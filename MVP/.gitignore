@@ -1,6 +1,3 @@
-# Exclude the example environment file as requested.
-.env.example
-
 # Standard Python ignores
 __pycache__/
 *.py[cod]
