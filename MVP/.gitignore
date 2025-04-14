@@ -1,0 +1,19 @@
+# Exclude the example environment file as requested.
+.env.example
+
+# Standard Python ignores
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+*/venv/
+*/env/
+
+# Instance folder (often contains secrets or DB)
+/instance/
+
+# Actual environment file (contains secrets)
+.env
