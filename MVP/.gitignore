@@ -11,6 +11,7 @@ venv/
 env/
 */venv/
 */env/
+mvp-env/
 
 # Instance folder (often contains secrets or DB)
 /instance/
