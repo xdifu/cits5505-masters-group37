@@ -6,9 +6,8 @@ __pycache__/
 # Virtual environment
 venv/
 env/
-*/venv/
-*/env/
 mvp-env/
+project-env/
 
 # Instance folder (often contains secrets or DB)
 /instance/
