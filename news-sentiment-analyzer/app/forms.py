@@ -2,8 +2,10 @@
 # Includes forms for user login, registration, and sentiment analysis submission.
 
 from flask_wtf import FlaskForm # Base class for Flask-WTF forms
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField # Import field types
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError # Import validators
+# Import EmailField and Email validator
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField
+# Import Email validator
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email
 
 # Import the User model to check for existing usernames during registration
 # It's assumed 'User' is defined in models.py within the same 'app' package
@@ -26,6 +28,8 @@ class LoginForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     """Form for new user registration."""
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
+    # Add EmailField for email input
+    email = EmailField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)]) # Enforce minimum password length
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')]) # Ensure passwords match
@@ -52,6 +56,25 @@ class RegistrationForm(FlaskForm):
             print("Warning: DB connection or User model not available for username validation.")
             # Optionally, raise an exception if validation cannot proceed:
             # raise ValidationError("Cannot validate username at this time. Please try again later.")
+
+    # Add validation for email uniqueness
+    def validate_email(self, email):
+        """
+        Custom validator to check if the email is already registered.
+        Requires the User model and db session to be available.
+        Args:
+            email (Field): The email field being validated.
+        Raises:
+            ValidationError: If the email already exists in the database.
+        """
+        if db and User:
+            user = db.session.scalar(db.select(User).where(User.email == email.data))
+            if user is not None:
+                raise ValidationError('Please use a different email address.')
+        else:
+            print("Warning: DB connection or User model not available for email validation.")
+            # Optionally, raise an exception if validation cannot proceed:
+            # raise ValidationError("Cannot validate email at this time. Please try again later.")
 
 
 class AnalysisForm(FlaskForm):
