@@ -27,7 +27,8 @@ Based on examples from Flask-Bootstrap and adapted for Bootstrap 5.
         {% set default_class = default_class + ' is-invalid' %}
     {% endif %}
 
-    {% set field_kwargs['class'] = default_class + ' ' + current_class %}
+    {# Correct way to update the 'class' key in the field_kwargs dictionary using 'do' #}
+    {% do field_kwargs.update({'class': default_class + ' ' + current_class}) %}
 
     {# Main field rendering logic #}
     {% if field.widget.input_type == 'hidden' or field.id == 'csrf_token' %}
