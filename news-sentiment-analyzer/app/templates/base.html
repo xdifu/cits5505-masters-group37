@@ -1,4 +1,3 @@
-sentiment-analyzer/app/templates/base.html -->
 <!-- Base HTML template for the entire application. -->
 <!-- Provides common structure, navigation, and includes Bootstrap 5 and Chart.js. -->
 <!doctype html>
@@ -21,26 +20,26 @@ sentiment-analyzer/app/templates/base.html -->
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
       <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">Sentiment Analyzer</a>
+        <a class="navbar-brand" href="{{ url_for('index') }}">Sentiment Analyzer</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+              <a class="nav-link" href="{{ url_for('index') }}">Home</a>
             </li>
             {% if current_user.is_authenticated %}
             <!-- Links visible only to logged-in users -->
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.analyze') }}">Analyze Text</a>
+              <a class="nav-link" href="{{ url_for('analyze') }}">Analyze Text</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.results') }}">My Results</a>
+              <a class="nav-link" href="{{ url_for('results') }}">My Results</a>
             </li>
             {% endif %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('main.shared_results') }}">Shared Results</a>
+              <a class="nav-link" href="{{ url_for('shared_results') }}">Shared Results</a>
             </li>
           </ul>
           <ul class="navbar-nav ms-auto">
@@ -50,15 +49,15 @@ sentiment-analyzer/app/templates/base.html -->
                 <span class="navbar-text me-2">Hello, {{ current_user.username }}!</span>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+              <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
             </li>
             {% else %}
             <!-- Links for anonymous users -->
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+              <a class="nav-link" href="{{ url_for('login') }}">Login</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+              <a class="nav-link" href="{{ url_for('register') }}">Register</a>
             </li>
             {% endif %}
           </ul>
