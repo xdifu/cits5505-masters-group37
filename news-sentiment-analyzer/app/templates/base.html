@@ -1,6 +1,6 @@
-masters-group37/news-sentiment-analyzer/app/templates/base.html -->
+sentiment-analyzer/app/templates/base.html -->
 <!-- Base HTML template for the entire application. -->
-<!-- Provides common structure, navigation, and includes Bootstrap 5. -->
+<!-- Provides common structure, navigation, and includes Bootstrap 5 and Chart.js. -->
 <!doctype html>
 <html lang="en">
   <head>
@@ -86,12 +86,15 @@ masters-group37/news-sentiment-analyzer/app/templates/base.html -->
 
     <!-- Optional Footer -->
     <footer class="mt-5 text-center text-muted">
-        <p>&copy; {{ now.year }} CITS5505 Group 37</p>
+        <!-- Assuming 'now' is provided by a context processor -->
+        <p>&copy; {{ now.year if now else '2025' }} CITS5505 Group 37</p>
     </footer>
 
-    <!-- Bootstrap Bundle with Popper -->
+    <!-- Bootstrap Bundle with Popper (Includes Bootstrap JS) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <!-- Optional custom JS -->
+    <!-- Chart.js Library (Add this line) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your custom JS (Ensure it's loaded after dependencies) -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <!-- Block for page-specific JavaScript -->
     {% block scripts %}{% endblock %}
