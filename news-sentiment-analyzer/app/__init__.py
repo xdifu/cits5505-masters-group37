@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from datetime import datetime # Import datetime for context processor
+from jinja2.ext import DoExtension # Import the DoExtension
 
 # Load environment variables first
 load_dotenv()
@@ -30,6 +31,9 @@ def create_app(config_class=None):
         Flask: The configured Flask application instance.
     """
     app = Flask(__name__)
+
+    # Enable Jinja2 'do' extension
+    app.jinja_options['extensions'] = ['jinja2.ext.do'] # Add DoExtension
 
     # --- Configuration ---
     # Secret Key: Essential for session security and CSRF protection
