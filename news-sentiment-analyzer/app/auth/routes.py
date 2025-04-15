@@ -1,9 +1,9 @@
-# filepath: /home/god/web-group-project/cits5505-masters-group37/news-sentiment-analyzer/app/auth/routes.py
 # Defines authentication routes (login, logout, register).
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, current_user, login_required
-from werkzeug.urls import url_parse
+# Import urlparse from Python's standard library instead of werkzeug
+from urllib.parse import urlparse
 from app import db
 from app.models import User
 from app.forms import LoginForm, RegistrationForm
@@ -25,7 +25,8 @@ def login():
         login_user(user, remember=form.remember_me.data)
         # Redirect to the page the user was trying to access, or index
         next_page = request.args.get('next')
-        if not next_page or url_parse(next_page).netloc != '':
+        # Use urlparse (from urllib.parse) to check if the next_page is safe
+        if not next_page or urlparse(next_page).netloc != '':
             next_page = url_for('main.index')
         flash(f'Welcome back, {user.username}!', 'success')
         return redirect(next_page)
