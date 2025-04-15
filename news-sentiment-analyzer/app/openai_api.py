@@ -33,10 +33,10 @@ def analyze_sentiment(text: str) -> str:
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
         # Use the beta parse method with the Pydantic model for response_format
-        # Note: Using gpt-4o as suggested, as gpt-4.1-nano might not support this
-        # or might have access restrictions with your key. Adjust if needed.
+        # Note: Using gpt-4.1-nano as requested, but be aware of potential access
+        # restrictions or incompatibility with the parse() method. gpt-4o is generally recommended.
         response_model = client.beta.chat.completions.parse(
-            model="gpt-4.1-nano", 
+            model="gpt-4.1-nano",
             messages=[
                 # System message guides the model on the task and expected output format implicitly via Pydantic
                 {"role": "system", "content": f"You are a sentiment analyzer. Classify the sentiment of the user's text strictly as one of the allowed values: {', '.join([e.value for e in SentimentEnum])}."},
@@ -45,8 +45,11 @@ def analyze_sentiment(text: str) -> str:
             response_format=SentimentOutput # Pass the Pydantic class directly
         )
 
-        # If parsing is successful, return the validated sentiment value from the Enum
-        return response_model.sentiment.value
+        # If parsing is successful, access the parsed Pydantic model via the correct path
+        # and return the validated sentiment value from the Enum
+        # The parsed object is nested within the response structure.
+        parsed_output = response_model.choices[0].message.parsed
+        return parsed_output.sentiment.value
 
     except ValidationError as ve:
         # Handle cases where the API response doesn't match the Pydantic model
@@ -58,9 +61,15 @@ def analyze_sentiment(text: str) -> str:
         # Handle API-specific errors (e.g., authentication, rate limits, model not found)
         print(f"OpenAI API error: {e}")
         # Check for specific error types if needed, e.g., AuthenticationError, RateLimitError
-        return f"Error: OpenAI API request failed ({e.status_code if hasattr(e, 'status_code') else 'N/A'})" # Provide status code if available
+        # Also check for 403 or model not found errors specifically if using restricted models/features
+        status_code = getattr(e, 'status_code', 'N/A')
+        print(f"API Error Status Code: {status_code}")
+        return f"Error: OpenAI API request failed (Status: {status_code})"
 
     except Exception as e:
-        # Catch any other potential exceptions during the process
+        # Catch any other potential exceptions during the process, including potential attribute errors
+        # if the response structure is unexpected even before validation.
         print(f"An unexpected error occurred during sentiment analysis: {e}")
+        # Log the type of exception for better debugging
+        print(f"Exception Type: {type(e).__name__}")
         return "Error: An unexpected error occurred."
