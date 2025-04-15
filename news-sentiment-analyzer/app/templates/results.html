@@ -7,10 +7,10 @@
 {% block content %}
 <h1 class="mb-4">My Analysis Results</h1>
 
-<!-- Add a container for the chart -->
+<!-- Container for the sentiment distribution chart -->
 <div class="mb-5 p-3 border rounded bg-light shadow-sm">
     <h2 class="text-center mb-3">Sentiment Distribution</h2>
-    <!-- Add the canvas element for Chart.js -->
+    <!-- Canvas element for Chart.js -->
     <div style="max-width: 400px; margin: auto;"> <!-- Optional: Constrain chart size -->
         <canvas id="sentimentChart"></canvas>
     </div>
@@ -25,7 +25,7 @@
                 <th scope="col">Date</th>
                 <th scope="col">Text Snippet</th>
                 <th scope="col">Sentiment</th>
-                <th scope="col" class="shared-status-cell-header">Shared</th> <!-- Optional: Header class if needed -->
+                <th scope="col" class="shared-status-cell-header">Shared</th> <!-- Header for shared status -->
                 <th scope="col">Actions</th>
             </tr>
         </thead>
@@ -33,37 +33,32 @@
             {% for result in results %}
             <tr>
                 <td>{{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
-                <!-- Show a snippet of the text -->
+                <!-- Display a snippet of the original text -->
                 <td>{{ result.original_text[:80] }}{% if result.original_text|length > 80 %}...{% endif %}</td>
                 <td>
-                    <!-- Add styling based on sentiment -->
+                    <!-- Display sentiment with appropriate Bootstrap badge styling -->
                     {% if result.sentiment == 'Positive' %}
                         <span class="badge bg-success">{{ result.sentiment }}</span>
                     {% elif result.sentiment == 'Negative' %}
                         <span class="badge bg-danger">{{ result.sentiment }}</span>
                     {% else %}
-                        <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                        <span class="badge bg-secondary">{{ result.sentiment }}</span> <!-- Default/Neutral style -->
                     {% endif %}
                 </td>
-                <!-- Add class for AJAX targeting -->
+                <!-- Display shared status; add class for potential AJAX targeting -->
                 <td class="shared-status-cell">{{ 'Yes' if result.shared else 'No' }}</td>
                 <td>
-                    <!-- Form to toggle the 'shared' status -->
-                    <!-- Add class for AJAX targeting -->
+                    <!-- Form to toggle the 'shared' status via POST request -->
+                    <!-- Add class for potential AJAX targeting -->
                     <form class="toggle-share-form" action="{{ url_for('main.toggle_share', result_id=result.id) }}" method="POST" style="display: inline;">
-                        <!-- Include CSRF token if using WTForms CSRFProtect -->
+                        <!-- Include CSRF token (requires 'share_form' passed from route) -->
                         {{ share_form.hidden_tag() if share_form }}
+                        <!-- Button text and style changes based on current shared status -->
                         <button type="submit" class="btn btn-sm {{ 'btn-warning' if result.shared else 'btn-info' }}">
                             {{ 'Unshare' if result.shared else 'Share' }}
                         </button>
                     </form>
-                    <!-- Optional: Add a delete button -->
-                    <!--
-                    <form action="{{ url_for('main.delete_result', result_id=result.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this result?');">
-                        {{ delete_form.hidden_tag() if delete_form }}
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                    -->
+                    <!-- The non-functional delete button form has been removed -->
                 </td>
             </tr>
             {% endfor %}
@@ -71,34 +66,36 @@
     </table>
 </div>
 {% else %}
+<!-- Message displayed if the user has no results yet -->
 <p>You haven't analyzed any text yet. Go to the <a href="{{ url_for('main.analyze') }}">Analyze Text</a> page to get started!</p>
 {% endif %}
 
 {% endblock %}
 
 {% block scripts %}
-{{ super() }} <!-- Optional: Include scripts from parent block if any -->
+{{ super() }} <!-- Include scripts from the base template -->
 
-<!-- Store data in a script tag with type application/json -->
+<!-- Embed sentiment data for the chart as JSON -->
 <script id="sentimentDataJson" type="application/json">
   {{ sentiment_counts|tojson|safe if sentiment_counts else '{}' }}
 </script>
 
-<!-- Ensure 'sentiment_counts' is passed from the Flask route -->
+<!-- Script to parse the sentiment data and make it available for chart initialization -->
+<!-- Assumes chart initialization logic is in static/js/script.js or follows this block -->
 <script>
-  let sentimentData = {}; // Default to empty object
+  let sentimentData = {}; // Initialize empty object for safety
   try {
-    // Find the data script tag and parse its content
+    // Find the data script tag by ID
     const sentimentDataElement = document.getElementById('sentimentDataJson');
     if (sentimentDataElement) {
+      // Parse the JSON content
       sentimentData = JSON.parse(sentimentDataElement.textContent);
     }
   } catch (e) {
-    console.error("Error parsing sentiment data:", e);
-    // Keep sentimentData as {} if parsing fails
+    console.error("Error parsing sentiment data from JSON script tag:", e);
+    // Keep sentimentData as {} if parsing fails to prevent further errors
   }
-  // You can now use the sentimentData variable in your chart initialization logic
-  // (e.g., in static/js/script.js or subsequent script blocks)
-  console.log('Sentiment Data:', sentimentData); // Example: Log data to console
+  // The 'sentimentData' variable is now ready for use by Chart.js
+  // console.log('Sentiment Data Loaded:', sentimentData); // For debugging
 </script>
 {% endblock %}
