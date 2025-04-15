@@ -1,0 +1,37 @@
+<!-- Page displaying sentiment analysis results shared by all users. -->
+<!-- Extends the base layout. -->
+{% extends "base.html" %}
+
+{% block title %}Shared Results - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Shared Analysis Results</h1>
+<p>These are results that users have chosen to share publicly.</p>
+
+{% if shared_results %}
+<div class="list-group">
+    {% for result in shared_results %}
+    <div class="list-group-item list-group-item-action flex-column align-items-start mb-3">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">
+                <!-- Display sentiment with appropriate styling -->
+                Sentiment:
+                {% if result.sentiment == 'Positive' %}
+                    <span class="badge bg-success">{{ result.sentiment }}</span>
+                {% elif result.sentiment == 'Negative' %}
+                    <span class="badge bg-danger">{{ result.sentiment }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                {% endif %}
+            </h5>
+            <small class="text-muted">{{ result.timestamp.strftime('%Y-%m-%d %H:%M') }} by {{ result.author.username }}</small>
+        </div>
+        <p class="mb-1">{{ result.original_text }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>No results have been shared yet.</p>
+{% endif %}
+
+{% endblock %}
