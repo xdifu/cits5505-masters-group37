@@ -9,12 +9,10 @@ from wtforms.validators import DataRequired, Length, EqualTo, ValidationError # 
 # It's assumed 'User' is defined in models.py within the same 'app' package
 # You might need to adjust the import based on your final db initialization strategy
 try:
-    from .models import User, db
+    from .models import User, db # Keep this import
 except ImportError:
-    # This is a fallback for environments where models might not be fully initialized yet
-    # or if db is not directly available for import.
-    # The validation logic relies on querying the User model.
     User = None
+    db = None # Explicitly set db to None if import fails
 
 
 class LoginForm(FlaskForm):
@@ -42,16 +40,18 @@ class RegistrationForm(FlaskForm):
         Raises:
             ValidationError: If the username already exists in the database.
         """
-        if User: # Check if the User model was imported successfully
-            # It's assumed 'db.session' is available here.
-            # This might require passing the db instance or using current_app context.
-            user = db.session.scalar(sa.select(User).where(User.username == username.data))
+        # Check if db and User were imported successfully
+        if db and User:
+            # Use Flask-SQLAlchemy's db.session and db.select
+            user = db.session.scalar(db.select(User).where(User.username == username.data))
             if user is not None:
                 raise ValidationError('Please use a different username.')
         else:
-            # Handle case where User model isn't available (e.g., during initial setup)
-            # This validation might be skipped or handled differently depending on app structure.
-            print("Warning: User model not available for username validation.")
+            # Log or handle the case where db/User isn't available
+            # Depending on strictness, you might raise an error or just log a warning
+            print("Warning: DB connection or User model not available for username validation.")
+            # Optionally, raise an exception if validation cannot proceed:
+            # raise ValidationError("Cannot validate username at this time. Please try again later.")
 
 
 class AnalysisForm(FlaskForm):
