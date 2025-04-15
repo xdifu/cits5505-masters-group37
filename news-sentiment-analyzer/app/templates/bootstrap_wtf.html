@@ -82,8 +82,8 @@ Based on examples from Flask-Bootstrap and adapted for Bootstrap 5.
 {% endmacro %}
 
 {# Alias for simpler usage in templates #}
-{% macro form_field(field, **kwargs) %} {# Using **kwargs here in the CALLER macro is fine #}
-  {{ render_field(field, **kwargs) }} {# Pass kwargs down to render_field #}
+{% macro form_field(field) %} {# Removed **kwargs from definition #}
+  {{ render_field(field, **kwargs) }} {# Pass kwargs down to render_field implicitly #}
 {% endmacro %}
 
 {# Macro to render the entire form structure (optional, often handled in template) #}
