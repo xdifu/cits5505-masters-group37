@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from datetime import datetime # Import datetime for context processor
-from jinja2.ext import DoExtension # Import the DoExtension
 
 # Load environment variables first
 load_dotenv()
