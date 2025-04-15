@@ -1,108 +1,66 @@
-# Handles interaction with the OpenAI API for sentiment analysis using Structured Outputs.
+# Handles interaction with the OpenAI API for sentiment analysis using Pydantic and Structured Outputs.
 
 import os
-import json # Import json for parsing the response
-from openai import OpenAI, OpenAIError # Use OpenAIError for specific exceptions
+from enum import Enum
+from pydantic import BaseModel, ValidationError
+from openai import OpenAI, OpenAIError # Keep OpenAIError for API-level issues
 
-def analyze_sentiment(text):
+# Define the allowed sentiment values using an Enum for strict validation
+class SentimentEnum(str, Enum):
+    POSITIVE = "Positive"
+    NEUTRAL = "Neutral"
+    NEGATIVE = "Negative"
+
+# Define the Pydantic model that represents the expected structured output
+class SentimentOutput(BaseModel):
+    sentiment: SentimentEnum # Use the Enum type for the sentiment field
+
+def analyze_sentiment(text: str) -> str:
     """
-    Analyzes the sentiment of the provided text using the OpenAI API with Structured Outputs.
+    Analyzes the sentiment of the provided text using the OpenAI API's
+    structured output parsing feature with Pydantic validation.
 
     Args:
         text (str): The news text to analyze.
 
     Returns:
-        str: The sentiment classification ('Positive', 'Neutral', 'Negative') or an error message.
-             Returns "Error: API Refusal" if the model refuses to respond.
-             Returns "Error: Incomplete Response" if the response was cut short.
+        str: The sentiment classification ('Positive', 'Neutral', 'Negative')
+             or an error message if analysis or validation fails.
     """
     try:
         # Initialize the OpenAI client using the API key from environment variables
+        # Ensure the API key is set in your .env file
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-        # Define the JSON schema for the expected response
-        sentiment_schema = {
-            "type": "object",
-            "properties": {
-                "sentiment": {
-                    "type": "string",
-                    "description": "The sentiment classification of the text.",
-                    "enum": ["Positive", "Neutral", "Negative"] # Strict allowed values
-                }
-            },
-            "required": ["sentiment"], # Sentiment field is mandatory
-            "additionalProperties": False # No other properties allowed
-        }
-
-        # Make the API call using the responses endpoint with structured output format
-        response = client.responses.create(
-            model="gpt-4.1-nano", # Ensure this model supports structured outputs
-            input=[
-                {"role": "system", "content": "You are a sentiment analyzer. Classify the sentiment of the user's text strictly as Positive, Neutral, or Negative according to the provided JSON schema."},
+        # Use the beta parse method with the Pydantic model for response_format
+        # Note: Using gpt-4o as suggested, as gpt-4.1-nano might not support this
+        # or might have access restrictions with your key. Adjust if needed.
+        response_model = client.beta.chat.completions.parse(
+            model="gpt-4.1-nano", 
+            messages=[
+                # System message guides the model on the task and expected output format implicitly via Pydantic
+                {"role": "system", "content": f"You are a sentiment analyzer. Classify the sentiment of the user's text strictly as one of the allowed values: {', '.join([e.value for e in SentimentEnum])}."},
                 {"role": "user", "content": f"Analyze this text: {text}"}
             ],
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "sentiment_analysis_result", # A name for the schema usage
-                    "schema": sentiment_schema,
-                    "strict": True # Enforce schema adherence strictly
-                }
-            },
-            # Consider adding max_output_tokens if needed, e.g., max_output_tokens=50
+            response_format=SentimentOutput # Pass the Pydantic class directly
         )
 
-        # Check response status and content type
-        if response.status == "completed":
-            # Access the structured output content
-            output_content = response.output[0].content[0]
+        # If parsing is successful, return the validated sentiment value from the Enum
+        return response_model.sentiment.value
 
-            if output_content.type == "output_text":
-                # The SDK should ideally parse this automatically if the schema is valid
-                try:
-                    # The output_text should be the JSON string when using json_schema
-                    parsed_json = json.loads(output_content.text)
-                    sentiment = parsed_json.get("sentiment")
-                    if sentiment in ["Positive", "Neutral", "Negative"]:
-                        return sentiment
-                    else:
-                        # This case should be rare with strict schema enforcement
-                        print(f"Unexpected sentiment value in response: {sentiment}")
-                        return "Error: Invalid sentiment value received."
-                except json.JSONDecodeError:
-                    print(f"Failed to parse JSON response: {output_content.text}")
-                    return "Error: API returned invalid JSON."
-                except AttributeError:
-                     # Fallback if direct access fails or structure is unexpected
-                     print(f"Unexpected response structure: {output_content}")
-                     return "Error: Could not extract sentiment from response structure."
-
-            elif output_content.type == "refusal":
-                # Handle cases where the model refused to answer for safety reasons
-                print(f"API Refusal: {output_content.refusal}")
-                return "Error: API Refusal"
-            else:
-                # Handle other unexpected content types
-                print(f"Unexpected content type: {output_content.type}")
-                return "Error: Unexpected response content type."
-
-        elif response.status == "incomplete":
-            # Handle incomplete responses (e.g., due to max_output_tokens)
-            reason = response.incomplete_details.reason if response.incomplete_details else "unknown"
-            print(f"Incomplete response from API. Reason: {reason}")
-            return f"Error: Incomplete Response ({reason})"
-        else:
-            # Handle other statuses like 'failed'
-            print(f"API call failed with status: {response.status}")
-            return f"Error: API call failed ({response.status})"
+    except ValidationError as ve:
+        # Handle cases where the API response doesn't match the Pydantic model
+        print(f"Pydantic Validation Error: The API response did not match the expected format. Details: {ve}")
+        # You might want to inspect 've.json()' for more details on the failure
+        return "Error: Invalid sentiment format received from API."
 
     except OpenAIError as e:
-        # Handle API-specific errors (e.g., authentication, rate limits, invalid schema)
+        # Handle API-specific errors (e.g., authentication, rate limits, model not found)
         print(f"OpenAI API error: {e}")
-        if "invalid json schema" in str(e).lower():
-             return "Error: Invalid JSON schema provided to API."
-        return f"Error: OpenAI API request failed ({e})"
+        # Check for specific error types if needed, e.g., AuthenticationError, RateLimitError
+        return f"Error: OpenAI API request failed ({e.status_code if hasattr(e, 'status_code') else 'N/A'})" # Provide status code if available
+
     except Exception as e:
         # Catch any other potential exceptions during the process
-        print(f"An unexpected error occurred: {e}")
+        print(f"An unexpected error occurred during sentiment analysis: {e}")
         return "Error: An unexpected error occurred."
