@@ -1,0 +1,100 @@
+<!-- filepath: /home/god/web-group-project/cits5505-masters-group37/news-sentiment-analyzer/app/templates/bootstrap_wtf.html -->
+{#
+Helper macros for rendering Flask-WTF forms with Bootstrap 5.
+Based on examples from Flask-Bootstrap and adapted for Bootstrap 5.
+#}
+
+{% macro render_field(field, form_type="basic", horizontal_columns=('lg', 2, 10), button_map={}, **kwargs) %}
+    {# Renders a single form field with label, input, errors, and description. #}
+
+    {# Determine field attributes, ensure class is appended not replaced #}
+    {% set field_kwargs = kwargs.copy() %}
+    {% set current_class = field_kwargs.pop('class_', '') %}
+    {% set default_class = 'form-control' %}
+    {% if field.type == 'BooleanField' %}
+        {% set default_class = 'form-check-input' %}
+    {% elif field.type == 'RadioField' %}
+        {% set default_class = 'form-check-input' %}
+    {% elif field.type == 'SubmitField' %}
+        {% set default_class = 'btn ' + button_map.get(field.id, 'btn-primary') %}
+    {% elif field.type == 'FileField' %}
+         {# FileField might not need form-control, depends on styling #}
+         {% set default_class = 'form-control' %}
+    {% endif %}
+
+    {# Add is-invalid class if field has errors #}
+    {% if field.errors %}
+        {% set default_class = default_class + ' is-invalid' %}
+    {% endif %}
+
+    {% set field_kwargs['class'] = default_class + ' ' + current_class %}
+
+    {# Main field rendering logic #}
+    {% if field.widget.input_type == 'hidden' or field.id == 'csrf_token' %}
+        {{ field(**field_kwargs) }}
+    {% elif field.type == 'BooleanField' %}
+        <div class="form-check mb-3 {{ kwargs.pop('div_class', '') }}">
+            {{ field(class_=field_kwargs['class'], **field_kwargs) }}
+            {{ field.label(class="form-check-label") }}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            {% if field.description %}
+                <small class="form-text text-muted">{{ field.description }}</small>
+            {% endif %}
+        </div>
+    {% elif field.type == 'RadioField' %}
+         <div class="mb-3 {{ kwargs.pop('div_class', '') }}">
+            <label class="form-label">{{ field.label }}</label>
+            {% for subfield in field %}
+            <div class="form-check">
+                {{ subfield(class_=field_kwargs['class'], **field_kwargs) }}
+                {{ subfield.label(class='form-check-label') }}
+            </div>
+            {% endfor %}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            {% if field.description %}
+                <small class="form-text text-muted">{{ field.description }}</small>
+            {% endif %}
+        </div>
+    {% else %} {# Standard text, password, email, textarea, etc. #}
+        <div class="mb-3 {{ kwargs.pop('div_class', '') }}">
+            {{ field.label(class="form-label") }}
+            {{ field(**field_kwargs) }}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            {% if field.description %}
+                <small class="form-text text-muted">{{ field.description }}</small>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{# Alias for simpler usage in templates #}
+{% macro form_field(field, **kwargs) %}
+  {{ render_field(field, **kwargs) }}
+{% endmacro %}
+
+{# Macro to render the entire form structure (optional, often handled in template) #}
+{% macro quick_form(form, action=request.full_path, method="post", extra_classes=None, role="form", enctype=None, id="", novalidate=False, render_kw={}) %}
+    <form {% if id %}id="{{id}}"{% endif %} action="{{action}}" method="{{method}}"
+        class="form {{ extra_classes }}"
+        role="{{role}}"
+        {% if enctype %}enctype="{{enctype}}"{% endif %}
+        {% if novalidate %}novalidate{% endif %}
+        {% if render_kw %} {{ render_kw|xmlattr }} {% endif %}>
+        {{ form.hidden_tag() }} {# Includes CSRF token #}
+        {% for field in form if not field.widget.input_type == 'hidden' and field.id != 'csrf_token' %}
+            {{ render_field(field) }}
+        {% endfor %}
+    </form>
+{% endmacro %}
