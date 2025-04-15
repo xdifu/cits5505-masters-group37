@@ -8,14 +8,8 @@ import sqlalchemy.orm as so # SQLAlchemy ORM components
 from werkzeug.security import generate_password_hash, check_password_hash # For password hashing
 from flask_login import UserMixin # Provides default implementations for Flask-Login user methods
 
-# It's assumed that 'db' is the SQLAlchemy instance initialized in app/__init__.py
-# from app import db # Typically you would import db from your app factory or __init__
-
-# Temporary placeholder for db until it's properly initialized in __init__.py
-# In a real setup, remove this and use the imported 'db' from your app instance.
-# You will need to replace this with the actual db instance from your app factory.
-from flask_sqlalchemy import SQLAlchemy
-db = SQLAlchemy()
+# Import the db instance initialized in app/__init__.py
+from app import db
 
 
 class User(UserMixin, db.Model):
