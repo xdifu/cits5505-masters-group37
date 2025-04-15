@@ -16,7 +16,11 @@
         <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
              {{ form.hidden_tag() }} <!-- Include CSRF token -->
              {{ wtf.form_field(form.news_text) }}
-             {{ wtf.form_field(form.submit) }}
+             {# Render the submit button directly, applying Bootstrap classes #}
+             {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
+             <div class="mb-3">
+                 {{ form.submit(class='btn btn-primary') }}
+             </div>
         </form>
 
         <!-- Add loading indicator element (hidden by default) -->
