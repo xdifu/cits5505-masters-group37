@@ -21,7 +21,7 @@ def index():
     return render_template('index.html', title='Welcome')
 
 @bp.route('/analyze', methods=['GET', 'POST'])
-@login_required # User must be logged in to analyze
+# @login_required # Temporarily commented out for static GUI demo
 def analyze():
     """Handles text submission for sentiment analysis."""
     form = AnalysisForm()
@@ -55,7 +55,7 @@ def analyze():
 
 
 @bp.route('/results')
-@login_required
+# @login_required # Temporarily commented out for static GUI demo
 def results():
     """Displays the user's past analysis results and a chart."""
     # Use scalars() for potentially large result sets and .all() to get the list
@@ -109,6 +109,7 @@ def toggle_share(result_id):
 
 
 @bp.route('/shared')
+# @login_required # Temporarily commented out for static GUI demo
 def shared_results():
     """Displays results shared by all users."""
     shared = db.session.scalars(
