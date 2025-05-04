@@ -85,3 +85,5 @@ class AnalysisForm(FlaskForm):
         render_kw={"placeholder": "Paste news text here..."} # Add placeholder text to the textarea
     )
     submit = SubmitField('Analyze Sentiment')
+
+    # Need to change the entire design
