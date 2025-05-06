@@ -1,0 +1,149 @@
+/* Custom styles for the News Sentiment Analyzer application. */
+/* Enhances Bootstrap 5 defaults for a more modern and tech-focused look. */
+
+/* Define root variables for easier theming */
+:root {
+    --primary-color: #0d6efd; /* Bootstrap primary blue */
+    --secondary-color: #6c757d; /* Bootstrap secondary grey */
+    --light-bg: #f8f9fa; /* Bootstrap light background */
+    --dark-text: #212529; /* Bootstrap dark text */
+    --border-color: #dee2e6; /* Bootstrap border color */
+    --border-radius: 0.375rem; /* Bootstrap default border radius */
+    --box-shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    --box-shadow-md: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+/* Apply a slightly more modern font stack */
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    line-height: 1.6;
+}
+
+/* --- Navigation Bar --- */
+.navbar {
+    box-shadow: var(--box-shadow-sm);
+    background-color: #ffffff !important; /* Override Bootstrap bg-light for a cleaner white */
+}
+
+.navbar-brand {
+    font-weight: 600; /* Slightly bolder brand name */
+}
+
+/* --- Main Content Area --- */
+main.container {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
+}
+
+/* --- Forms --- */
+/* Style form elements for consistency */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Bootstrap focus shadow */
+}
+
+textarea.form-control {
+    min-height: 150px; /* Ensure textarea has a decent default height */
+}
+
+/* --- Buttons --- */
+.btn {
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease-in-out; /* Smooth transitions for hover effects */
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+/* --- Result Display --- */
+.result {
+    background-color: #ffffff; /* White background for result box */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+}
+
+.result h2 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: var(--primary-color);
+}
+
+/* --- Tables (My Results) --- */
+.table {
+    background-color: #ffffff; /* White background for tables */
+    box-shadow: var(--box-shadow-sm);
+}
+
+.table thead th {
+    background-color: var(--light-bg); /* Light header for contrast */
+    border-bottom-width: 2px; /* Slightly thicker header border */
+}
+
+.table td, .table th {
+    vertical-align: middle; /* Align content vertically */
+}
+
+/* Style sentiment badges within the table */
+.table .badge {
+    font-size: 0.85em; /* Slightly larger badge text */
+    padding: 0.4em 0.7em;
+}
+
+/* --- List Groups (Shared Results) --- */
+.list-group-item {
+    margin-bottom: 1rem !important; /* Add space between shared items */
+    border-radius: var(--border-radius) !important; /* Apply border radius */
+    border: 1px solid var(--border-color);
+    box-shadow: var(--box-shadow-sm);
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.list-group-item:hover {
+    box-shadow: var(--box-shadow-md); /* Subtle shadow increase on hover */
+}
+
+.list-group-item h5 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Space between "Sentiment:" text and badge */
+}
+
+.list-group-item p {
+    color: #495057; /* Slightly lighter text for description */
+    word-break: break-word; /* Prevent long text from overflowing */
+}
+
+/* --- Alerts --- */
+.alert {
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+}
+
+/* --- Footer --- */
+footer {
+    padding: 1.5rem 0;
+    font-size: 0.9em;
+    color: var(--secondary-color);
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .display-5 {
+        font-size: 2.5rem; /* Adjust large heading size on smaller screens */
+    }
+    .lead {
+        font-size: 1rem; /* Adjust lead paragraph size */
+    }
+}
