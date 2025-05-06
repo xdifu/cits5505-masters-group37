@@ -1,0 +1,34 @@
+<!-- Main HTML page for the sentiment analysis application. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Sentiment Analysis</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        textarea { width: 100%; height: 150px; margin-bottom: 1em; }
+        .result { margin-top: 1em; padding: 1em; border: 1px solid #ccc; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+    <h1>News Sentiment Analysis</h1>
+    <p>Enter news text below to analyze its sentiment using gpt-4.1-nano.</p>
+
+    <!-- Form for submitting text -->
+    <form method="POST" action="/">
+        <textarea name="news_text" placeholder="Paste news text here..." required></textarea>
+        <button type="submit">Analyze Sentiment</button>
+    </form>
+
+    <!-- Display the sentiment analysis result if available -->
+    {% if sentiment %}
+    <div class="result">
+        <h2>Analysis Result:</h2>
+        <p><strong>{{ sentiment }}</strong></p>
+    </div>
+    {% endif %}
+
+</body>
+</html>
