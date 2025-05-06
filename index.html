@@ -1,0 +1,35 @@
+<!-- Introductory view template for the News Sentiment Analyzer application. -->
+<!-- Explains the application's purpose and provides navigation for users. -->
+{% extends "base.html" %}
+
+{% block title %}Welcome - News Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="px-4 py-5 my-5 text-center">
+    <!-- Main heading for the application -->
+    <h1 class="display-5 fw-bold">News Sentiment Analyzer</h1>
+    <div class="col-lg-6 mx-auto">
+      <!-- Description of the application's functionality -->
+      <p class="lead mb-4">
+        Welcome! This application leverages artificial intelligence to analyze the sentiment
+        of news articles or other text inputs. Discover whether the underlying tone is Positive, Neutral, or Negative.
+      </p>
+      <!-- Call to action for user engagement -->
+      <p class="lead mb-4">
+        Please register for an account or log in to submit text for analysis, review your past results, and explore results shared by others.
+      </p>
+      <!-- Action buttons adapting to user authentication status -->
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+        {% if not current_user.is_authenticated %}
+        <!-- Show Login and Register buttons for anonymous users -->
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg px-4">Register</a>
+        {% else %}
+        <!-- Show Analyze Text and View Results buttons for logged-in users -->
+        <a href="{{ url_for('main.analyze') }}" class="btn btn-primary btn-lg px-4 gap-3">Analyze Text</a>
+        <a href="{{ url_for('main.results') }}" class="btn btn-outline-secondary btn-lg px-4">View My Results</a>
+        {% endif %}
+      </div>
+    </div>
+</div>
+{% endblock %}
