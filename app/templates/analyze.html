@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import 'bootstrap_wtf.html' as wtf %}
 
 {% block title %}Analyze Text - Sentiment Analyzer{% endblock %}
 
@@ -7,6 +8,14 @@
     <div class="col-md-8">
         <h1 class="mb-4">Analyze News Sentiment</h1>
         <p>Paste the news text into the box below and click "Analyze Sentiment".</p>
+
+        <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
+            {{ form.hidden_tag() }}
+            {{ wtf.form_field(form.news_text) }}
+            <div class="mb-3">
+                {{ form.submit(class='btn btn-primary') }}
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
