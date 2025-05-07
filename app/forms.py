@@ -3,9 +3,10 @@
 
 from flask_wtf import FlaskForm # Base class for Flask-WTF forms
 # Import EmailField and Email validator
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField, SelectMultipleField
 # Import Email validator
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email
+import sqlalchemy as sa
 
 # Import the User model to check for existing usernames during registration
 # It's assumed 'User' is defined in models.py within the same 'app' package
@@ -79,9 +80,28 @@ class RegistrationForm(FlaskForm):
 
 class AnalysisForm(FlaskForm):
     """Form for submitting text for sentiment analysis."""
-    news_text = TextAreaField(
-        'News Text',
-        validators=[DataRequired(), Length(min=10, max=10000)], # Require text, set length limits
-        render_kw={"placeholder": "Paste news text here..."} # Add placeholder text to the textarea
-    )
-    submit = SubmitField('Analyze Sentiment')
+    news_text = TextAreaField('Text to Analyze', validators=[
+        DataRequired(), Length(min=1, max=10000)])
+    submit = SubmitField('Analyze')
+    
+    # For backward compatibility
+    @property
+    def text_to_analyze(self):
+        return self.news_text
+
+
+class ShareForm(FlaskForm):
+    """Form for sharing an analysis result with another user."""
+    share_with_username = StringField('Username to share with', validators=[DataRequired()])
+    submit = SubmitField('Share')
+
+
+class ManageSharingForm(FlaskForm):
+    """Form for managing sharing of analysis results with other users."""
+    users_to_share_with = SelectMultipleField('Share with', coerce=int)
+    submit = SubmitField('Update Sharing')
+
+    def __init__(self, current_user_id, *args, **kwargs):
+        super(ManageSharingForm, self).__init__(*args, **kwargs)
+        # Populate choices, excluding the current user
+        self.users_to_share_with.choices = [(user.id, user.username) for user in db.session.scalars(sa.select(User).where(User.id != current_user_id)).all()]

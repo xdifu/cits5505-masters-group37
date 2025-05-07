@@ -2,78 +2,60 @@
 <!-- Extends the base layout and shows results with share options. -->
 {% extends "base.html" %}
 
-{% block title %}My Results - Sentiment Analyzer{% endblock %}
+{% block title %}My Analysis Results - Sentiment Analyzer{% endblock %}
 
 {% block content %}
 <h1 class="mb-4">My Analysis Results</h1>
 
-<!-- Container for the sentiment distribution chart -->
-<div class="mb-5 p-3 border rounded bg-light shadow-sm">
-    <h2 class="text-center mb-3">Sentiment Distribution</h2>
-    <!-- Canvas element for Chart.js -->
-    <div style="max-width: 400px; margin: auto;"> <!-- Optional: Constrain chart size -->
-        <canvas id="sentimentChart"></canvas>
-    </div>
-</div>
-
 {% if results %}
-<h2 class="mb-3">Result History</h2>
-<div class="table-responsive">
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th scope="col">Date</th>
-                <th scope="col">Text Snippet</th>
-                <th scope="col">Sentiment</th>
-                <th scope="col" class="shared-status-cell-header">Shared</th> <!-- Header for shared status -->
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for result in results %}
-            <tr>
-                <td>{{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
-                <!-- Display a snippet of the original text -->
-                <td>{{ result.original_text[:80] }}{% if result.original_text|length > 80 %}...{% endif %}</td>
-                <td>
-                    <!-- Display sentiment with appropriate Bootstrap badge styling -->
-                    {% if result.sentiment == 'Positive' %}
-                        <span class="badge bg-success">{{ result.sentiment }}</span>
-                    {% elif result.sentiment == 'Negative' %}
-                        <span class="badge bg-danger">{{ result.sentiment }}</span>
-                    {% else %}
-                        <span class="badge bg-secondary">{{ result.sentiment }}</span> <!-- Default/Neutral style -->
-                    {% endif %}
-                </td>
-                <!-- Display shared status; add class for potential AJAX targeting -->
-                <td class="shared-status-cell">{{ 'Yes' if result.shared else 'No' }}</td>
-                <td>
-                    <!-- Form to toggle the 'shared' status via POST request -->
-                    <!-- Add class for potential AJAX targeting -->
-                    <form class="toggle-share-form" action="{{ url_for('main.toggle_share', result_id=result.id) }}" method="POST" style="display: inline;">
-                        <!-- Include CSRF token (requires 'share_form' passed from route) -->
-                        {{ share_form.hidden_tag() if share_form }}
-                        <!-- Button text and style changes based on current shared status -->
-                        <button type="submit" class="btn btn-sm {{ 'btn-warning' if result.shared else 'btn-info' }}">
-                            {{ 'Unshare' if result.shared else 'Share' }}
-                        </button>
-                    </form>
-                    <!-- The non-functional delete button form has been removed -->
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="list-group">
+    {% for result in results %}
+    <div class="list-group-item list-group-item-action flex-column align-items-start mb-3">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">
+                <!-- Display sentiment with appropriate styling -->
+                Sentiment:
+                {% if result.sentiment == 'Positive' %}
+                    <span class="badge bg-success">{{ result.sentiment }}</span>
+                {% elif result.sentiment == 'Negative' %}
+                    <span class="badge bg-danger">{{ result.sentiment }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                {% endif %}
+            </h5>
+            <small class="text-muted">Analyzed on: {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+        <p class="mb-1"><strong>Original Text:</strong></p>
+        <p class="mb-1">{{ result.original_text }}</p>
+        
+        <!-- Share buttons - providing two ways to share -->
+        <div class="mt-2">
+            <a href="{{ url_for('main.share_analysis', result_id=result.id) }}" class="btn btn-sm btn-outline-primary me-2">Share with User</a>
+            <a href="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="btn btn-sm btn-outline-success">Manage Sharing</a>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% else %}
-<!-- Message displayed if the user has no results yet -->
-<p>You haven't analyzed any text yet. Go to the <a href="{{ url_for('main.analyze') }}">Analyze Text</a> page to get started!</p>
+<p>You haven't analyzed any text yet. <a href="{{ url_for('main.analyze') }}">Analyze some now!</a></p>
 {% endif %}
 
+<!-- Sentiment chart container -->
+<div class="mt-5">
+    <h2 class="h4 mb-3">Your Sentiment Distribution</h2>
+    <div class="card">
+        <div class="card-body">
+            <canvas id="sentimentChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }} <!-- Include scripts from the base template -->
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Embed sentiment data for the chart as JSON -->
 <script id="sentimentDataJson" type="application/json">
@@ -81,7 +63,6 @@
 </script>
 
 <!-- Script to parse the sentiment data and make it available for chart initialization -->
-<!-- Assumes chart initialization logic is in static/js/script.js or follows this block -->
 <script>
   let sentimentData = {}; // Initialize empty object for safety
   try {
@@ -95,7 +76,48 @@
     console.error("Error parsing sentiment data from JSON script tag:", e);
     // Keep sentimentData as {} if parsing fails to prevent further errors
   }
-  // The 'sentimentData' variable is now ready for use by Chart.js
-  // console.log('Sentiment Data Loaded:', sentimentData); // For debugging
+  
+  // Initialize the chart once data is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('sentimentChart');
+    if (ctx && typeof sentimentData !== 'undefined') {
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Positive', 'Neutral', 'Negative'],
+          datasets: [{
+            data: [
+              sentimentData.positive || 0,
+              sentimentData.neutral || 0,
+              sentimentData.negative || 0
+            ],
+            backgroundColor: [
+              'rgba(40, 167, 69, 0.7)',  // Success (Positive)
+              'rgba(108, 117, 125, 0.7)', // Secondary (Neutral)
+              'rgba(220, 53, 69, 0.7)'   // Danger (Negative)
+            ],
+            borderColor: [
+              'rgba(40, 167, 69, 1)',
+              'rgba(108, 117, 125, 1)',
+              'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Your Sentiment Analysis Results Distribution'
+            }
+          }
+        }
+      });
+    }
+  });
 </script>
 {% endblock %}

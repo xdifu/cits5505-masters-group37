@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}Share Analysis - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h1 class="mb-4">Share Analysis Result</h1>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                Analysis Details
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">
+                    Sentiment:
+                    {% if result.sentiment == 'Positive' %}
+                        <span class="badge bg-success">{{ result.sentiment }}</span>
+                    {% elif result.sentiment == 'Negative' %}
+                        <span class="badge bg-danger">{{ result.sentiment }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                    {% endif %}
+                </h5>
+                <p class="card-text"><strong>Original Text:</strong></p>
+                <p class="card-text">{{ result.original_text }}</p>
+                <p class="card-text"><small class="text-muted">Analyzed on: {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</small></p>
+            </div>
+        </div>
+
+        <h2 class="h4 mb-3">Share with another user:</h2>
+        <form method="POST" action="{{ url_for('main.share_analysis', result_id=result.id) }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ wtf.form_field(form.share_with_username, class='form-control', placeholder='Enter username') }}
+            </div>
+            <div class="mb-3">
+                {{ wtf.form_field(form.submit, class='btn btn-primary') }}
+            </div>
+        </form>
+        <p><a href="{{ url_for('main.results') }}" class="btn btn-secondary">Back to My Results</a></p>
+    </div>
+</div>
+{% endblock %}
