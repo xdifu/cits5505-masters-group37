@@ -41,11 +41,11 @@
               <!-- Link to main results page -->
               <a class="nav-link" href="{{ url_for('main.results') }}">My Results</a>
             </li>
-            {% endif %}
             <li class="nav-item">
-              <!-- Link to main shared results page -->
-              <a class="nav-link" href="{{ url_for('main.shared_results') }}">Shared Results</a>
+              <!-- New link for items shared with the user -->
+              <a class="nav-link" href="{{ url_for('main.shared_with_me') }}">Shared With Me</a>
             </li>
+            {% endif %}
           </ul>
           <ul class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}

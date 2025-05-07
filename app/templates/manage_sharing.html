@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% import "bootstrap_wtf.html" as wtf %}
+
+{% block title %}Manage Sharing - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+    <h1>Manage Sharing for:</h1>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">
+                Sentiment:
+                {% if result.sentiment == 'Positive' %}
+                    <span class="badge bg-success">{{ result.sentiment }}</span>
+                {% elif result.sentiment == 'Negative' %}
+                    <span class="badge bg-danger">{{ result.sentiment }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                {% endif %}
+            </h5>
+            <p><strong>Original Text:</strong> {{ result.original_text }}</p>
+            <p><strong>Analyzed on:</strong> {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+    </div>
+
+    <hr>
+
+    <h2>Share this result with other users:</h2>
+    <form method="POST" action="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="mb-3">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.users_to_share_with.label(class="form-label") }}<br>
+            {% for subfield in form.users_to_share_with %}
+                <div class="form-check">
+                    {{ subfield(class="form-check-input") }}
+                    {{ subfield.label(class="form-check-label") }}
+                </div>
+            {% endfor %}
+            {% if form.users_to_share_with.errors %}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.users_to_share_with.errors %}
+                        <span>{{ error }}</span><br>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+
+    <a href="{{ url_for('main.results') }}" class="btn btn-secondary">Back to My Results</a>
+{% endblock %}

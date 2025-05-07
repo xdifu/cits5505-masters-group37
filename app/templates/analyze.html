@@ -47,4 +47,18 @@
 
     </div>
 </div>
+
+<!-- Link to view user's own results -->
+<div class="row mt-4">
+    <div class="col-md-8 offset-md-2 text-center">
+        <p><a href="{{ url_for('main.results') }}" class="btn btn-info">View My Analysis Results</a></p>
+    </div>
+</div>
+
+<!-- Link to view results shared with the user -->
+<div class="row mt-2">
+    <div class="col-md-8 offset-md-2 text-center">
+        <p><a href="{{ url_for('main.shared_with_me') }}" class="btn btn-outline-secondary">View Results Shared With Me</a></p>
+    </div>
+</div>
 {% endblock %}
