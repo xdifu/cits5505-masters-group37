@@ -56,3 +56,25 @@ class User(UserMixin, db.Model):
         """String representation of the User object."""
         return f'<User {self.username}>'
 
+class Result(db.Model):
+    """
+    Represents a single sentiment analysis result stored in the database.
+    Includes the original text, the sentiment, timestamp, and sharing status.
+    Linked to a User via a foreign key.
+    """
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    original_text: so.Mapped[str] = so.mapped_column(sa.Text) # Store the full text submitted
+    sentiment: so.Mapped[str] = so.mapped_column(sa.String(10)) # 'Positive', 'Neutral', 'Negative'
+    timestamp: so.Mapped[datetime] = so.mapped_column(
+        index=True, default=lambda: datetime.now(timezone.utc) # Default to current UTC time
+    )
+    shared: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False, index=True) # Flag for sharing status
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey(User.id), index=True) # Foreign key linking to User
+
+    # Define the many-to-one relationship from Result to User
+    # 'back_populates' links this relationship to the 'results' relationship in User
+    author: so.Mapped[User] = so.relationship(back_populates='results')
+
+    def __repr__(self):
+        """String representation of the Result object."""
+        return f'<Result {self.id} Sentiment: {self.sentiment}>'
