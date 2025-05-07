@@ -12,7 +12,7 @@
     --box-shadow-sm: 0 .125rem .25rem rgba(0, 0, 0, .075);
     --box-shadow-md: 0 .5rem 1rem rgba(0, 0, 0, .15);
     --heading-font-weight: 700;
-    --background-color: #f4f4f7;
+    --background-color: #f0f8ff;
 }
 
 /* Apply a slightly more modern font stack */
@@ -31,7 +31,15 @@ h2 {
 /* --- Navigation Bar --- */
 .navbar {
     box-shadow: var(--box-shadow-sm);
-    background-color: #ffffff !important; /* Override Bootstrap bg-light for a cleaner white */
+    background-color: #d9e6f2 !important;
+}
+
+.navbar .nav-link {
+    color: var(--dark-text);
+}
+
+.navbar .nav-link:hover {
+    color: var(--primary-color);
 }
 
 .navbar-brand {
