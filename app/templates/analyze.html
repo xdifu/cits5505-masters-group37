@@ -7,7 +7,7 @@
 <div class="row justify-content-center">
     <div class="col-md-10 col-lg-8">
         <div class="card shadow-lg rounded-4 p-4">
-            <h1 class="mb-3 text-center"><i class="bi bi-emoji-smile"></i> Analyze News Sentiment</h1>
+            <h1 class="mb-3 text-center">Analyze News Sentiment</h1>
             <p class="text-center text-muted">Paste the news text into the box below and click <strong>Analyze Sentiment</strong>.</p>
 
             <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
@@ -20,7 +20,7 @@
 
                 <div class="d-flex justify-content-between">
                     <button type="button" id="clear-btn" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle"></i> Clear Text
+                        Clear Text
                     </button>
                     {{ form.submit(class='btn btn-primary') }}
                 </div>
@@ -84,15 +84,9 @@ document.addEventListener("DOMContentLoaded", function() {
             loadingIndicator.classList.add("d-none");
             resultDisplay.classList.remove("d-none");
 
-            let emoji = "";
-            if (data.sentiment === "Positive") emoji = "😊";
-            else if (data.sentiment === "Negative") emoji = "😞";
-            else if (data.sentiment === "Neutral") emoji = "😐";
-            else emoji = "🤔";
-
             resultDisplay.innerHTML = `
                 <div class="alert alert-success" role="alert">
-                    <h5 class="alert-heading">Analysis Result: ${emoji}</h5>
+                    <h5 class="alert-heading">Analysis Result</h5>
                     <p><strong>${data.sentiment}</strong></p>
                     <hr>
                     <small>This result has been saved to your history.</small>
