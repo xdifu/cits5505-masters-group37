@@ -1,59 +1,75 @@
-# Handles interaction with the OpenAI API for sentiment analysis.
+# Handles interaction with the OpenAI API for sentiment analysis using Pydantic and Structured Outputs.
 
 import os
-import re  # Import regex for pattern matching
-from openai import OpenAI, OpenAIError # Use OpenAIError for specific exceptions
+from enum import Enum
+from pydantic import BaseModel, ValidationError
+from openai import OpenAI, OpenAIError # Keep OpenAIError for API-level issues
 
-def analyze_sentiment(text):
+# Define the allowed sentiment values using an Enum for strict validation
+class SentimentEnum(str, Enum):
+    POSITIVE = "Positive"
+    NEUTRAL = "Neutral"
+    NEGATIVE = "Negative"
+
+# Define the Pydantic model that represents the expected structured output
+class SentimentOutput(BaseModel):
+    sentiment: SentimentEnum # Use the Enum type for the sentiment field
+
+def analyze_sentiment(text: str) -> str:
     """
-    Analyzes the sentiment of the provided text using the OpenAI API.
+    Analyzes the sentiment of the provided text using the OpenAI API's
+    structured output parsing feature with Pydantic validation.
 
     Args:
         text (str): The news text to analyze.
 
     Returns:
-        str: The sentiment classification ('Positive', 'Neutral', 'Negative') or an error message.
+        str: The sentiment classification ('Positive', 'Neutral', 'Negative')
+             or an error message if analysis or validation fails.
     """
     try:
         # Initialize the OpenAI client using the API key from environment variables
+        # Ensure the API key is set in your .env file
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-        # Make the API call to the chat completions endpoint with a more explicit prompt
-        completion = client.chat.completions.create(
-            model="gpt-4.1-nano", # Specify the desired model
+        # Use the beta parse method with the Pydantic model for response_format
+        # Note: Using gpt-4.1-nano as requested, but be aware of potential access
+        # restrictions or incompatibility with the parse() method. gpt-4o is generally recommended.
+        response_model = client.beta.chat.completions.parse(
+            model="gpt-4.1-nano",
             messages=[
-                {"role": "system", "content": "You are a sentiment analyzer that classifies text as strictly Positive, Neutral, or Negative. Respond with ONLY ONE WORD: 'Positive', 'Neutral', or 'Negative'."},
-                {"role": "user", "content": f"Classify the sentiment of this text: {text}"}
+                # System message guides the model on the task and expected output format implicitly via Pydantic
+                {"role": "system", "content": f"You are a sentiment analyzer. Classify the sentiment of the user's text strictly as one of the allowed values: {', '.join([e.value for e in SentimentEnum])}."},
+                {"role": "user", "content": f"Analyze this text: {text}"}
             ],
-            max_tokens=25, # Slight increase to allow for explanations but not too verbose
-            temperature=0.1 # Lower temperature for more deterministic output
+            response_format=SentimentOutput # Pass the Pydantic class directly
         )
 
-        # Extract the content of the response
-        response_text = completion.choices[0].message.content.strip()
-        
-        # Use regex to extract just the sentiment from a potentially longer response
-        # Look for positive, neutral, or negative in the response (case insensitive)
-        sentiment_match = re.search(r'positive|neutral|negative', response_text, re.IGNORECASE)
-        
-        if sentiment_match:
-            # If found, capitalize the first letter for consistency
-            sentiment = sentiment_match.group(0).capitalize()
-            return sentiment
-        else:
-            # If no match is found, check if the whole response is one of our categories
-            if response_text.lower() in ['positive', 'neutral', 'negative']:
-                return response_text.capitalize()
-            else:
-                # Log unexpected response format
-                print(f"Unexpected API response: {response_text}")
-                return "Error: Could not determine sentiment from API response."
+        # If parsing is successful, access the parsed Pydantic model via the correct path
+        # and return the validated sentiment value from the Enum
+        # The parsed object is nested within the response structure.
+        parsed_output = response_model.choices[0].message.parsed
+        return parsed_output.sentiment.value
+
+    except ValidationError as ve:
+        # Handle cases where the API response doesn't match the Pydantic model
+        print(f"Pydantic Validation Error: The API response did not match the expected format. Details: {ve}")
+        # You might want to inspect 've.json()' for more details on the failure
+        return "Error: Invalid sentiment format received from API."
 
     except OpenAIError as e:
-        # Handle API-specific errors (e.g., authentication, rate limits)
+        # Handle API-specific errors (e.g., authentication, rate limits, model not found)
         print(f"OpenAI API error: {e}")
-        return f"Error: OpenAI API request failed ({e})"
+        # Check for specific error types if needed, e.g., AuthenticationError, RateLimitError
+        # Also check for 403 or model not found errors specifically if using restricted models/features
+        status_code = getattr(e, 'status_code', 'N/A')
+        print(f"API Error Status Code: {status_code}")
+        return f"Error: OpenAI API request failed (Status: {status_code})"
+
     except Exception as e:
-        # Catch any other potential exceptions during the process
-        print(f"An unexpected error occurred: {e}")
+        # Catch any other potential exceptions during the process, including potential attribute errors
+        # if the response structure is unexpected even before validation.
+        print(f"An unexpected error occurred during sentiment analysis: {e}")
+        # Log the type of exception for better debugging
+        print(f"Exception Type: {type(e).__name__}")
         return "Error: An unexpected error occurred."
