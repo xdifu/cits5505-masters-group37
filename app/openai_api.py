@@ -1,9 +1,11 @@
-# Handles interaction with the OpenAI API for sentiment analysis using Pydantic and Structured Outputs.
+# Handles interaction with g4f for sentiment analysis using Pydantic and Structured Outputs.
 
-import os
+import os # os is kept if other parts of the app might use env vars, but not for g4f client init
 from enum import Enum
 from pydantic import BaseModel, ValidationError
-from openai import OpenAI, OpenAIError # Keep OpenAIError for API-level issues
+# Remove OpenAI, OpenAIError imports, add g4f Client
+from g4f.client import Client
+# import json # Not strictly needed if Pydantic's model_validate_json handles the string directly
 
 # Define the allowed sentiment values using an Enum for strict validation
 class SentimentEnum(str, Enum):
@@ -17,8 +19,8 @@ class SentimentOutput(BaseModel):
 
 def analyze_sentiment(text: str) -> str:
     """
-    Analyzes the sentiment of the provided text using the OpenAI API's
-    structured output parsing feature with Pydantic validation.
+    Analyzes the sentiment of the provided text using the g4f client
+    and Pydantic validation for structured output.
 
     Args:
         text (str): The news text to analyze.
@@ -28,48 +30,51 @@ def analyze_sentiment(text: str) -> str:
              or an error message if analysis or validation fails.
     """
     try:
-        # Initialize the OpenAI client using the API key from environment variables
-        # Ensure the API key is set in your .env file
-        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        # Initialize the g4f client
+        # No API key is typically passed directly to the g4f Client constructor
+        g4f_client = Client()
 
-        # Use the beta parse method with the Pydantic model for response_format
-        # Note: Using gpt-4.1-nano as requested, but be aware of potential access
-        # restrictions or incompatibility with the parse() method. gpt-4o is generally recommended.
-        response_model = client.beta.chat.completions.parse(
-            model="gpt-4.1-nano",
+        allowed_sentiments = ', '.join([e.value for e in SentimentEnum])
+        # System message guides the model to output JSON matching SentimentOutput
+        system_content = (
+            f"You are a sentiment analyzer. Classify the sentiment of the user's text. "
+            f"Respond ONLY with a JSON object formatted as {{\'sentiment\': \'<sentiment_value>\'}}, "
+            f"where <sentiment_value> is one of: {allowed_sentiments}."
+        )
+        
+        # Use a model supported by g4f. "gpt-4o-mini" is an example from g4f docs.
+        # You may need to experiment with different models available through g4f.
+        response = g4f_client.chat.completions.create(
+            model="gpt-4o-mini", # Or another model supported by g4f
             messages=[
-                # System message guides the model on the task and expected output format implicitly via Pydantic
-                {"role": "system", "content": f"You are a sentiment analyzer. Classify the sentiment of the user's text strictly as one of the allowed values: {', '.join([e.value for e in SentimentEnum])}."},
+                {"role": "system", "content": system_content},
                 {"role": "user", "content": f"Analyze this text: {text}"}
             ],
-            response_format=SentimentOutput # Pass the Pydantic class directly
+            # g4f's create method does not have a 'response_format' for Pydantic.
+            # We expect a string response that we will then parse.
         )
 
-        # If parsing is successful, access the parsed Pydantic model via the correct path
-        # and return the validated sentiment value from the Enum
-        # The parsed object is nested within the response structure.
-        parsed_output = response_model.choices[0].message.parsed
+        # Extract the raw string content from the g4f response
+        if response.choices and response.choices[0].message and response.choices[0].message.content:
+            raw_response_content = response.choices[0].message.content.strip()
+        else:
+            print("Error: Received an empty or invalid response structure from g4f.")
+            return "Error: Invalid response structure from g4f."
+
+        # Attempt to parse the string response using the Pydantic model
+        parsed_output = SentimentOutput.model_validate_json(raw_response_content)
         return parsed_output.sentiment.value
 
     except ValidationError as ve:
         # Handle cases where the API response doesn't match the Pydantic model
-        print(f"Pydantic Validation Error: The API response did not match the expected format. Details: {ve}")
-        # You might want to inspect 've.json()' for more details on the failure
+        print(f"Pydantic Validation Error: The g4f response did not match the expected JSON format. Details: {ve}")
+        print(f"Raw response from g4f: {raw_response_content if 'raw_response_content' in locals() else 'N/A'}")
         return "Error: Invalid sentiment format received from API."
 
-    except OpenAIError as e:
-        # Handle API-specific errors (e.g., authentication, rate limits, model not found)
-        print(f"OpenAI API error: {e}")
-        # Check for specific error types if needed, e.g., AuthenticationError, RateLimitError
-        # Also check for 403 or model not found errors specifically if using restricted models/features
-        status_code = getattr(e, 'status_code', 'N/A')
-        print(f"API Error Status Code: {status_code}")
-        return f"Error: OpenAI API request failed (Status: {status_code})"
-
+    # Catch g4f specific errors if known, or general exceptions.
+    # OpenAIError is no longer relevant here.
     except Exception as e:
-        # Catch any other potential exceptions during the process, including potential attribute errors
-        # if the response structure is unexpected even before validation.
-        print(f"An unexpected error occurred during sentiment analysis: {e}")
-        # Log the type of exception for better debugging
+        # Catch any other potential exceptions during the process
+        print(f"An unexpected error occurred during sentiment analysis with g4f: {e}")
         print(f"Exception Type: {type(e).__name__}")
         return "Error: An unexpected error occurred."
