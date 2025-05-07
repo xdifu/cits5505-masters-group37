@@ -1,4 +1,5 @@
 # Defines the database models for the application using SQLAlchemy.
+# Includes models for Users and their sentiment analysis Results.
 
 from datetime import datetime, timezone # Import datetime for timestamping
 from typing import Optional # For type hinting optional relationships
@@ -55,6 +56,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         """String representation of the User object."""
         return f'<User {self.username}>'
+
 
 class Result(db.Model):
     """
