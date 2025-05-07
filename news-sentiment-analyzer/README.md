@@ -89,17 +89,15 @@ news-sentiment-analyzer/
 *   An OpenAI API Key
 
 ## Setup and Installation
-1.  **Clone the Repository and Checkout Branch:**
+1.  **Clone the Repository:**
    ```bash
    # Clone the repository
    git clone https://github.com/xdifu/cits5505-masters-group37.git
    cd cits5505-masters-group37
 
-   # Check out the specific feature branch
-   git checkout feature/xdifu/news-sentiment-analyzer
-
-   # Navigate into the project directory
-   cd news-sentiment-analyzer
+   # The main branch should be checked out by default.
+   # If you need to switch to it explicitly:
+   # git checkout main
    ```
 
 2.  **Create and Activate a Virtual Environment:**
@@ -194,9 +192,9 @@ news-sentiment-analyzer/
 | UWA ID      | Name             | GitHub Username |
 | :---------- | :--------------- | :-------------- |
 | `24473616`  | `Difu Xiao`      | `xdifu`         |
-| `2XXXXXXX`  | `[Member Name 2]`| `[GitHub User 2]` |
-| `2XXXXXXX`  | `[Member Name 3]`| `[GitHub User 3]` |
-| `2XXXXXXX`  | `[Member Name 4]`| `[GitHub User 4]` |
+| `24212167`  | `Nandana Shine`  | ` Nandana098 `  |
+| `24134929`  | `Tobin Yao    `  | ` tobinyao `    |
+| `24117922`  | `Zhengxu Jin  `  | ` joshjin11 `   |
 
 ## License
 
