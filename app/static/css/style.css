@@ -154,3 +154,9 @@ footer {
         font-size: 1rem; /* Adjust lead paragraph size */
     }
 }
+/* --- Navbar User Info Alignment --- */
+.navbar .navbar-nav.ms-auto {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
