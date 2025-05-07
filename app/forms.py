@@ -55,7 +55,7 @@ class RegistrationForm(FlaskForm):
             # Depending on strictness, you might raise an error or just log a warning
             print("Warning: DB connection or User model not available for username validation.")
             # Optionally, raise an exception if validation cannot proceed:
-            # raise ValidationError("Cannot validate username at this time. Please try again later.")
+            raise ValidationError("Cannot validate username at this time. Please try again later.")
 
     # Add validation for email uniqueness
     def validate_email(self, email):
@@ -74,7 +74,7 @@ class RegistrationForm(FlaskForm):
         else:
             print("Warning: DB connection or User model not available for email validation.")
             # Optionally, raise an exception if validation cannot proceed:
-            # raise ValidationError("Cannot validate email at this time. Please try again later.")
+            raise ValidationError("Cannot validate email at this time. Please try again later.")
 
 
 class AnalysisForm(FlaskForm):
