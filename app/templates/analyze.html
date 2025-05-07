@@ -1,5 +1,7 @@
+<!-- Page for submitting text for sentiment analysis. -->
+<!-- Extends the base layout and includes the analysis form. -->
 {% extends "base.html" %}
-{% import 'bootstrap_wtf.html' as wtf %}
+{% import 'bootstrap_wtf.html' as wtf %} <!-- Assuming you have bootstrap_wtf.html or similar -->
 
 {% block title %}Analyze Text - Sentiment Analyzer{% endblock %}
 
@@ -9,15 +11,19 @@
         <h1 class="mb-4">Analyze News Sentiment</h1>
         <p>Paste the news text into the box below and click "Analyze Sentiment".</p>
 
+        <!-- Add id for AJAX targeting -->
+        <!-- Assuming the route passes the 'form' object -->
         <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
-            {{ form.hidden_tag() }}
-            {{ wtf.form_field(form.news_text) }}
-            <div class="mb-3">
-                {{ form.submit(class='btn btn-primary') }}
-            </div>
+             {{ form.hidden_tag() }} <!-- Include CSRF token -->
+             {{ wtf.form_field(form.news_text) }}
+             {# Render the submit button directly, applying Bootstrap classes #}
+             {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
+             <div class="mb-3">
+                 {{ form.submit(class='btn btn-primary') }}
+             </div>
         </form>
 
-        <!-- Loading indicator -->
+        <!-- Add loading indicator element (hidden by default) -->
         <div id="loading-indicator" style="display: none;" class="text-center mt-3">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
@@ -25,12 +31,12 @@
             <p>Analyzing...</p>
         </div>
 
-        <!-- AJAX result area -->
+        <!-- Add element for displaying AJAX results -->
         <div id="ajax-result-display" class="mt-4">
             <!-- AJAX results will be injected here -->
         </div>
 
-        <!-- Non-AJAX fallback result -->
+        <!-- Keep original result display for non-AJAX fallback or initial load -->
         {% if sentiment_result and not request.is_xhr %}
         <div class="result mt-4 p-3 border rounded bg-light">
             <h2>Analysis Result:</h2>
@@ -38,6 +44,7 @@
             <p><small>This result has been saved to your history.</small></p>
         </div>
         {% endif %}
+
     </div>
 </div>
 {% endblock %}
