@@ -39,7 +39,10 @@ h2 {
 }
 
 .navbar .nav-link:hover {
-    color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: white !important;
+    border-radius: var(--border-radius);
+    padding: 0.25rem 0.75rem;
 }
 
 .navbar-brand {
