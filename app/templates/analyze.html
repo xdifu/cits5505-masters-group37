@@ -1,50 +1,115 @@
-<!-- Page for submitting text for sentiment analysis. -->
-<!-- Extends the base layout and includes the analysis form. -->
 {% extends "base.html" %}
-{% import 'bootstrap_wtf.html' as wtf %} <!-- Assuming you have bootstrap_wtf.html or similar -->
+{% import 'bootstrap_wtf.html' as wtf %}
 
 {% block title %}Analyze Text - Sentiment Analyzer{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <h1 class="mb-4">Analyze News Sentiment</h1>
-        <p>Paste the news text into the box below and click "Analyze Sentiment".</p>
+    <div class="col-md-10 col-lg-8">
+        <div class="card shadow-lg rounded-4 p-4">
+            <h1 class="mb-3 text-center"><i class="bi bi-emoji-smile"></i> Analyze News Sentiment</h1>
+            <p class="text-center text-muted">Paste the news text into the box below and click <strong>Analyze Sentiment</strong>.</p>
 
-        <!-- Add id for AJAX targeting -->
-        <!-- Assuming the route passes the 'form' object -->
-        <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
-             {{ form.hidden_tag() }} <!-- Include CSRF token -->
-             {{ wtf.form_field(form.news_text) }}
-             {# Render the submit button directly, applying Bootstrap classes #}
-             {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
-             <div class="mb-3">
-                 {{ form.submit(class='btn btn-primary') }}
-             </div>
-        </form>
+            <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
+                {{ form.hidden_tag() }}
 
-        <!-- Add loading indicator element (hidden by default) -->
-        <div id="loading-indicator" style="display: none;" class="text-center mt-3">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <div class="mb-3">
+                    {{ wtf.form_field(form.news_text, class='form-control', rows=6) }}
+                    <div class="form-text text-end" id="char-count">0 / 10000 characters</div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" id="clear-btn" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear Text
+                    </button>
+                    {{ form.submit(class='btn btn-primary') }}
+                </div>
+            </form>
+
+            <div id="loading-indicator" class="text-center mt-4 d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Analyzing...</p>
             </div>
-            <p>Analyzing...</p>
-        </div>
 
-        <!-- Add element for displaying AJAX results -->
-        <div id="ajax-result-display" class="mt-4">
-            <!-- AJAX results will be injected here -->
-        </div>
+            <div id="ajax-result-display" class="mt-4 d-none">
+                <!-- AJAX results will be injected here -->
+            </div>
 
-        <!-- Keep original result display for non-AJAX fallback or initial load -->
-        {% if sentiment_result and not request.is_xhr %}
-        <div class="result mt-4 p-3 border rounded bg-light">
-            <h2>Analysis Result:</h2>
-            <p><strong>{{ sentiment_result }}</strong></p>
-            <p><small>This result has been saved to your history.</small></p>
+            {% if sentiment_result and not request.is_xhr %}
+            <div class="alert alert-info mt-4" role="alert">
+                <h5 class="alert-heading">Analysis Result:</h5>
+                <p><strong>{{ sentiment_result }}</strong></p>
+                <hr>
+                <small>This result has been saved to your history.</small>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const textarea = document.querySelector("#{{ form.news_text.id }}");
+    const charCount = document.getElementById("char-count");
+    const clearBtn = document.getElementById("clear-btn");
+    const loadingIndicator = document.getElementById("loading-indicator");
+    const resultDisplay = document.getElementById("ajax-result-display");
+
+    // Update character count
+    textarea.addEventListener("input", function() {
+        charCount.textContent = `${textarea.value.length} / 10000 characters`;
+    });
+
+    // Clear text area
+    clearBtn.addEventListener("click", function() {
+        textarea.value = "";
+        charCount.textContent = "0 / 10000 characters";
+    });
+
+    // Optional: Handle AJAX submission (requires backend support)
+    document.getElementById("analysis-form").addEventListener("submit", function(event) {
+        event.preventDefault(); // Stop normal submission
+        loadingIndicator.classList.remove("d-none");
+        resultDisplay.classList.add("d-none");
+
+        // Example AJAX (you need Flask route to return JSON)
+        fetch(this.action, {
+            method: "POST",
+            body: new FormData(this)
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingIndicator.classList.add("d-none");
+            resultDisplay.classList.remove("d-none");
+
+            let emoji = "";
+            if (data.sentiment === "Positive") emoji = "😊";
+            else if (data.sentiment === "Negative") emoji = "😞";
+            else if (data.sentiment === "Neutral") emoji = "😐";
+            else emoji = "🤔";
+
+            resultDisplay.innerHTML = `
+                <div class="alert alert-success" role="alert">
+                    <h5 class="alert-heading">Analysis Result: ${emoji}</h5>
+                    <p><strong>${data.sentiment}</strong></p>
+                    <hr>
+                    <small>This result has been saved to your history.</small>
+                </div>
+            `;
+        })
+        .catch(error => {
+            loadingIndicator.classList.add("d-none");
+            resultDisplay.classList.remove("d-none");
+            resultDisplay.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <h5 class="alert-heading">Error</h5>
+                    <p>Sorry, something went wrong: ${error}</p>
+                </div>
+            `;
+        });
+    });
+});
+</script>
 {% endblock %}
