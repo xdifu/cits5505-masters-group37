@@ -15,7 +15,7 @@
     --background-color: #f6f9ff; /* Lighter, more subtle blue background */
     
     /* Advanced tech-inspired variables */
-    --gradient-primary: linear-gradient(45deg, #0066ff, #00c6ff); // Darker to Lighter
+    --gradient-primary: linear-gradient(45deg, #0066ff, #00c6ff); /* Darker to Lighter */
     --gradient-positive: linear-gradient(45deg, #28a745, #20c997);
     --gradient-negative: linear-gradient(45deg, #dc3545, #ff4d6d);
     --gradient-neutral: linear-gradient(45deg, #6c757d, #adb5bd);
