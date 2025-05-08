@@ -261,34 +261,32 @@ function initialize3DTiltEffects() {
             }
         });
     } else {
-        // Apply the tilt-card class to appropriate elements
-        const cardElements = document.querySelectorAll('.card, .result, .list-group-item');
-        cardElements.forEach(card => card.classList.add('tilt-card'));
-        
-        // Implement a simple hover effect for cards as fallback
+        // Fallback: Apply a simple JS-driven tilt on hover for .tilt-card elements
+        // that are narrower than 600px.
         document.querySelectorAll('.tilt-card').forEach(card => {
-            card.addEventListener('mousemove', function(e) {
-                const cardRect = card.getBoundingClientRect();
-                const cardCenterX = cardRect.left + cardRect.width / 2;
-                const cardCenterY = cardRect.top + cardRect.height / 2;
+            // ADDED: Width check for the fallback mechanism
+            if (card.offsetWidth < 600) {
+                card.addEventListener('mousemove', function(e) {
+                    const cardRect = card.getBoundingClientRect();
+                    const cardCenterX = cardRect.left + cardRect.width / 2;
+                    const cardCenterY = cardRect.top + cardRect.height / 2;
+                    
+                    const mouseX = e.clientX - cardCenterX;
+                    const mouseY = e.clientY - cardCenterY;
+                    
+                    // Calculate the rotation values (limited to -5 to 5 degrees)
+                    const rotateY = mouseX / (cardRect.width / 2) * 5;
+                    const rotateX = -mouseY / (cardRect.height / 2) * 5;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                });
                 
-                // Calculate the position of the mouse relative to the center of the card
-                const mouseX = e.clientX - cardCenterX;
-                const mouseY = e.clientY - cardCenterY;
-                
-                // Calculate the rotation values (limited to -5 to 5 degrees)
-                const rotateY = mouseX / (cardRect.width / 2) * 5;
-                const rotateX = -mouseY / (cardRect.height / 2) * 5;
-                
-                // Apply the rotation
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
-            });
+                card.addEventListener('mouseleave', function() {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+                });
+            }
         });
-        console.log('Simple tilt effect initialized as fallback');
+        console.log('Simple tilt effect initialized as fallback for narrow cards.');
     }
 }
 
