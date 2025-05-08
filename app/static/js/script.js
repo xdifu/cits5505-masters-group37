@@ -242,18 +242,24 @@ function createSimpleParticleEffect(container) {
 
 /**
  * Initializes 3D tilt effects for cards and result containers.
- * Uses vanilla-tilt.js if available, otherwise creates a simple hover effect.
+ * Uses vanilla-tilt.js if available, but only on narrow elements
+ * to avoid excessive rotation on large panels.
  */
 function initialize3DTiltEffects() {
-    // Check if vanilla-tilt is available
     if (typeof VanillaTilt !== 'undefined') {
-        VanillaTilt.init(document.querySelectorAll('.tilt-card'), {
-            max: 10,
-            speed: 400,
-            glare: true,
-            "max-glare": 0.3,
+        // Find all tilt-card elements
+        document.querySelectorAll('.tilt-card').forEach(el => {
+            // Only initialize on elements narrower than 600px
+            if (el.offsetWidth < 600) {
+                VanillaTilt.init(el, {
+                    max: 5,           // smaller max tilt angle
+                    speed: 300,
+                    glare: true,
+                    'max-glare': 0.2,
+                    scale: 1.02
+                });
+            }
         });
-        console.log('VanillaTilt initialized');
     } else {
         // Apply the tilt-card class to appropriate elements
         const cardElements = document.querySelectorAll('.card, .result, .list-group-item');
@@ -390,20 +396,20 @@ function renderSentimentChart() {
                                 bottom: 30
                             }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value} (${percentage}%)`;
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
         } catch (error) {
             console.error("Error rendering chart:", error);
             // Display a user-friendly message
