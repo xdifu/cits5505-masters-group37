@@ -15,12 +15,16 @@
     --background-color: #f6f9ff; /* Lighter, more subtle blue background */
     
     /* Advanced tech-inspired variables */
-    --gradient-primary: linear-gradient(45deg, #0066ff, #00c6ff);
+    --gradient-primary: linear-gradient(45deg, #0066ff, #00c6ff); // Darker to Lighter
     --gradient-positive: linear-gradient(45deg, #28a745, #20c997);
     --gradient-negative: linear-gradient(45deg, #dc3545, #ff4d6d);
     --gradient-neutral: linear-gradient(45deg, #6c757d, #adb5bd);
     --gradient-cyber: linear-gradient(120deg, #0a0047, #1e54f7);
     --gradient-futuristic: linear-gradient(to right, #12c2e9, #c471ed, #f64f59);
+
+    /* NEW: Gradient for light blue to dark blue text effect, similar to the image */
+    --gradient-text-blue-glow: linear-gradient(135deg, #00c6ff, #0066ff); /* Light sky blue to primary blue */
+    
     --transition-speed: 0.3s;
     --card-border-radius: 1rem;
     --glass-bg: rgba(255, 255, 255, 0.8);
@@ -309,13 +313,16 @@ h1.display-5 {
 .navbar-brand {
     font-weight: 700;
     font-size: 1.4rem;
-    background: var(--gradient-cyber);
+    /* MODIFICATION: Apply the new blue gradient and glow animation */
+    background: var(--gradient-text-blue-glow); /* Use the new gradient */
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent !important;
-    text-shadow: 0px 2px 5px rgba(0, 102, 255, 0.2);
+    /* MODIFICATION: Apply textGlow animation instead of static text-shadow for consistency */
+    animation: textGlow 3s infinite alternate; 
+    /* text-shadow: 0px 2px 5px rgba(0, 102, 255, 0.2); /* Original shadow, replaced by animation */
     position: relative;
-    transition: all var(--transition-speed);
+    transition: all var(--transition-speed); /* Keep existing transitions for other properties */
     letter-spacing: 0.5px;
 }
 
@@ -326,7 +333,8 @@ h1.display-5 {
     left: 0;
     width: 100%;
     height: 2px;
-    background: var(--gradient-cyber);
+    /* MODIFICATION: Use a color from the gradient for the underline, or a solid primary color */
+    background: var(--primary-color); /* Solid primary blue for underline, or use a gradient */
     transform: scaleX(0);
     transform-origin: center;
     transition: transform 0.3s ease;
@@ -334,9 +342,9 @@ h1.display-5 {
 }
 
 .navbar-brand:hover {
-    text-shadow: 0px 2px 8px rgba(0, 102, 255, 0.4);
-    transform: translateY(-1px) scale(1.02);
-    letter-spacing: 1px;
+    /* text-shadow: 0px 2px 8px rgba(0, 102, 255, 0.4); /* Hover shadow handled by textGlow animation */
+    transform: translateY(-1px) scale(1.02); /* Keep existing hover transform */
+    letter-spacing: 1px; /* Keep existing letter spacing on hover */
 }
 
 .navbar-brand:hover::after {
@@ -809,65 +817,223 @@ canvas#sentimentChart {
     margin-bottom: 0.25rem;
 }
 
-/* --- Responsive Adjustments --- */
-@media (max-width: 992px) {
-    .card:hover, .result:hover, .list-group-item:hover {
-        transform: translateY(-5px) scale(1.01);
-    }
+/* --- Results Page Enhancements --- */
+
+.results-list-container {
+    /* Container for report cards, can add specific styling if needed */
 }
 
-@media (max-width: 768px) {
-    .display-5 {
-        font-size: 2.2rem;
-    }
-    .lead {
-        font-size: 1rem;
-    }
-    .btn {
-        padding: 0.5rem 1rem;
-    }
-    .chart-container {
-        height: 300px; /* Adjusted height for medium screens */
-        margin-bottom: 30px; /* Consistent spacing for medium screens */
-    }
+.report-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.22); /* Slightly more visible border */
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--depth-shadow);
+    padding: 1.75rem; /* Increased padding */
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden; /* For pseudo-elements */
 }
 
-@media (max-width: 576px) {
-    .display-5 {
-        font-size: 1.8rem;
-    }
-    h2 {
-        font-size: 1.5rem;
-    }
-    .chart-container {
-        height: 250px; /* Adjusted height for small screens */
-        margin-bottom: 35px; /* Extra spacing on smaller screens to prevent overlap */
-    }
-    .carousel-caption {
-        padding: 10px;
-    }
+.report-card::before { /* Subtle animated gradient border effect */
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    z-index: -1;
+    margin: -2px; /* Adjust to border thickness */
+    border-radius: inherit; /* Inherit border-radius */
+    background: linear-gradient(120deg, rgba(0,102,255,0.3), rgba(0,198,255,0.3), rgba(0,102,255,0.3));
+    background-size: 200% 200%;
+    animation: gradientBorderShift 8s ease infinite;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
-/* --- Loading Animation --- */
-#loading-indicator {
+@keyframes gradientBorderShift {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+
+.report-card:hover::before {
+    opacity: 1;
+}
+
+.report-card:hover {
+    transform: translateY(-10px) scale(1.02); /* Keep existing hover from general .card */
+    box-shadow: var(--depth-shadow-hover);
+}
+
+.report-card-header {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 102, 255, 0.1); /* Lighter separator */
+    padding-bottom: 0.85rem;
 }
 
-.spinner-border {
-    box-shadow: 0 0 15px rgba(13, 110, 253, 0.5);
-    animation: spinnerGlow 1.5s infinite alternate, spinner-border 0.75s linear infinite;
+.report-card-title a {
+    font-size: 1.35rem; /* Slightly larger */
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
-@keyframes spinnerGlow {
-    from {
-        box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
-    }
-    to {
-        box-shadow: 0 0 20px rgba(13, 110, 253, 0.8);
-    }
+.report-card-title a:hover {
+    color: var(--dark-text);
+    text-shadow: 0 0 5px rgba(0,102,255,0.3);
+}
+
+.report-card-timestamp {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    font-style: italic;
+}
+
+.report-card-body {
+    margin-bottom: 1.25rem;
+}
+
+.report-card-sentiment {
+    font-size: 1rem;
+    margin-bottom: 0.75rem; /* Adjusted spacing */
+}
+
+.report-card-sentiment strong {
+    margin-right: 0.5em;
+}
+
+.sentiment-badge { /* General badge styling, specific colors below */
+    padding: 0.4em 0.9em; /* Adjusted padding */
+    font-size: 0.85rem; /* Slightly smaller for better fit */
+    font-weight: 500;
+    border-radius: 50px; /* Pill shape */
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+}
+.sentiment-badge:hover {
+    transform: scale(1.05);
+}
+
+.sentiment-badge.positive { background: var(--gradient-positive); }
+.sentiment-badge.neutral { background: var(--gradient-neutral); }
+.sentiment-badge.negative { background: var(--gradient-negative); }
+
+.report-card-items-count small {
+    color: var(--secondary-color);
+    font-size: 0.85rem;
+}
+
+.report-card-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem; /* Add some space above actions */
+    padding-top: 1rem; /* Add padding if border is desired */
+    border-top: 1px solid rgba(0, 102, 255, 0.08); /* Very subtle top border for actions */
+}
+
+/* Cyber Button Styles (can be reused or adapted from existing .btn styles) */
+.btn-cyber-primary, .btn-cyber-secondary, .btn-cyber-outline {
+    padding: 0.45rem 0.9rem; /* Fine-tuned padding */
+    font-size: 0.8rem; /* Slightly smaller for "sm" feel */
+    font-weight: 600; /* Bolder */
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.75px; /* Increased letter spacing */
+    transition: all 0.25s ease-out;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.btn-cyber-primary:hover, .btn-cyber-secondary:hover, .btn-cyber-outline:hover {
+    transform: translateY(-3px) scale(1.03); /* Consistent hover transform */
+    box-shadow: var(--depth-shadow); /* Use existing depth shadow */
+}
+
+.btn-cyber-primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+.btn-cyber-primary:hover { color: white; } /* Ensure text color remains white */
+
+.btn-cyber-secondary {
+    background: var(--gradient-cyber);
+    color: white;
+}
+.btn-cyber-secondary:hover { color: white; }
+
+.btn-cyber-outline {
+    background-color: transparent;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+.btn-cyber-outline:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color); /* Ensure border remains on hover */
+}
+
+/* Right column summary card */
+.results-summary-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--depth-shadow);
+    padding: 1.75rem;
+    /* sticky-top is applied via inline style in HTML for offset */
+}
+
+.sentiment-distribution-chart-container {
+    height: 280px; /* Adjust height as needed */
+    margin-bottom: 2rem; /* Space below chart */
+}
+
+.summary-counts-title {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.sentiment-stat {
+    padding: 0.75rem 0.5rem;
+    border-radius: 0.5rem; /* Slightly rounded corners for stats */
+    transition: background-color 0.3s ease;
+}
+.sentiment-stat:hover {
+    background-color: rgba(0,102,255,0.05);
+}
+
+.sentiment-stat .stat-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.sentiment-stat.positive .stat-label { color: var(--bs-success); }
+.sentiment-stat.neutral .stat-label { color: var(--bs-secondary); }
+.sentiment-stat.negative .stat-label { color: var(--bs-danger); }
+
+.sentiment-stat .stat-value {
+    font-size: 1.75rem; /* Larger stat values */
+    font-weight: 700;
+    color: var(--dark-text);
+}
+
+.total-analyzed p {
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+}
+.total-analyzed strong {
+    color: var(--dark-text);
+    font-weight: 600;
 }
 
 /* --- Navbar User Info Alignment --- */
@@ -879,76 +1045,22 @@ canvas#sentimentChart {
 
 /* User greeting with glow effect */
 .navbar-text {
-    background: var(--gradient-primary);
+    /* MODIFICATION: Apply the new blue gradient for text color */
+    background: var(--gradient-text-blue-glow); /* Use the new gradient */
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent !important;
+    color: transparent !important; /* Make text transparent to show gradient */
+    /* END OF MODIFICATION for gradient text */
     font-weight: 600;
-    animation: textGlow 3s infinite alternate;
+    animation: textGlow 3s infinite alternate; /* Keep the glow animation */
 }
 
 @keyframes textGlow {
     from {
-        text-shadow: 0 0 5px rgba(0, 102, 255, 0.3);
+        /* Adjusted glow to better match the image's softer, more spread glow */
+        text-shadow: 0 0 8px rgba(0, 120, 255, 0.4), 0 0 12px rgba(0, 120, 255, 0.3);
     }
     to {
-        text-shadow: 0 0 10px rgba(0, 102, 255, 0.8);
+        text-shadow: 0 0 12px rgba(0, 120, 255, 0.7), 0 0 20px rgba(0, 120, 255, 0.5);
     }
-}
-
-/* Typing cursor animation for headings */
-.typing-cursor {
-    display: inline-block;
-    width: 3px;
-    height: 1em;
-    background-color: var(--primary-color);
-    margin-left: 2px;
-    animation: blinkCursor 0.7s infinite;
-}
-
-@keyframes blinkCursor {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-}
-
-/* Share buttons with modern design */
-.share-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.share-btn {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.share-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.6s;
-    z-index: -1;
-}
-
-.share-btn:hover::before {
-    left: 100%;
-}
-
-.share-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--depth-shadow);
 }
