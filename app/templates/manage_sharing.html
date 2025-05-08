@@ -4,47 +4,120 @@
 {% block title %}Manage Sharing - Sentiment Analyzer{% endblock %}
 
 {% block content %}
-    <h1>Manage Sharing for:</h1>
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">
-                Sentiment:
-                {% if result.sentiment == 'Positive' %}
-                    <span class="badge bg-success">{{ result.sentiment }}</span>
-                {% elif result.sentiment == 'Negative' %}
-                    <span class="badge bg-danger">{{ result.sentiment }}</span>
-                {% else %}
-                    <span class="badge bg-secondary">{{ result.sentiment }}</span>
-                {% endif %}
-            </h5>
-            <p><strong>Original Text:</strong> {{ result.original_text }}</p>
-            <p><strong>Analyzed on:</strong> {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <h1 class="mb-4 display-5 cyberpunk-title" data-text="Manage Sharing">Manage Sharing</h1>
+        
+        <div class="card mb-4 tilt-card">
+            <div class="card-header">
+                <h5 class="mb-0">Analysis Result</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">
+                    Sentiment:
+                    {% if result.sentiment == 'Positive' %}
+                        <span class="badge bg-success">{{ result.sentiment }}</span>
+                    {% elif result.sentiment == 'Negative' %}
+                        <span class="badge bg-danger">{{ result.sentiment }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                    {% endif %}
+                </h5>
+                <p class="mt-3"><strong>Original Text:</strong> {{ result.original_text }}</p>
+                <p><strong>Analyzed on:</strong> {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                
+                <!-- Visual sentiment indicator -->
+                <div class="sentiment-indicator mt-3 pt-3 border-top">
+                    {% if result.sentiment == 'Positive' %}
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Sentiment strength:</span>
+                            <div class="progress flex-grow-1" style="height: 10px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% elif result.sentiment == 'Negative' %}
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Sentiment strength:</span>
+                            <div class="progress flex-grow-1" style="height: 10px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">Sentiment strength:</span>
+                            <div class="progress flex-grow-1" style="height: 10px;">
+                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card tilt-card">
+            <div class="card-header">
+                <h5 class="mb-0">Share with Users</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Select the users you want to share this analysis result with. Users with checkmarks will have access to view this result.</p>
+                
+                <form method="POST" action="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="mb-3">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.users_to_share_with.label(class="form-label fw-bold") }}<br>
+                        <div class="user-selection mt-3">
+                            {% for subfield in form.users_to_share_with %}
+                                <div class="form-check user-check-item">
+                                    {{ subfield(class="form-check-input") }}
+                                    {{ subfield.label(class="form-check-label") }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.users_to_share_with.errors %}
+                            <div class="invalid-feedback d-block mt-2">
+                                {% for error in form.users_to_share_with.errors %}
+                                    <span>{{ error }}</span><br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('main.results') }}" class="btn btn-outline-secondary">Back to My Results</a>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+</div>
 
-    <hr>
-
-    <h2>Share this result with other users:</h2>
-    <form method="POST" action="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="mb-3">
-        {{ form.hidden_tag() }}
-        <div class="mb-3">
-            {{ form.users_to_share_with.label(class="form-label") }}<br>
-            {% for subfield in form.users_to_share_with %}
-                <div class="form-check">
-                    {{ subfield(class="form-check-input") }}
-                    {{ subfield.label(class="form-check-label") }}
-                </div>
-            {% endfor %}
-            {% if form.users_to_share_with.errors %}
-                <div class="invalid-feedback d-block">
-                    {% for error in form.users_to_share_with.errors %}
-                        <span>{{ error }}</span><br>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-        {{ form.submit(class="btn btn-primary") }}
-    </form>
-
-    <a href="{{ url_for('main.results') }}" class="btn btn-secondary">Back to My Results</a>
+<style>
+    /* Custom styling for user selection list */
+    .user-selection {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .user-check-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(0, 102, 255, 0.1);
+        transition: all 0.2s;
+    }
+    
+    .user-check-item:last-child {
+        border-bottom: none;
+    }
+    
+    .user-check-item:hover {
+        background-color: rgba(0, 102, 255, 0.05);
+    }
+    
+    .user-check-item .form-check-input:checked + .form-check-label {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+</style>
 {% endblock %}

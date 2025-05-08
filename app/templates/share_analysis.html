@@ -4,13 +4,13 @@
 {% block title %}Share Analysis - Sentiment Analyzer{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 offset-md-2">
-        <h1 class="mb-4">Share Analysis Result</h1>
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <h1 class="mb-4 display-5 cyberpunk-title" data-text="Share Analysis Result">Share Analysis Result</h1>
 
-        <div class="card mb-4">
+        <div class="card mb-4 tilt-card">
             <div class="card-header">
-                Analysis Details
+                <h5 class="mb-0">Analysis Details</h5>
             </div>
             <div class="card-body">
                 <h5 class="card-title">
@@ -23,23 +23,40 @@
                         <span class="badge bg-secondary">{{ result.sentiment }}</span>
                     {% endif %}
                 </h5>
-                <p class="card-text"><strong>Original Text:</strong></p>
+                <p class="card-text mt-3"><strong>Original Text:</strong></p>
                 <p class="card-text">{{ result.original_text }}</p>
                 <p class="card-text"><small class="text-muted">Analyzed on: {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</small></p>
             </div>
         </div>
 
-        <h2 class="h4 mb-3">Share with another user:</h2>
-        <form method="POST" action="{{ url_for('main.share_analysis', result_id=result.id) }}" novalidate>
-            {{ form.hidden_tag() }}
-            <div class="mb-3">
-                {{ wtf.form_field(form.share_with_username, class='form-control', placeholder='Enter username') }}
+        <div class="card tilt-card">
+            <div class="card-body">
+                <h2 class="h4 mb-3">Share with another user:</h2>
+                <form method="POST" action="{{ url_for('main.share_analysis', result_id=result.id) }}" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-4">
+                        {{ wtf.form_field(form.share_with_username, class='form-control', placeholder='Enter username') }}
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        {{ wtf.form_field(form.submit, class='btn btn-primary') }}
+                        <a href="{{ url_for('main.results') }}" class="btn btn-outline-secondary">Back to My Results</a>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                {{ wtf.form_field(form.submit, class='btn btn-primary') }}
+        </div>
+        
+        <!-- Quick info about sharing -->
+        <div class="card mt-4 tilt-card">
+            <div class="card-body">
+                <h5 class="card-title">Sharing Tips</h5>
+                <ul class="mb-0">
+                    <li>The recipient will see your username as the sharer</li>
+                    <li>You can share with multiple users individually</li>
+                    <li>For batch sharing, use the "Manage Sharing" option</li>
+                    <li>You can revoke sharing permissions at any time</li>
+                </ul>
             </div>
-        </form>
-        <p><a href="{{ url_for('main.results') }}" class="btn btn-secondary">Back to My Results</a></p>
+        </div>
     </div>
 </div>
 {% endblock %}

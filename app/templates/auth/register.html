@@ -7,22 +7,45 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <h1 class="mb-4 text-center">Register</h1>
-        <!-- Render the registration form manually to avoid duplicate submit button label -->
-        <form method="POST" action="" novalidate>
-            {{ form.hidden_tag() }} <!-- CSRF token -->
-            {{ wtf.form_field(form.username) }}
-            {{ wtf.form_field(form.email) }}
-            {{ wtf.form_field(form.password) }}
-            {{ wtf.form_field(form.password2) }}
-            <div class="mb-3">
-                {{ form.submit(class='btn btn-primary w-100') }} {# Render submit button directly #}
+    <div class="col-md-6 col-lg-5">
+        <h1 class="mb-4 text-center cyberpunk-title" data-text="Register">Register</h1>
+        
+        <div class="card tilt-card">
+            <div class="card-body p-4">
+                <!-- Render the registration form manually to avoid duplicate submit button label -->
+                <form method="POST" action="" novalidate>
+                    {{ form.hidden_tag() }} <!-- CSRF token -->
+                    
+                    <div class="mb-4">
+                        {{ wtf.form_field(form.username) }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ wtf.form_field(form.email) }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ wtf.form_field(form.password) }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ wtf.form_field(form.password2) }}
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        {{ form.submit(class='btn btn-primary btn-lg') }} {# Render submit button directly #}
+                    </div>
+                </form>
             </div>
-        </form>
-        <p class="mt-3 text-center">
-            Already have an account? <a href="{{ url_for('auth.login') }}">Click to Sign In!</a>
-        </p>
+        </div>
+        
+        <div class="card mt-3 tilt-card">
+            <div class="card-body text-center">
+                <p class="mb-0">
+                    Already have an account? <a href="{{ url_for('auth.login') }}">Click to Sign In!</a>
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
