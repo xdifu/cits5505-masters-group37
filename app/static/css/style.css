@@ -744,6 +744,71 @@ canvas#sentimentChart {
     border: var(--glass-border);
 }
 
+/* --- Custom Entity Overview Gauge --- */
+.custom-gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the gauge elements */
+    padding: 10px 0;
+}
+
+.custom-gauge-scale {
+    display: flex;
+    justify-content: space-between;
+    width: 100%; /* Make scale take full width of its container */
+    max-width: 300px; /* Max width for the scale itself */
+    font-size: 0.75rem;
+    color: var(--dark-text); /* Use existing variable */
+    user-select: none;
+    margin-bottom: 5px;
+}
+
+.custom-gauge-scale .tick {
+    position: relative;
+    cursor: help; /* For hover tooltips */
+}
+
+.custom-gauge-bar {
+    position: relative;
+    height: 12px; /* Slightly thicker bar */
+    width: 100%;  /* Make bar take full width of its container */
+    max-width: 300px; /* Max width for the bar itself */
+    border-radius: 6px;
+    background: linear-gradient(to right, 
+        var(--bs-danger), /* Red for -100% */
+        var(--bs-danger) 25%, /* Transition to orange/yellow */
+        var(--bs-warning) 40%,
+        var(--bs-secondary) 50%, /* Grey for 0% */
+        var(--bs-info) 60%, /* Transition to light green/blue */
+        var(--bs-success) 75%, /* Green for +100% */
+        var(--bs-success)
+    );
+    margin: 4px 0;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.custom-gauge-pointer {
+    position: absolute;
+    top: -4px; /* Position above the bar */
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent; /* Triangle pointer */
+    border-right: 7px solid transparent;
+    border-bottom: 10px solid var(--dark-text); /* Color of the pointer */
+    transform: translateX(-50%); /* Center the pointer on its 'left' position */
+    transition: left 0.5s ease-out; /* Smooth transition for pointer movement */
+}
+
+.custom-gauge-summary {
+    font-size: 0.9rem;
+    margin-top: 8px;
+    color: var(--dark-text);
+}
+
+.custom-gauge-summary p {
+    margin-bottom: 0.25rem;
+}
+
 /* --- Responsive Adjustments --- */
 @media (max-width: 992px) {
     .card:hover, .result:hover, .list-group-item:hover {
