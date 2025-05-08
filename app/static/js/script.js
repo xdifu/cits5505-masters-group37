@@ -424,37 +424,37 @@ function renderSentimentChart() {
  * Sets up AJAX submission for the main analysis form.
  */
 function setupAjaxFormSubmissions() {
-    // Get the analysis form
-    const analysisForm = document.getElementById('analysis-form');
-    // Get result display element
-    const resultDisplay = document.getElementById('ajax-result-display');
-    // Get loading indicator
+    const form = document.getElementById('analysis-form');
     const loadingIndicator = document.getElementById('loading-indicator');
-
-    if (analysisForm && resultDisplay && loadingIndicator) {
-        analysisForm.addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent default form submission
-            console.log('Intercepting analysis form submission for AJAX.');
-
-            loadingIndicator.style.display = 'flex'; // Show loading
-            resultDisplay.innerHTML = ''; // Clear previous results
-
-            const formData = new FormData(analysisForm);
-            const url = analysisForm.action; // Get URL from form's action attribute
-
+    const resultDisplay = document.getElementById('ajax-result-display');
+    
+    if (form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            // Show loading indicator
+            if (loadingIndicator) loadingIndicator.style.display = 'block';
+            if (resultDisplay) resultDisplay.innerHTML = ''; // Clear previous results
+            
             try {
-                const response = await fetch(url, {
+                const formData = new FormData(form);
+                
+                // Submit form data via AJAX
+                const response = await fetch(form.action, {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest' // Identify as AJAX request
+                        'X-Requested-With': 'XMLHttpRequest'  // 添加这个头部以标识 AJAX 请求
                     }
                 });
-
+                
+                // Hide loading indicator
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+                
                 const data = await response.json(); // Expect JSON response from Flask
 
                 // Display result with animation

@@ -14,7 +14,6 @@ import json # For handling JSON data in text fields
 from app import db, login_manager
 
 # Association table for AnalysisReport sharing
-# Renamed from result_shares to analysis_report_shares
 analysis_report_shares = db.Table('analysis_report_shares',
     db.Column('analysis_report_id', sa.Integer, db.ForeignKey('analysis_report.id'), primary_key=True),
     db.Column('recipient_id', sa.Integer, db.ForeignKey('user.id'), primary_key=True)
@@ -40,14 +39,12 @@ class User(UserMixin, db.Model):
 
     # Renamed from results_shared_with_me to analysis_reports_shared_with_me
     # AnalysisReports shared with this user by others
-    analysis_reports_shared_with_me: so.WriteOnlyMapped['AnalysisReport'] = so.relationship(
+    analysis_reports_shared_with_me: so.Mapped[List['AnalysisReport']] = so.relationship(
         secondary=analysis_report_shares,
         primaryjoin=(analysis_report_shares.c.recipient_id == id),
-        # Ensure AnalysisReport.id is used in secondaryjoin if class name changed
-        secondaryjoin="analysis_report_shares.c.analysis_report_id == AnalysisReport.id",
+        secondaryjoin="analysis_report_shares.c.analysis_report_id == AnalysisReport.id", # Use string 'AnalysisReport.id'
         back_populates='shared_with_recipients',
-        lazy='dynamic',
-        passive_deletes=True
+        lazy='select'
     )
 
     def set_password(self, password: str):
@@ -78,17 +75,16 @@ class AnalysisReport(db.Model):
 
     # News items associated with this report
     news_items: so.WriteOnlyMapped['NewsItem'] = so.relationship(
-        back_populates='analysis_report', cascade="all, delete-orphan"
+        back_populates='analysis_report', cascade="all, delete-orphan", lazy='dynamic' # Added lazy='dynamic' for .all() later
     )
 
     # Recipients with whom this report is shared
-    shared_with_recipients: so.WriteOnlyMapped['User'] = so.relationship(
+    shared_with_recipients: so.Mapped[List['User']] = so.relationship(
         secondary=analysis_report_shares,
         primaryjoin=(analysis_report_shares.c.analysis_report_id == id),
-        secondaryjoin=(analysis_report_shares.c.recipient_id == User.id), # Corrected secondaryjoin
+        secondaryjoin="analysis_report_shares.c.recipient_id == User.id", # Use string 'User.id'
         back_populates='analysis_reports_shared_with_me',
-        lazy='dynamic',
-        passive_deletes=True # Added passive_deletes
+        lazy='select'  # Ensures it's loaded as a list
     )
     
     # Add the missing 'shared' column
@@ -112,62 +108,42 @@ class NewsItem(db.Model):
     original_text: so.Mapped[str] = so.mapped_column(sa.Text, nullable=False)
     # Sentiment analysis results from OpenAI
     sentiment_label: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False) # Positive, Neutral, Negative
-    sentiment_score: so.Mapped[float] = so.mapped_column(sa.Float, nullable=False) # -1.0 to +1.0
-    
-    # Store intents as a JSON string list, e.g., '["News Report", "Market Analysis"]'
-    intents_json: so.Mapped[Optional[str]] = so.mapped_column(sa.Text) 
-    
-    # Store keywords with their individual sentiment scores as a JSON string
-    # e.g., '[{"text": "economy", "sentiment_score": 0.5}, {"text": "growth", "sentiment_score": 0.7}]'
-    keywords_with_sentiment_json: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
+    # IMPORTANT: Ensure these fields are actually in your model definition.
+    # If not, you need to add them similar to the above (e.g., using so.mapped_column).
+    sentiment_score: so.Mapped[float] = so.mapped_column(sa.Float, nullable=False, default=0.0)
+    publication_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
+    intents: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True) # Should store JSON string of a list
+    keywords: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True) # Should store JSON string of a list
 
-    # Estimated publication date from analysis
-    publication_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime) 
-    
-    timestamp: so.Mapped[datetime] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
-    
-    # Foreign Key to link back to the AnalysisReport
     analysis_report_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('analysis_report.id'), index=True)
     analysis_report: so.Mapped['AnalysisReport'] = so.relationship(back_populates='news_items')
 
-    def __repr__(self):
-        return f'<NewsItem {self.id} Sentiment: {self.sentiment_label}>'
-
-    # Helper methods to get/set intents and keywords as Python lists
-    def get_intents(self) -> list:
-        if self.intents_json:
-            try:
-                return json.loads(self.intents_json)
-            except json.JSONDecodeError:
+    def to_dict(self) -> dict:
+        """Serializes the NewsItem object to a dictionary."""
+        # Helper to parse JSON safely from text fields
+        def parse_json_list(json_str: Optional[str]) -> list:
+            if not json_str:
                 return []
-        return []
-
-    def set_intents(self, intents_list: list):
-        self.intents_json = json.dumps(intents_list)
-
-    def get_keywords(self) -> list:
-        if self.keywords_with_sentiment_json:
             try:
-                return json.loads(self.keywords_with_sentiment_json)
+                data = json.loads(json_str)
+                return data if isinstance(data, list) else []
             except json.JSONDecodeError:
+                # Optionally log this error
                 return []
-        return []
 
-    def set_keywords(self, keywords_list: list):
-        self.keywords_with_sentiment_json = json.dumps(keywords_list)
-
-    def to_dict(self):
         return {
-            "id": self.id,
-            "original_text": self.original_text,
-            "publication_date": self.publication_date.isoformat() if self.publication_date else None,
-            "sentiment_score": self.sentiment_score,
-            "sentiment_label": self.sentiment_label,
-            "intents": self.get_intents(),
-            "keywords": self.get_keywords(),
-            "report_id": self.analysis_report_id
+            'id': self.id,
+            'original_text': self.original_text,
+            'summary': (self.original_text[:200] + "...") if len(self.original_text) > 200 else self.original_text,
+            'sentiment_label': self.sentiment_label,
+            'sentiment_score': self.sentiment_score,
+            'publication_date': self.publication_date.isoformat() if self.publication_date else None,
+            'intents': parse_json_list(self.intents), # Parse JSON string to list
+            'keywords': parse_json_list(self.keywords), # Parse JSON string to list
+            'analysis_report_id': self.analysis_report_id
+            # 'title' was requested in prompt's feed design but is not a distinct model field.
+            # 'summary' is derived from original_text.
         }
-
 
 @login_manager.user_loader
 def load_user(id):

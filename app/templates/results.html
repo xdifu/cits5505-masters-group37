@@ -11,46 +11,81 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="list-group tilt-card">
-            {% for result in results %}
+            {% for report_item in results %} <!-- Iterate over AnalysisReport objects -->
             <div class="list-group-item list-group-item-action flex-column align-items-start mb-3">
                 <div class="d-flex w-100 justify-content-between">
                     <h5 class="mb-1">
-                        <!-- Display sentiment with appropriate styling -->
-                        Sentiment:
-                        {% if result.sentiment == 'Positive' %}
-                            <span class="badge bg-success">{{ result.sentiment }}</span>
-                        {% elif result.sentiment == 'Negative' %}
-                            <span class="badge bg-danger">{{ result.sentiment }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ result.sentiment }}</span>
-                        {% endif %}
+                        <!-- Display Report Name and link to its dashboard -->
+                        <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}">{{ report_item.name }}</a>
                     </h5>
-                    <small class="text-muted">Analyzed on: {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                    <small class="text-muted">Created on: {{ report_item.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
                 </div>
-                <p class="mb-1"><strong>Original Text:</strong></p>
-                <p class="mb-1">{{ result.original_text }}</p>
+                <p class="mb-1">
+                    <strong>Overall Sentiment Score:</strong> 
+                    {% if report_item.overall_sentiment_score is not none %}
+                        {{ "%.2f" | format(report_item.overall_sentiment_score) }}
+                        {% set score = report_item.overall_sentiment_score %}
+                        {% if score > 0.1 %}
+                            <span class="badge bg-success ms-1">Positive</span>
+                        {% elif score < -0.1 %}
+                            <span class="badge bg-danger ms-1">Negative</span>
+                        {% else %}
+                            <span class="badge bg-secondary ms-1">Neutral</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted ms-1">N/A</span>
+                    {% endif %}
+                </p>
                 
-                <!-- Share buttons - providing two ways to share -->
-                <div class="mt-2 share-buttons">
-                    <a href="{{ url_for('main.share_analysis', result_id=result.id) }}" class="btn btn-sm btn-outline-primary share-btn me-2">Share with User</a>
-                    <a href="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="btn btn-sm btn-outline-success share-btn">Manage Sharing</a>
+                {% if report_item.item_count > 0 %}
+                  <p class="mb-1 mt-2">
+                    <small class="text-muted">
+                      Contains {{ report_item.item_count }} news item{{ 's' if report_item.item_count > 1 else '' }}.
+                    </small>
+                  </p>
+                {% else %}
+                  <p class="mb-1 mt-2">
+                    <small class="text-muted">No individual items in this report.</small>
+                  </p>
+                {% endif %}
+                
+                <div class="mt-3 share-buttons">
+                  <!-- Share button: use main.share_report and report_id -->
+                  <a href="{{ url_for('main.share_report', report_id=report_item.id) }}"
+                     class="btn btn-sm btn-outline-primary share-btn me-2">
+                    Share
+                  </a>
+
+                  <!-- Manage sharing: use main.manage_report_sharing and report_id -->
+                  <a href="{{ url_for('main.manage_report_sharing', report_id=report_item.id) }}"
+                     class="btn btn-sm btn-outline-success share-btn me-2">
+                    Manage Sharing
+                  </a>
+
+                  <!-- View Dashboard stays the same -->
+                  <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}"
+                     class="btn btn-sm btn-info share-btn">
+                    View Dashboard
+                  </a>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
     
-    <!-- Sentiment chart container -->
     <div class="col-lg-4">
-        <div class="chart-container">
-            <h2 class="h4 mb-3">Your Sentiment Distribution</h2>
-            <canvas id="sentimentChart"></canvas>
+        <div class="card tilt-card mb-4"> <!-- Added card class for consistency -->
+            <div class="card-body"> <!-- Added card-body -->
+                <h2 class="h4 mb-3 text-center">Sentiment Distribution</h2> <!-- Centered heading -->
+                <div style="height: 300px;"> <!-- Added fixed height for canvas parent -->
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
         </div>
         
-        <!-- Summary stats - removed mb-4 from chart-container and added proper margin to ensure no overlap -->
-        <div class="card tilt-card mt-4">
+        <div class="card tilt-card">
             <div class="card-body">
-                <h2 class="h4 mb-3 chart-heading no-animation">Sentiment Summary</h2>
+                <h2 class="h4 mb-3 chart-heading no-animation text-center">Summary</h2> <!-- Centered heading -->
                 <div class="row text-center">
                     <div class="col-4">
                         <div class="sentiment-stat">
@@ -72,7 +107,7 @@
                     </div>
                 </div>
                 <div class="text-center mt-3">
-                    <p>Total analyses: <strong>{{ (sentiment_counts.positive or 0) + (sentiment_counts.neutral or 0) + (sentiment_counts.negative or 0) }}</strong></p>
+                    <p>Total analyzed items: <strong>{{ (sentiment_counts.positive or 0) + (sentiment_counts.neutral or 0) + (sentiment_counts.negative or 0) }}</strong></p>
                 </div>
             </div>
         </div>
@@ -90,32 +125,15 @@
 {% endblock %}
 
 {% block scripts %}
-{{ super() }} <!-- Include scripts from the base template -->
-
-<!-- Embed sentiment data for the chart as JSON -->
-<script id="sentimentDataJson" type="application/json">
-  {{ sentiment_counts|tojson|safe if sentiment_counts else '{}' }}
-</script>
-
-<!-- Script to parse the sentiment data and make it available for chart initialization -->
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  let sentimentData = {}; // Initialize empty object for safety
-  try {
-    // Find the data script tag by ID
-    const sentimentDataElement = document.getElementById('sentimentDataJson');
-    if (sentimentDataElement) {
-      // Parse the JSON content
-      sentimentData = JSON.parse(sentimentDataElement.textContent);
-    }
-  } catch (e) {
-    console.error("Error parsing sentiment data from JSON script tag:", e);
-    // Keep sentimentData as {} if parsing fails to prevent further errors
-  }
+  // Define sentiment data as a global variable
+  var sentimentData = JSON.parse('{{ sentiment_counts|tojson|safe }}');
   
-  // Initialize the chart once data is loaded
   document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('sentimentChart');
-    if (ctx && typeof sentimentData !== 'undefined') {
+    if (ctx && sentimentData && (sentimentData.positive || sentimentData.neutral || sentimentData.negative)) { // Check if there's data
       new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -128,9 +146,9 @@
               sentimentData.negative || 0
             ],
             backgroundColor: [
-              'rgba(40, 167, 69, 0.7)',  // Success (Positive)
-              'rgba(108, 117, 125, 0.7)', // Secondary (Neutral)
-              'rgba(220, 53, 69, 0.7)'   // Danger (Negative)
+              'rgba(40, 167, 69, 0.7)',
+              'rgba(108, 117, 125, 0.7)',
+              'rgba(220, 53, 69, 0.7)'
             ],
             borderColor: [
               'rgba(40, 167, 69, 1)',
@@ -147,27 +165,21 @@
           animation: {
             animateScale: true,
             animateRotate: true,
-            duration: 1200, /* Slightly reduced animation duration for faster completion */
+            duration: 1200,
             easing: 'easeOutQuart'
-          },            plugins: {
+          },
+          plugins: {
               legend: {
                 position: 'top',
-                labels: {
-                  font: {
-                    size: 14
-                  },
-                  padding: 20
-                }
+                labels: { font: { size: 14 }, padding: 20 }
               },
-              // Removed title to avoid duplication with HTML heading
-              
             tooltip: {
               callbacks: {
                 label: function(context) {
                   const label = context.label || '';
                   const value = context.raw || 0;
                   const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((value / total) * 100);
+                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
                   return `${label}: ${value} (${percentage}%)`;
                 }
               }
@@ -175,6 +187,8 @@
           }
         }
       });
+    } else if (ctx) {
+        ctx.parentNode.innerHTML = '<p class="text-center text-muted mt-3">Not enough data for sentiment distribution chart.</p>';
     }
   });
 </script>
