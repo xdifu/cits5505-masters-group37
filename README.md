@@ -187,6 +187,32 @@ news-sentiment-analyzer/
 7.  Go to the **"Shared Results"** page to view analyses shared publicly by other users.
 8.  **Logout** when finished.
 
+## Database Management
+
+The application provides two scripts for managing the database:
+
+### Clearing Database Data
+
+To clear all user data, analysis results, and sharing relationships while preserving the database structure:
+
+```bash
+python clear_database.py
+```
+
+Options:
+- Clear all data
+- Clear a specific user's data
+
+### Resetting the Database
+
+To completely reset the database by dropping and recreating all tables:
+
+```bash
+python reset_database.py
+```
+
+This method is more drastic and will delete all data and reset the database structure to its initial state.
+
 ## Team Members
 
 | UWA ID      | Name             | GitHub Username |
