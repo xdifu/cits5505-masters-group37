@@ -1,6 +1,7 @@
 {#
 Helper macros for rendering Flask-WTF forms with Bootstrap 5.
 Based on examples from Flask-Bootstrap and adapted for Bootstrap 5.
+Enhanced with custom styling for the News Sentiment Analyzer application.
 #}
 
 {% macro render_field(field, form_type="basic", horizontal_columns=('lg', 2, 10), button_map={}) %} {# Removed **kwargs from definition #}
@@ -65,10 +66,15 @@ Based on examples from Flask-Bootstrap and adapted for Bootstrap 5.
                 <small class="form-text text-muted">{{ field.description }}</small>
             {% endif %}
         </div>
+    {% elif field.type == 'SubmitField' %}
+        <div class="mb-3 {{ kwargs.get('div_class', '') }}">
+            {{ field(**field_kwargs) }} {# Pass collected kwargs #}
+        </div>
     {% else %} {# Standard text, password, email, textarea, etc. #}
         <div class="mb-3 {{ kwargs.get('div_class', '') }}">
             {{ field.label(class="form-label") }}
             {{ field(**field_kwargs) }} {# Pass collected kwargs #}
+            
             {% if field.errors %}
                 {% for error in field.errors %}
                     <div class="invalid-feedback d-block">{{ error }}</div>
@@ -76,6 +82,27 @@ Based on examples from Flask-Bootstrap and adapted for Bootstrap 5.
             {% endif %}
             {% if field.description %}
                 <small class="form-text text-muted">{{ field.description }}</small>
+            {% endif %}
+            
+            {% if field.type == 'TextAreaField' %}
+                <!-- Add a character counter for textareas -->
+                <div class="d-flex justify-content-end mt-1">
+                    <small class="text-muted character-count">0 characters</small>
+                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const textarea = document.getElementById('{{ field.id }}');
+                        const charCount = textarea.parentElement.querySelector('.character-count');
+                        
+                        // Initial count
+                        charCount.textContent = `${textarea.value.length} characters`;
+                        
+                        // Update on input
+                        textarea.addEventListener('input', function() {
+                            charCount.textContent = `${textarea.value.length} characters`;
+                        });
+                    });
+                </script>
             {% endif %}
         </div>
     {% endif %}

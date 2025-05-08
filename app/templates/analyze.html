@@ -7,28 +7,38 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <h1 class="mb-4">Analyze News Sentiment</h1>
-        <p>Paste the news text into the box below and click "Analyze Sentiment".</p>
+    <div class="col-md-10 col-lg-8">
+        <h1 class="mb-4 display-5 cyberpunk-title" data-text="Analyze News Sentiment">Analyze News Sentiment</h1>
+        
+        <div class="card tilt-card mb-4">
+            <div class="card-body">
+                <p class="lead">Paste the news text into the box below and click "Analyze Sentiment" to discover the underlying tone.</p>
+                <p>Our advanced AI will analyze whether the content is <span class="badge bg-success">Positive</span>, <span class="badge bg-secondary">Neutral</span>, or <span class="badge bg-danger">Negative</span>.</p>
+            </div>
+        </div>
 
         <!-- Add id for AJAX targeting -->
         <!-- Assuming the route passes the 'form' object -->
-        <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate>
-             {{ form.hidden_tag() }} <!-- Include CSRF token -->
-             {{ wtf.form_field(form.news_text) }}
-             {# Render the submit button directly, applying Bootstrap classes #}
-             {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
-             <div class="mb-3">
-                 {{ form.submit(class='btn btn-primary') }}
-             </div>
+        <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate class="card tilt-card">
+            <div class="card-body">
+                {{ form.hidden_tag() }} <!-- Include CSRF token -->
+                <div class="mb-4">
+                    {{ wtf.form_field(form.news_text) }}
+                </div>
+                {# Render the submit button directly, applying Bootstrap classes #}
+                {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
+                <div class="mb-3 text-center">
+                    {{ form.submit(class='btn btn-primary btn-lg px-4') }}
+                </div>
+            </div>
         </form>
 
         <!-- Add loading indicator element (hidden by default) -->
-        <div id="loading-indicator" style="display: none;" class="text-center mt-3">
+        <div id="loading-indicator" style="display: none;" class="text-center mt-4">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p>Analyzing...</p>
+            <p class="mt-2">Analyzing your text with advanced AI...</p>
         </div>
 
         <!-- Add element for displaying AJAX results -->
@@ -38,9 +48,17 @@
 
         <!-- Keep original result display for non-AJAX fallback or initial load -->
         {% if sentiment_result and not request.is_xhr %}
-        <div class="result mt-4 p-3 border rounded bg-light">
+        <div class="result mt-4 tilt-card">
             <h2>Analysis Result:</h2>
-            <p><strong>{{ sentiment_result }}</strong></p>
+            <p class="display-6 mt-3">
+                {% if sentiment_result == 'Positive' %}
+                    <span class="badge bg-success">{{ sentiment_result }}</span>
+                {% elif sentiment_result == 'Negative' %}
+                    <span class="badge bg-danger">{{ sentiment_result }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ sentiment_result }}</span>
+                {% endif %}
+            </p>
             <p><small>This result has been saved to your history.</small></p>
         </div>
         {% endif %}

@@ -161,11 +161,10 @@ def share_analysis(result_id):
             flash('You cannot share an analysis with yourself.', 'info')
         else:
             # Check if already shared with this user
-            is_already_shared = db.session.scalar(
-                sa.select(sa.func.count()).select_from(result_to_share.shared_with_recipients).where(
-                    User.id == user_to_share_with.id
-                )
-            ) > 0
+            # For WriteOnlyCollection, query using with_parent
+            # Use the actual class attribute for the relationship
+            already_shared_query = db.session.query(User).with_parent(result_to_share, Result.shared_with_recipients).filter(User.id == user_to_share_with.id)
+            is_already_shared = db.session.query(already_shared_query.exists()).scalar()
 
             if is_already_shared:
                 flash(f'This result is already shared with {user_to_share_with.username}.', 'info')
