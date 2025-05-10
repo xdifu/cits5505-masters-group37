@@ -28,7 +28,9 @@
         ANIMATION: {
             TYPING_SPEED: 100,
             TOAST_DELAY: 3000,
-            FADE_DURATION: 500
+            FADE_DURATION: 500,
+            HIGHLIGHT_DURATION: 1500, // Added for highlight animation duration
+            BUTTON_TRANSITION_DURATION: '0.3s' // Added for button transition duration
         },
         TILT: {
             MAX_WIDTH: 600,
@@ -296,7 +298,7 @@
         
         for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
-            // Ensure 'simple-particle' class is defined in CSS for base styling
+            // Ensure 'simple-particle' class is defined in CSS for base styling and animation name
             particle.className = 'simple-particle'; 
             
             // Random positioning and properties
@@ -313,15 +315,16 @@
             
             const delay = Math.random() * 5;
             
-            // Apply styles
+            // Apply styles for size and position
             particle.style.width = `${size}px`;
             particle.style.height = `${size}px`;
             particle.style.left = `${posX}%`;
             particle.style.top = `${posY}%`;
-            // Base styles like position, border-radius, background-color should be in .simple-particle CSS class
             
-            // Apply dynamic animation. @keyframes 'floatParticle' must be defined in CSS.
-            particle.style.animation = `floatParticle ${duration}s ${delay}s infinite linear`;
+            // Set CSS custom properties for dynamic animation values
+            // The .simple-particle class in CSS will use these via var()
+            particle.style.setProperty('--particle-duration', `${duration}s`);
+            particle.style.setProperty('--particle-delay', `${delay}s`);
             
             container.appendChild(particle);
         }
@@ -688,7 +691,7 @@
                     }
 
                     // Update button text and style with transition
-                    button.style.transition = 'all 0.3s ease'; // This is fine for direct style transition
+                    button.style.transition = `all ${CONFIG.ANIMATION.BUTTON_TRANSITION_DURATION} ease`; // Use constant
                     button.textContent = data.shared ? 'Unshare' : 'Share';
                     DOM.removeClass(button, data.shared ? 'btn-info' : 'btn-warning');
                     DOM.addClass(button, data.shared ? 'btn-warning' : 'btn-info');
@@ -701,7 +704,7 @@
                         // Remove the class after animation to allow re-triggering or prevent style conflicts
                         setTimeout(() => {
                             DOM.removeClass(sharedStatusCell, 'animate-highlight');
-                        }, 1500); // Duration of the highlight animation (e.g., 1.5s)
+                        }, CONFIG.ANIMATION.HIGHLIGHT_DURATION); // Use constant
                     }
 
                     // Show success message with toast notification
@@ -741,24 +744,29 @@
         if (type === 'success') bgClass = 'bg-success';
         if (type === 'error') bgClass = 'bg-danger';
         
-        // Create toast HTML
-        const toastHtml = `
-            <div id="${toastId}" class="toast align-items-center ${bgClass} text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        // Create a new div element for the toast
+        const toastElementDiv = document.createElement('div');
+        toastElementDiv.id = toastId;
+        toastElementDiv.className = `toast align-items-center ${bgClass} text-white border-0`;
+        toastElementDiv.setAttribute('role', 'alert');
+        toastElementDiv.setAttribute('aria-live', 'assertive');
+        toastElementDiv.setAttribute('aria-atomic', 'true');
+        
+        // Set inner HTML of the new toast element
+        toastElementDiv.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
                 </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         `;
         
-        // Add toast to container
-        toastContainer.innerHTML += toastHtml;
+        // Append the new toast element to the container instead of using innerHTML +=
+        toastContainer.appendChild(toastElementDiv);
         
-        // Initialize and show the toast
-        const toastElement = DOM.get(`#${toastId}`);
-        const toast = new bootstrap.Toast(toastElement, {
+        // Initialize and show the toast using the newly created element
+        const toast = new bootstrap.Toast(toastElementDiv, {
             animation: true,
             autohide: true,
             delay: CONFIG.ANIMATION.TOAST_DELAY
@@ -766,8 +774,8 @@
         toast.show();
         
         // Remove toast from DOM after it's hidden
-        toastElement.addEventListener('hidden.bs.toast', function() {
-            toastElement.remove();
+        toastElementDiv.addEventListener('hidden.bs.toast', function() {
+            toastElementDiv.remove();
         });
     }
 
