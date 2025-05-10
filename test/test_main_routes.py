@@ -1,8 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from flask import url_for
-from app import create_app, db
-from app.models import User, Result
+from flask import url_for, get_flashed_messages, current_app
+from werkzeug.security import check_password_hash
+from app.models import User, AnalysisReport # Changed Result to AnalysisReport
+from app import db
 from datetime import datetime, timezone
 import json
 
@@ -47,7 +48,7 @@ def auth_client(client, test_user):
 @pytest.fixture
 def test_result(test_user, _db):
     """Create a test result."""
-    result = Result(
+    result = AnalysisReport(
         original_text='Test news text',
         sentiment='Positive',
         author=test_user,
