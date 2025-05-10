@@ -187,9 +187,12 @@
         },
         
         /**
-         * Set animation on element
+         * Set animation on element by directly manipulating the style.animation property.
+         * Prefer using CSS classes for animations where possible.
+         * This helper is useful when animation parameters (like duration, delay)
+         * are highly dynamic and tied to a CSS-defined @keyframes name.
          * @param {HTMLElement} element - Target element
-         * @param {string} animation - Animation name
+         * @param {string} animation - Animation string (e.g., "animationName 1s forwards")
          */
         animate: (element, animation) => {
             if (element) element.style.animation = animation;
@@ -293,7 +296,8 @@
         
         for (let i = 0; i < particleCount; i++) {
             const particle = document.createElement('div');
-            particle.className = 'simple-particle';
+            // Ensure 'simple-particle' class is defined in CSS for base styling
+            particle.className = 'simple-particle'; 
             
             // Random positioning and properties
             const sizeMin = CONFIG.PARTICLES.SIMPLE_SIZE_RANGE[0];
@@ -314,9 +318,9 @@
             particle.style.height = `${size}px`;
             particle.style.left = `${posX}%`;
             particle.style.top = `${posY}%`;
-            particle.style.position = 'absolute';
-            particle.style.borderRadius = '50%';
-            particle.style.backgroundColor = 'rgba(0, 102, 255, 0.2)';
+            // Base styles like position, border-radius, background-color should be in .simple-particle CSS class
+            
+            // Apply dynamic animation. @keyframes 'floatParticle' must be defined in CSS.
             particle.style.animation = `floatParticle ${duration}s ${delay}s infinite linear`;
             
             container.appendChild(particle);
@@ -620,15 +624,23 @@
         }
         
         container.innerHTML = resultHtml;
-        container.className = 'result mt-4 p-4 border rounded';
+        container.className = 'result mt-4 p-4 border rounded'; // Base classes
         
         // Add tilt effect to the result
         if (typeof VanillaTilt !== 'undefined' && container.offsetWidth < CONFIG.TILT.MAX_WIDTH) {
             VanillaTilt.init(container, CONFIG.TILT.SETTINGS);
         }
         
-        // Add fade-in animation
-        DOM.animate(container, `fadeInUp ${CONFIG.ANIMATION.FADE_DURATION / 1000}s forwards`);
+        // Add fade-in animation using a CSS class.
+        // Ensure 'animate-fadeInUp' class and its @keyframes 'fadeInUp' are defined in your CSS.
+        // The duration (CONFIG.ANIMATION.FADE_DURATION) should be part of the .animate-fadeInUp class definition.
+        DOM.addClass(container, 'animate-fadeInUp');
+        
+        // Optional: Remove the animation class after it completes to allow re-triggering if needed,
+        // or if the animation properties interfere with other states.
+        // setTimeout(() => {
+        //     DOM.removeClass(container, 'animate-fadeInUp');
+        // }, CONFIG.ANIMATION.FADE_DURATION);
     }
 
     /**
@@ -644,7 +656,7 @@
                 log('Intercepting share toggle form submission for AJAX.');
 
                 const button = form.querySelector('button[type="submit"]');
-                const resultId = form.action.split('/').pop();
+                // const resultId = form.action.split('/').pop(); // Not used in this snippet
                 const sharedStatusCell = form.closest('tr').querySelector('.shared-status-cell');
 
                 // Disable button temporarily
@@ -652,7 +664,8 @@
                 const originalButtonText = button.textContent;
                 button.textContent = 'Updating...';
                 
-                // Add pulsing animation to indicate processing
+                // Add pulsing animation to indicate processing.
+                // Ensure 'pulse-animation' class and its @keyframes 'pulse' are defined in CSS.
                 DOM.addClass(button, 'pulse-animation');
 
                 try {
@@ -675,15 +688,20 @@
                     }
 
                     // Update button text and style with transition
-                    button.style.transition = 'all 0.3s ease';
+                    button.style.transition = 'all 0.3s ease'; // This is fine for direct style transition
                     button.textContent = data.shared ? 'Unshare' : 'Share';
                     DOM.removeClass(button, data.shared ? 'btn-info' : 'btn-warning');
                     DOM.addClass(button, data.shared ? 'btn-warning' : 'btn-info');
 
-                    // Update shared status text with a highlight effect
+                    // Update shared status text with a highlight effect using a CSS class.
+                    // Ensure 'animate-highlight' class and its @keyframes 'highlight' are defined in CSS.
                     if (sharedStatusCell) {
                         sharedStatusCell.textContent = data.shared ? 'Yes' : 'No';
-                        DOM.animate(sharedStatusCell, 'highlight 1.5s');
+                        DOM.addClass(sharedStatusCell, 'animate-highlight');
+                        // Remove the class after animation to allow re-triggering or prevent style conflicts
+                        setTimeout(() => {
+                            DOM.removeClass(sharedStatusCell, 'animate-highlight');
+                        }, 1500); // Duration of the highlight animation (e.g., 1.5s)
                     }
 
                     // Show success message with toast notification
@@ -691,10 +709,10 @@
 
                 } catch (error) {
                     ErrorHandler.handle(error, 'Failed to update share status. Please try again.');
-                    button.textContent = originalButtonText;
+                    button.textContent = originalButtonText; // Restore original button text on error
                 } finally {
                     button.disabled = false;
-                    DOM.removeClass(button, 'pulse-animation');
+                    DOM.removeClass(button, 'pulse-animation'); // Remove pulse animation
                 }
             });
         });
