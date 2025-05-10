@@ -33,7 +33,9 @@
 
         <div class="card mb-4 p-3">
             <h2 class="h5 mb-3">Sentiment Proportion (Pie Chart)</h2>
-            <canvas id="pieChart"></canvas>
+            <div class="text-center d-flex justify-content-center">
+              <canvas id="pieChart" width="400" height="400"></canvas>
+            </div>
         </div>
 
         <div class="card mb-4 p-3">
@@ -108,7 +110,7 @@
     },
     plugins: [ChartDataLabels],
     options: {
-      responsive: true,
+      responsive: false,
       plugins: {
         datalabels: {
           color: '#fff',
