@@ -2,19 +2,17 @@
 # Includes forms for user login, registration, and sentiment analysis submission.
 
 from flask_wtf import FlaskForm # Base class for Flask-WTF forms
-# Import EmailField and Email validator
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField, SelectMultipleField
-# Import Email validator
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email, Regexp
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField, SelectMultipleField, HiddenField
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email, Optional as WTFormsOptional, Regexp
 import sqlalchemy as sa
 
 # Import the User model to check for existing usernames during registration
-# It's assumed 'User' is defined in models.py within the same 'app' package
-# You might need to adjust the import based on your final db initialization strategy
 try:
-    from .models import User, db # Keep this import
+    # Updated to import new model names if necessary, User model is still User
+    from .models import User, AnalysisReport, db 
 except ImportError:
     User = None
+    AnalysisReport = None # Add AnalysisReport here for context, though not directly used in all forms
     db = None # Explicitly set db to None if import fails
 
 
@@ -29,16 +27,15 @@ class LoginForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     """Form for new user registration."""
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
-    # Add EmailField for email input
     email = EmailField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[
-        DataRequired(),
+        DataRequired(), 
         Length(min=6),
         Regexp(
             regex=r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$',
             message="Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
         )
-    ])
+    ]) # Enforce minimum password length
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')]) # Ensure passwords match
     submit = SubmitField('Register')
@@ -65,7 +62,6 @@ class RegistrationForm(FlaskForm):
             # Optionally, raise an exception if validation cannot proceed:
             # raise ValidationError("Cannot validate username at this time. Please try again later.")
 
-    # Add validation for email uniqueness
     def validate_email(self, email):
         """
         Custom validator to check if the email is already registered.
@@ -86,29 +82,56 @@ class RegistrationForm(FlaskForm):
 
 
 class AnalysisForm(FlaskForm):
-    """Form for submitting text for sentiment analysis."""
-    news_text = TextAreaField('Text to Analyze', validators=[
-        DataRequired(), Length(min=1, max=10000)])
-    submit = SubmitField('Analyze')
-    
-    # For backward compatibility
-    @property
-    def text_to_analyze(self):
-        return self.news_text
+    """Form for submitting text for creating an analysis report."""
+    report_name = StringField('Report Name (Optional)', validators=[WTFormsOptional(), Length(max=128)])
+    news_text = TextAreaField('News Articles Text (one article per line or separated by double newlines)', 
+                              validators=[DataRequired(), Length(min=10, max=50000)],
+                              render_kw={"rows": 15, "placeholder": "Paste your news articles here. For multiple articles, place each on a new line or separate them with a blank line."})
+    submit = SubmitField('Analyze and Create Report')
 
 
-class ShareForm(FlaskForm):
-    """Form for sharing an analysis result with another user."""
-    share_with_username = StringField('Username to share with', validators=[DataRequired()])
-    submit = SubmitField('Share')
+class ShareReportForm(FlaskForm):
+    """Form for sharing an analysis report with another user."""
+    # Renamed from ShareForm to ShareReportForm for clarity
+    # This form might be part of a page where the report_id is implicit or passed in the URL
+    share_with_username = StringField('Username to share with', validators=[DataRequired(), Length(max=64)])
+    report_id = HiddenField() # To carry the report_id if needed, though often handled by URL context
+    submit = SubmitField('Share Report')
+
+    def validate_share_with_username(self, share_with_username):
+        """
+        Custom validator to check if the username to share with exists.
+        Requires the User model and db session to be available.
+        Args:
+            share_with_username (Field): The username field being validated.
+        Raises:
+            ValidationError: If the username does not exist in the database.
+        """
+        if db and User:
+            user = db.session.scalar(db.select(User).where(User.username == share_with_username.data))
+            if user is None:
+                raise ValidationError('User not found. Please enter a valid username.')
+        else:
+            print("Warning: DB connection or User model not available for username validation during sharing.")
 
 
-class ManageSharingForm(FlaskForm):
-    """Form for managing sharing of analysis results with other users."""
-    users_to_share_with = SelectMultipleField('Share with', coerce=int)
-    submit = SubmitField('Update Sharing')
+class ManageReportSharingForm(FlaskForm):
+    """Form for managing sharing of a specific analysis report with multiple users."""
+    # Renamed from ManageSharingForm to ManageReportSharingForm
+    # Choices for users_to_share_with will be populated dynamically in the route
+    users_to_share_with = SelectMultipleField('Share with Users', coerce=int, validators=[WTFormsOptional()])
+    # report_id is typically handled by the route (e.g., /report/<int:report_id>/manage_sharing)
+    # but can be added as a HiddenField if the form needs to post it explicitly.
+    # report_id = HiddenField(validators=[DataRequired()]) 
+    submit = SubmitField('Update Sharing Settings')
 
     def __init__(self, current_user_id, *args, **kwargs):
-        super(ManageSharingForm, self).__init__(*args, **kwargs)
-        # Populate choices, excluding the current user
-        self.users_to_share_with.choices = [(user.id, user.username) for user in db.session.scalars(sa.select(User).where(User.id != current_user_id)).all()]
+        super(ManageReportSharingForm, self).__init__(*args, **kwargs)
+        if db and User:
+            # Populate choices dynamically, excluding the current user
+            self.users_to_share_with.choices = [
+                (user.id, user.username) 
+                for user in db.session.scalars(
+                    sa.select(User).where(User.id != current_user_id)
+                ).all()
+            ]

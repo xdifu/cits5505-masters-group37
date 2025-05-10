@@ -5,177 +5,64 @@
 {% block title %}My Analysis Results - Sentiment Analyzer{% endblock %}
 
 {% block content %}
-<h1 class="mb-4 display-5 cyberpunk-title" data-text="My Analysis Results">My Analysis Results</h1>
+<h1 class="mb-5 display-5 cyberpunk-title" data-text="My Analysis Results">My Analysis Results</h1> {# Increased bottom margin #}
 
 {% if results %}
 <div class="row">
-    <div class="col-lg-8">
-        <div class="list-group tilt-card">
-            {% for result in results %}
-            <div class="list-group-item list-group-item-action flex-column align-items-start mb-3">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">
-                        <!-- Display sentiment with appropriate styling -->
-                        Sentiment:
-                        {% if result.sentiment == 'Positive' %}
-                            <span class="badge bg-success">{{ result.sentiment }}</span>
-                        {% elif result.sentiment == 'Negative' %}
-                            <span class="badge bg-danger">{{ result.sentiment }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ result.sentiment }}</span>
-                        {% endif %}
+    {# Left column for report cards - now full width #}
+    <div class="col-lg-12">
+        <div class="results-list-container"> {# New container for report cards #}
+            {% for report_item in results %}
+            <div class="report-card mb-4 tilt-card"> {# Added tilt-card here for potential JS tilt on individual small cards #}
+                <div class="report-card-header">
+                    <h5 class="report-card-title">
+                        <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}">{{ report_item.name }}</a>
                     </h5>
-                    <small class="text-muted">Analyzed on: {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                    <small class="report-card-timestamp text-muted">{{ report_item.timestamp.strftime('%Y-%m-%d %H:%M') }} UTC</small>
                 </div>
-                <p class="mb-1"><strong>Original Text:</strong></p>
-                <p class="mb-1">{{ result.original_text }}</p>
-                
-                <!-- Share buttons - providing two ways to share -->
-                <div class="mt-2 share-buttons">
-                    <a href="{{ url_for('main.share_analysis', result_id=result.id) }}" class="btn btn-sm btn-outline-primary share-btn me-2">Share with User</a>
-                    <a href="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="btn btn-sm btn-outline-success share-btn">Manage Sharing</a>
+                <div class="report-card-body">
+                    <div class="report-card-sentiment mb-2">
+                        {% set score = report_item.overall_sentiment_score if report_item.overall_sentiment_score is not none else 0.0 %}
+                        {% set score_percent = (score * 100) | round | int %}
+                        {% set sentiment_label_display = 'Neutral' %}
+                        {% set sentiment_class = 'neutral' %}
+                        {% if score > 0.15 %} {# Adjusted threshold for clearer distinction #}
+                            {% set sentiment_label_display = 'Positive' %}
+                            {% set sentiment_class = 'positive' %}
+                        {% elif score < -0.15 %} {# Adjusted threshold #}
+                            {% set sentiment_label_display = 'Negative' %}
+                            {% set sentiment_class = 'negative' %}
+                        {% endif %}
+                        <strong>Overall Sentiment:</strong>
+                        <span class="sentiment-badge {{ sentiment_class }}">
+                            {% if score_percent > 0 %}+{% endif %}{{ score_percent }}% {{ sentiment_label_display }}
+                        </span>
+                    </div>
+                    <p class="report-card-items-count">
+                        <small class="text-muted">{{ report_item.item_count }} item{{ 's' if report_item.item_count != 1 else '' }} analyzed.</small>
+                    </p>
+                </div>
+                <div class="report-card-actions">
+                    <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}" class="btn btn-sm btn-cyber-primary">View Dashboard</a>
+                    <a href="{{ url_for('main.share_report', report_id=report_item.id) }}" class="btn btn-sm btn-cyber-secondary">Share Report</a>
+                    <a href="{{ url_for('main.manage_report_sharing', report_id=report_item.id) }}" class="btn btn-sm btn-cyber-outline">Manage Sharing</a>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
-    
-    <!-- Sentiment chart container -->
-    <div class="col-lg-4">
-        <div class="chart-container">
-            <h2 class="h4 mb-3">Your Sentiment Distribution</h2>
-            <canvas id="sentimentChart"></canvas>
-        </div>
-        
-        <!-- Summary stats - removed mb-4 from chart-container and added proper margin to ensure no overlap -->
-        <div class="card tilt-card mt-4">
-            <div class="card-body">
-                <h2 class="h4 mb-3 chart-heading no-animation">Sentiment Summary</h2>
-                <div class="row text-center">
-                    <div class="col-4">
-                        <div class="sentiment-stat">
-                            <span class="badge bg-success mb-2">Positive</span>
-                            <h3 class="h2">{{ sentiment_counts.positive or 0 }}</h3>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="sentiment-stat">
-                            <span class="badge bg-secondary mb-2">Neutral</span>
-                            <h3 class="h2">{{ sentiment_counts.neutral or 0 }}</h3>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="sentiment-stat">
-                            <span class="badge bg-danger mb-2">Negative</span>
-                            <h3 class="h2">{{ sentiment_counts.negative or 0 }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-center mt-3">
-                    <p>Total analyses: <strong>{{ (sentiment_counts.positive or 0) + (sentiment_counts.neutral or 0) + (sentiment_counts.negative or 0) }}</strong></p>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% else %}
-<div class="card tilt-card p-4 text-center">
+<div class="card tilt-card p-4 text-center"> {# Keep tilt-card for this "empty" state card if desired and small enough #}
     <div class="card-body">
         <h2 class="h4">No Results Yet</h2>
         <p>You haven't analyzed any text yet.</p>
-        <a href="{{ url_for('main.analyze') }}" class="btn btn-primary mt-2">Analyze Some Now!</a>
+        <a href="{{ url_for('main.analyze') }}" class="btn btn-primary mt-2 cyberpunk-btn">Analyze Some Now!</a> {# Added cyberpunk-btn for consistency #}
     </div>
 </div>
 {% endif %}
 {% endblock %}
 
 {% block scripts %}
-{{ super() }} <!-- Include scripts from the base template -->
-
-<!-- Embed sentiment data for the chart as JSON -->
-<script id="sentimentDataJson" type="application/json">
-  {{ sentiment_counts|tojson|safe if sentiment_counts else '{}' }}
-</script>
-
-<!-- Script to parse the sentiment data and make it available for chart initialization -->
-<script>
-  let sentimentData = {}; // Initialize empty object for safety
-  try {
-    // Find the data script tag by ID
-    const sentimentDataElement = document.getElementById('sentimentDataJson');
-    if (sentimentDataElement) {
-      // Parse the JSON content
-      sentimentData = JSON.parse(sentimentDataElement.textContent);
-    }
-  } catch (e) {
-    console.error("Error parsing sentiment data from JSON script tag:", e);
-    // Keep sentimentData as {} if parsing fails to prevent further errors
-  }
-  
-  // Initialize the chart once data is loaded
-  document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('sentimentChart');
-    if (ctx && typeof sentimentData !== 'undefined') {
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Positive', 'Neutral', 'Negative'],
-          datasets: [{
-            label: 'Sentiment Distribution',
-            data: [
-              sentimentData.positive || 0,
-              sentimentData.neutral || 0,
-              sentimentData.negative || 0
-            ],
-            backgroundColor: [
-              'rgba(40, 167, 69, 0.7)',  // Success (Positive)
-              'rgba(108, 117, 125, 0.7)', // Secondary (Neutral)
-              'rgba(220, 53, 69, 0.7)'   // Danger (Negative)
-            ],
-            borderColor: [
-              'rgba(40, 167, 69, 1)',
-              'rgba(108, 117, 125, 1)',
-              'rgba(220, 53, 69, 1)'
-            ],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '70%',
-          animation: {
-            animateScale: true,
-            animateRotate: true,
-            duration: 1200, /* Slightly reduced animation duration for faster completion */
-            easing: 'easeOutQuart'
-          },            plugins: {
-              legend: {
-                position: 'top',
-                labels: {
-                  font: {
-                    size: 14
-                  },
-                  padding: 20
-                }
-              },
-              // Removed title to avoid duplication with HTML heading
-              
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const label = context.label || '';
-                  const value = context.raw || 0;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((value / total) * 100);
-                  return `${label}: ${value} (${percentage}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-  });
-</script>
+{{ super() }}
 {% endblock %}
