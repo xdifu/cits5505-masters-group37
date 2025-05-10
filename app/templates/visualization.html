@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Data Visualization - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <h1 class="mb-4">Sentiment Data Visualization</h1>
+        <p>This page visualizes your past sentiment analysis results.</p>
+
+        <div class="card mb-4 p-3">
+            <h2 class="h5 mb-3">Sentiment Distribution (Bar Chart)</h2>
+            <canvas id="barChart"></canvas>
+        </div>
+
+        <div class="card mb-4 p-3">
+            <h2 class="h5 mb-3">Sentiment Proportion (Pie Chart)</h2>
+            <canvas id="pieChart"></canvas>
+        </div>
+
+        <div class="card mb-4 p-3">
+            <h2 class="h5 mb-3">Sentiment Trend Over Time (Line Chart)</h2>
+            <canvas id="lineChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Positive', 'Neutral', 'Negative'],
+      datasets: [{
+        label: 'Count',
+        data: {{ sentiment_counts | safe }},
+        backgroundColor: ['#4caf50', '#ffc107', '#f44336']
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Positive', 'Neutral', 'Negative'],
+      datasets: [{
+        data: {{ sentiment_counts | safe }},
+        backgroundColor: ['#4caf50', '#ffc107', '#f44336']
+      }]
+    },
+    options: {
+      responsive: true
+    }
+  });
+
+  new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: {{ dates | safe }},
+      datasets: [{
+        label: 'Sentiment Score',
+        data: {{ scores | safe }},
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.2)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          suggestedMax: 1
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
