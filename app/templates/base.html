@@ -53,6 +53,11 @@
               <a class="nav-link" href="{{ url_for('main.results') }}">My Results</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link {% if request.path == '/visualization' %}active{% endif %}" href="{{ url_for('main.visualization') }}">
+                Visualize Data
+              </a>
+            </li>
+            <li class="nav-item">
               <!-- New link for items shared with the user -->
               <a class="nav-link" href="{{ url_for('main.shared_with_me') }}">Shared With Me</a>
             </li>
