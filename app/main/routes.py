@@ -180,3 +180,38 @@ def share_analysis(result_id):
                     flash(f'Error sharing result: {str(e)}', 'danger')
     
     return render_template('share_analysis.html', title='Share Analysis', form=form, result=result_to_share)
+
+@bp.route('/visualization')
+@login_required
+def visualization():
+    results = Result.query.filter_by(user_id=current_user.id).order_by(Result.timestamp).all()
+
+    # Obtain the quantity of each emotion category
+    sentiment_counts = {
+        'Positive': sum(1 for r in results if r.sentiment.lower() == 'positive'),
+        'Neutral': sum(1 for r in results if r.sentiment.lower() == 'neutral'),
+        'Negative': sum(1 for r in results if r.sentiment.lower() == 'negative')
+    }
+    sentiment_counts_list = [
+        sentiment_counts['Positive'],
+        sentiment_counts['Neutral'],
+        sentiment_counts['Negative']
+    ]
+
+    # Prepare the time series and emotion scores (for line charts)
+    dates = [r.timestamp.strftime('%Y-%m-%d %H:%M') for r in results]
+    scores = []
+    for r in results:
+        if r.sentiment.lower() == "positive":
+            scores.append(1)
+        elif r.sentiment.lower() == "neutral":
+            scores.append(0.5)
+        else:
+            scores.append(0)
+
+    return render_template(
+        "visualization.html",
+        dates=dates,
+        scores=scores,
+        sentiment_counts=sentiment_counts_list
+    )
