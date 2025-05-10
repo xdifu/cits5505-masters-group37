@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from flask_bcrypt import Bcrypt # Import Bcrypt
-from config import Config
+from config import Config, DevelopmentConfig # Import DevelopmentConfig
 from flask_migrate import Migrate # Import Migrate
 from datetime import datetime # Import datetime for context processor
 
@@ -26,7 +26,7 @@ bcrypt = Bcrypt() # Initialize Bcrypt
 migrate = Migrate() # Initialize Migrate
 
 
-def create_app(config_class=Config):
+def create_app(config_class=DevelopmentConfig): # Change default here
     """
     Factory function to create and configure the Flask application instance.
 

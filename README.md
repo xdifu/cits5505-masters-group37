@@ -31,6 +31,7 @@ This application provides a platform for users to perform sentiment analysis on 
 *   **Charting:** Chart.js
 *   **API Integration:** OpenAI Python Client Library (`openai`)
 *   **Environment Variables:** `python-dotenv`
+*   **Database Migrations:** Flask-Migrate (with Alembic) # Added
 *   **Testing:**
     *   Unit Testing: `pytest`
     *   Functional Testing: `selenium`
@@ -125,17 +126,30 @@ news-sentiment-analyzer/
     *   Edit the `.env` file and add your credentials:
         ```dotenv
         # .env
+        FLASK_APP=run.py # Ensures Flask CLI can find the app
         SECRET_KEY='a-very-strong-random-secret-key-please-change' # Replace with a real secret key
         OPENAI_API_KEY='your-openai-api-key-here'
         # DATABASE_URL='sqlite:///instance/app.db' # Optional: Defaults to this if not set
         ```
+        *   **`FLASK_APP`**: Tells the `flask` command how to load your application. Essential for `flask db` commands.
         *   **`SECRET_KEY`**: Used by Flask for session security and CSRF protection. Generate a strong random key.
         *   **`OPENAI_API_KEY`**: Your API key obtained from OpenAI.
 
 ## Running the Application
 
 1.  **Ensure your virtual environment is activated.**
-2.  **Start the Flask Development Server:**
+2.  **Initialize or Upgrade the Database (if first time or after model changes):**
+    ```bash
+    # Set up the migration environment (only needs to be run once per project setup)
+    # FLASK_APP=run.py flask db init 
+
+    # Generate an initial migration (or a new migration after model changes)
+    # FLASK_APP=run.py flask db migrate -m "Descriptive migration message"
+
+    # Apply the migration to the database
+    FLASK_APP=run.py flask db upgrade
+    ```
+3.  **Start the Flask Development Server:**
     ```bash
     flask run
     ```
@@ -187,7 +201,59 @@ news-sentiment-analyzer/
 7.  Go to the **"Shared Results"** page to view analyses shared publicly by other users.
 8.  **Logout** when finished.
 
+## Database Migrations (Flask-Migrate)
+
+This project uses [Flask-Migrate](https://flask-migrate.readthedocs.io/) (which uses [Alembic](https://alembic.sqlalchemy.org/)) to handle database schema migrations. This allows for evolving the database structure over time without losing data.
+
+### Common Migration Commands
+
+Make sure your `FLASK_APP=run.py` environment variable is set (e.g., in your `.env` file or exported in your shell).
+
+*   **Initialize the migration environment (run once per project):**
+    ```bash
+    flask db init
+    ```
+    This creates the `migrations/` directory. You should commit this directory to version control.
+
+*   **Generate a new migration script after model changes:**
+    Whenever you change your SQLAlchemy models in `app/models.py` (e.g., add a table, add a column, change a type), you need to generate a migration script:
+    ```bash
+    flask db migrate -m "A short message describing the changes"
+    ```
+    Review the generated script in `migrations/versions/` before applying it.
+
+*   **Apply migrations to the database:**
+    This command applies any pending migrations to your database, bringing its schema up to date with your models.
+    ```bash
+    flask db upgrade
+    ```
+
+*   **Downgrade a migration (revert):**
+    To revert the last applied migration:
+    ```bash
+    flask db downgrade
+    ```
+    You can also downgrade to a specific migration version.
+
+*   **View migration history:**
+    ```bash
+    flask db history
+    ```
+
+*   **View current database revision:**
+    ```bash
+    flask db current
+    ```
+
+### Important Notes for Migrations:
+
+*   Always **review auto-generated migration scripts** before applying them, especially for complex changes, to ensure they correctly reflect your intentions.
+*   For SQLite, Flask-Migrate is configured to use "batch mode" which helps with limitations in SQLite's `ALTER TABLE` support.
+*   The old `reset_database.py` and `clear_database.py` scripts are still available but should primarily be used for development convenience (e.g., quickly resetting to a known state). **They are destructive and do not replace the migration workflow for schema evolution.**
+
 ## Database Management
+
+(This section might be deprecated or updated based on the new migration workflow)
 
 The application provides two scripts for managing the database:
 

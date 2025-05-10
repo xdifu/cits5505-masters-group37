@@ -4,7 +4,7 @@ from app import create_app, db
 from app.models import User
 from app.forms import (
     LoginForm, RegistrationForm, AnalysisForm,
-    ShareForm, ManageReportSharingForm
+    ShareReportForm, ManageReportSharingForm
 )
 
 pytestmark = pytest.mark.forms  # Mark all tests in this file as form tests
@@ -141,11 +141,11 @@ def test_share_form_validation(app):
     """Test ShareForm validation."""
     with app.test_request_context():
         # Test valid username
-        form = ShareForm(share_with_username='testuser')
+        form = ShareReportForm(share_with_username='testuser')
         assert form.validate()
 
         # Test empty username
-        form = ShareForm(share_with_username='')
+        form = ShareReportForm(share_with_username='')
         assert not form.validate()
         assert 'This field is required' in form.share_with_username.errors
 

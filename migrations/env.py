@@ -51,7 +51,7 @@ def get_metadata():
     return target_db.metadata
 
 
-def run_migrations_offline():
+def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
@@ -66,17 +66,17 @@ def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
-        target_metadata=get_metadata(),
+        target_metadata=get_metadata(),  # Use get_metadata() function
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True
+        render_as_batch=True  # Ensure this is correctly placed
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-def run_migrations_online():
+def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
@@ -95,6 +95,11 @@ def run_migrations_online():
                 logger.info('No changes in schema detected.')
 
     conf_args = current_app.extensions['migrate'].configure_args
+    # Ensure render_as_batch is part of conf_args or explicitly set
+    # and not duplicated.
+    if 'render_as_batch' not in conf_args:
+        conf_args['render_as_batch'] = True
+
     if conf_args.get("process_revision_directives") is None:
         conf_args["process_revision_directives"] = process_revision_directives
 
@@ -103,8 +108,8 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=get_metadata(),
-            render_as_batch=True,
+            target_metadata=get_metadata(),  # Use get_metadata() function
+            # render_as_batch=True, # Removed duplicate, will be in conf_args
             **conf_args
         )
 

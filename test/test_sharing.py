@@ -3,8 +3,11 @@ Test suite for sharing functionality, including models, routes, and access contr
 """
 
 import pytest
-from flask import url_for
-from app.models import User, Result
+from flask import url_for, get_flashed_messages
+from werkzeug.security import check_password_hash
+
+from app.models import User, AnalysisReport # Changed Result to AnalysisReport
+from app import db
 from datetime import datetime, timezone
 import json
 
@@ -13,7 +16,7 @@ pytestmark = pytest.mark.sharing  # Mark all tests in this file as sharing tests
 @pytest.fixture
 def shared_result(test_user, _db):
     """Create a test result that's shared."""
-    result = Result(
+    result = AnalysisReport(
         original_text='Shared test content',
         sentiment='Positive',
         author=test_user,
