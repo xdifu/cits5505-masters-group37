@@ -5,7 +5,7 @@ from flask_wtf import FlaskForm # Base class for Flask-WTF forms
 # Import EmailField and Email validator
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField, SelectMultipleField
 # Import Email validator
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email, Regexp
 import sqlalchemy as sa
 
 # Import the User model to check for existing usernames during registration
@@ -31,7 +31,14 @@ class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     # Add EmailField for email input
     email = EmailField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)]) # Enforce minimum password length
+    password = PasswordField('Password', validators=[
+        DataRequired(),
+        Length(min=6),
+        Regexp(
+            regex=r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$',
+            message="Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+        )
+    ])
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')]) # Ensure passwords match
     submit = SubmitField('Register')
