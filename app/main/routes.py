@@ -575,6 +575,44 @@ def shared_report_details(report_id):
     # If shared, show the main dashboard for this report
     return redirect(url_for('main.results_dashboard', report_id=report_id))
 
+@bp.route('/visualization')
+@login_required
+def visualization():
+    results = db.session.query(NewsItem).join(NewsItem.analysis_report).filter(
+        AnalysisReport.user_id == current_user.id
+    ).order_by(NewsItem.publication_date).all()
+
+    sentiment_counts = {
+        'Positive': sum(1 for r in results if r.sentiment_label.lower() == 'positive'),
+        'Neutral': sum(1 for r in results if r.sentiment_label.lower() == 'neutral'),
+        'Negative': sum(1 for r in results if r.sentiment_label.lower() == 'negative')
+    }
+    sentiment_counts_list = [
+        sentiment_counts['Positive'],
+        sentiment_counts['Neutral'],
+        sentiment_counts['Negative']
+    ]
+
+    dates = []
+    scores = []
+
+    for r in results:
+        if r.publication_date:
+            dates.append(r.publication_date.strftime('%Y-%m-%d %H:%M'))
+            if r.sentiment_label.lower() == "positive":
+                scores.append(1)
+            elif r.sentiment_label.lower() == "neutral":
+                scores.append(0.5)
+            else:
+                scores.append(0)
+
+    return render_template(
+        "visualization.html",
+        dates=dates,
+        scores=scores,
+        sentiment_counts=sentiment_counts_list
+    )
+
 # Old /results route (from before AnalysisReport) is now /results_list
 # Old /share_analysis and /manage_sharing are updated to /share_report and /manage_report_sharing
 # Old /shared_results/<id> is now /shared_report_details/<id>

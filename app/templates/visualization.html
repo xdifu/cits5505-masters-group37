@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Data Visualization - Sentiment Analyzer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <h1 class="mb-4">Sentiment Data Visualization</h1>
+        <p>This page visualizes your past sentiment analysis results.</p>
+
+        <div class="card mb-4 p-4 text-center">
+          <h2 class="h5 mb-4">Sentiment Summary</h2>
+          <div class="d-flex justify-content-around mb-3">
+            <div>
+              <span class="badge rounded-pill bg-success fs-6 px-3 py-2">Positive</span>
+              <div class="fs-4 mt-2">{{ sentiment_counts[0] }}</div>
+            </div>
+            <div>
+              <span class="badge rounded-pill bg-secondary fs-6 px-3 py-2">Neutral</span>
+              <div class="fs-4 mt-2">{{ sentiment_counts[1] }}</div>
+            </div>
+            <div>
+              <span class="badge rounded-pill bg-danger fs-6 px-3 py-2">Negative</span>
+              <div class="fs-4 mt-2">{{ sentiment_counts[2] }}</div>
+            </div>
+          </div>
+          <p class="mb-0">Total analyses: <strong>{{ sentiment_counts[0] + sentiment_counts[1] + sentiment_counts[2] }}</strong></p>
+        </div>
+
+        <div class="card mb-4 p-3">
+            <h2 class="h5 mb-3">Sentiment Distribution (Bar Chart)</h2>
+            <canvas id="barChart"></canvas>
+        </div>
+
+        <div class="card mb-4 p-3">
+            <h2 class="h5 mb-3">Sentiment Proportion (Pie Chart)</h2>
+            <div class="text-center d-flex justify-content-center">
+              <canvas id="pieChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+        <div class="card mb-4 p-3">
+            <h2 class="h5 mb-3">Sentiment Trend Over Time (Line Chart)</h2>
+            <canvas id="lineChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+
+  new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Sentiment'],  
+    datasets: [
+      {
+        label: 'Positive',
+        data: [{{ sentiment_counts[0] }}],
+        backgroundColor: '#198754'
+      },
+      {
+        label: 'Neutral',
+        data: [{{ sentiment_counts[1] }}],
+        backgroundColor: '#6c757d'
+      },
+      {
+        label: 'Negative',
+        data: [{{ sentiment_counts[2] }}],
+        backgroundColor: '#dc3545'
+      }
+    ]
+  },
+  plugins: [ChartDataLabels],
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      },
+      plugins: {
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          color: '#fff',
+          font: {
+            weight: 'bold',
+            size: 14
+          },
+          formatter: (value, context) => {
+            const data = context.chart.data.datasets.map(d => d.data[0]);
+            const total = data.reduce((acc, val) => acc + val, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${value} (${percentage}%)`;
+          }
+        }
+      }
+    }
+  });
+
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Positive', 'Neutral', 'Negative'],
+      datasets: [{
+        data: {{ sentiment_counts | tojson | safe }},
+        backgroundColor: ['#198754', '#6c757d', '#dc3545']
+      }]
+    },
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: false,
+      plugins: {
+        datalabels: {
+          color: '#fff',
+          formatter: (value, context) => {
+            const data = context.chart.data.datasets[0].data;
+            const total = data.reduce((acc, val) => acc + val, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${value} (${percentage}%)`;
+          },
+          font: {
+            weight: 'bold',
+            size: 14
+          }
+        }
+      }
+    }
+  });
+
+  const dates = {{ dates | tojson | safe }};
+  const scores = {{ scores | tojson | safe }};
+  new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Sentiment Score',
+        data: scores,
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.2)',
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          suggestedMax: 1
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
