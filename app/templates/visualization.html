@@ -110,7 +110,7 @@
     data: {
       labels: ['Positive', 'Neutral', 'Negative'],
       datasets: [{
-        data: {{ sentiment_counts | safe }},
+        data: {{ sentiment_counts | tojson | safe }},
         backgroundColor: ['#198754', '#6c757d', '#dc3545']
       }]
     },
@@ -135,13 +135,15 @@
     }
   });
 
+  const dates = {{ dates | tojson | safe }};
+  const scores = {{ scores | tojson | safe }};
   new Chart(lineCtx, {
     type: 'line',
     data: {
-      labels: {{ dates | safe }},
+      labels: dates,
       datasets: [{
         label: 'Sentiment Score',
-        data: {{ scores | safe }},
+        data: scores,
         borderColor: '#0d6efd',
         backgroundColor: 'rgba(13, 110, 253, 0.2)',
         tension: 0.3,

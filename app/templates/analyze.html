@@ -23,12 +23,13 @@
             <div class="card-body">
                 {{ form.hidden_tag() }} <!-- Include CSRF token -->
                 <div class="mb-4">
-                    {{ wtf.form_field(form.news_text) }}
+                    {# Assuming wtf.form_field renders the label and field for news_text #}
+                    {{ wtf.form_field(form.news_text, class="form-control form-control-lg cyberpunk-textarea", rows="10", placeholder="Enter news article text here...") }}
                 </div>
                 {# Render the submit button directly, applying Bootstrap classes #}
                 {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
                 <div class="mb-3 text-center">
-                    {{ form.submit(class='btn btn-primary btn-lg px-4') }}
+                    {{ form.submit(class="btn btn-primary btn-lg cyberpunk-btn") }}
                 </div>
             </div>
         </form>
@@ -47,19 +48,45 @@
         </div>
 
         <!-- Keep original result display for non-AJAX fallback or initial load -->
-        {% if sentiment_result and not request.is_xhr %}
-        <div class="result mt-4 tilt-card">
-            <h2>Analysis Result:</h2>
+        {# Updated to display sentiment, intents, and keywords from analysis_data #}
+        {% if analysis_data and not request.is_xhr %}
+        <div class="result mt-4 tilt-card p-4">
+            <h2 class="h4 cyberpunk-subheader">Analysis Result:</h2>
+            
             <p class="display-6 mt-3">
-                {% if sentiment_result == 'Positive' %}
-                    <span class="badge bg-success">{{ sentiment_result }}</span>
-                {% elif sentiment_result == 'Negative' %}
-                    <span class="badge bg-danger">{{ sentiment_result }}</span>
+                <strong>Sentiment:</strong>
+                {% if analysis_data.sentiment == 'Positive' %}
+                    <span class="badge bg-success fs-5">{{ analysis_data.sentiment }}</span>
+                {% elif analysis_data.sentiment == 'Negative' %}
+                    <span class="badge bg-danger fs-5">{{ analysis_data.sentiment }}</span>
                 {% else %}
-                    <span class="badge bg-secondary">{{ sentiment_result }}</span>
+                    <span class="badge bg-secondary fs-5">{{ analysis_data.sentiment }}</span>
                 {% endif %}
             </p>
-            <p><small>This result has been saved to your history.</small></p>
+
+            {% if analysis_data.intents %}
+            <div class="mt-3">
+                <h3 class="h5">Identified Intents:</h3>
+                <ul class="list-inline">
+                    {% for intent in analysis_data.intents %}
+                    <li class="list-inline-item"><span class="badge bg-info text-dark">{{ intent }}</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if analysis_data.keywords %}
+            <div class="mt-3">
+                <h3 class="h5">Extracted Keywords:</h3>
+                <ul class="list-inline">
+                    {% for keyword in analysis_data.keywords %}
+                    <li class="list-inline-item"><span class="badge bg-light text-dark border">{{ keyword }}</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            <p class="mt-3"><small>This result has been saved to your history.</small></p>
         </div>
         {% endif %}
 
