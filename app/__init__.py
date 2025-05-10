@@ -5,8 +5,11 @@ from flask import Flask
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+from flask_bcrypt import Bcrypt # Import Bcrypt
+from config import Config
+from flask_migrate import Migrate # Import Migrate
 from datetime import datetime # Import datetime for context processor
-from config import config # Import the config dictionary
 
 # Load environment variables first
 load_dotenv()
@@ -18,9 +21,12 @@ login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
 # Set the message category for login required messages
 login_manager.login_message_category = 'info'
+csrf = CSRFProtect()
+bcrypt = Bcrypt() # Initialize Bcrypt
+migrate = Migrate() # Initialize Migrate
 
 
-def create_app(config_name='default'): # Changed parameter name and default
+def create_app(config_class=Config):
     """
     Factory function to create and configure the Flask application instance.
 
@@ -37,7 +43,7 @@ def create_app(config_name='default'): # Changed parameter name and default
 
     # --- Configuration ---
     # Load configuration from config.py using config_name
-    app.config.from_object(config[config_name])
+    app.config.from_object(config_class)
 
     # Enable Jinja2 'do' extension
     app.jinja_options['extensions'] = ['jinja2.ext.do'] # Add DoExtension
@@ -45,6 +51,9 @@ def create_app(config_name='default'): # Changed parameter name and default
     # --- Initialize Extensions with App ---
     db.init_app(app)
     login_manager.init_app(app)
+    csrf.init_app(app)
+    bcrypt.init_app(app) # Initialize Bcrypt with the app
+    migrate.init_app(app, db) # Initialize Migrate with the app and db
 
     # --- User Loader for Flask-Login ---
     # Import User model here to avoid circular imports at the top level
