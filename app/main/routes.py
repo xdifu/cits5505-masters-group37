@@ -1,20 +1,20 @@
 # filepath: c:\Users\Xiao Difu\Desktop\group5505\cits5505-masters-group37\app\main\routes.py
 # Defines the main routes for the application (index, analyze, results dashboards, etc.).
 
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app # Removed Blueprint
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.main import bp
-from app.models import AnalysisReport, NewsItem, analysis_report_shares, User # Removed SentimentEnum from here
-from app.forms import AnalysisForm, ShareReportForm, ManageReportSharingForm # Updated import
-from app.openai_api import analyze_text_data, SingleNewsItemAnalysis, PREDEFINED_INTENT_TAGS, SentimentEnum # Added SentimentEnum here
+from app.models import AnalysisReport, NewsItem, analysis_report_shares, User
+from app.forms import AnalysisForm, ShareReportForm, ManageReportSharingForm
+from app.openai_api import analyze_text_data, SingleNewsItemAnalysis, PREDEFINED_INTENT_TAGS, SentimentEnum
 from sqlalchemy.orm import aliased
-from sqlalchemy import desc, or_, select, func # Ensure select is imported
-from typing import List, Optional, Dict, Any # Added List, Optional
-import json # Added json
-from datetime import datetime, timedelta, timezone # Added timezone
-import re # Added re
-from collections import Counter, defaultdict # Added Counter, defaultdict
+from sqlalchemy import desc, or_, select, func
+from typing import List, Optional, Dict, Any
+import json
+from datetime import datetime, timedelta, timezone
+import re
+from collections import Counter, defaultdict
 
 # Helper function to parse string dates from OpenAI into datetime objects
 def _parse_publication_date(date_str: Optional[str]) -> Optional[datetime]:
@@ -492,22 +492,25 @@ def share_report(report_id):
 
     form = ShareReportForm()
     if form.validate_on_submit():
-        user_to_share_with = db.session.scalar(
-            db.select(User).where(User.username == form.share_with_username.data)
-        )
-        if user_to_share_with is None:
-            flash(f'User {form.share_with_username.data} not found.', 'danger')
-        elif user_to_share_with == current_user:
-            flash('You cannot share a report with yourself.', 'warning')
-        # Corrected check for list-based relationship:
-        elif user_to_share_with in report.shared_with_recipients:
-            flash(f'Report already shared with {user_to_share_with.username}.', 'info')
-        else:
-            report.shared_with_recipients.append(user_to_share_with)
-            db.session.commit()
-            flash(f'Report shared successfully with {user_to_share_with.username}.', 'success')
-        return redirect(url_for('main.results_dashboard', report_id=report_id))
-    
+        try:
+            user_to_share_with = db.session.scalar(
+                db.select(User).where(User.username == form.share_with_username.data)
+            )
+            if user_to_share_with is None:
+                flash(f'User {form.share_with_username.data} not found.', 'danger')
+            elif user_to_share_with == current_user:
+                flash('You cannot share a report with yourself.', 'warning')
+            elif user_to_share_with in report.shared_with_recipients:
+                flash(f'Report already shared with {user_to_share_with.username}.', 'info')
+            else:
+                report.shared_with_recipients.append(user_to_share_with)
+                db.session.commit()
+                flash(f'Report shared successfully with {user_to_share_with.username}.', 'success')
+            return redirect(url_for('main.results_dashboard', report_id=report_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error sharing result: {str(e)}', 'danger')
+
     return render_template('share_analysis.html', title='Share Report', form=form, report=report)
 
 @bp.route('/manage_report_sharing/<int:report_id>', methods=['GET', 'POST'])
@@ -578,45 +581,45 @@ def shared_report_details(report_id):
 # Old /results route (from before AnalysisReport) is now /results_list
 # Old /share_analysis and /manage_sharing are updated to /share_report and /manage_report_sharing
 # Old /shared_results/<id> is now /shared_report_details/<id>
-    username_to_share_with = form.share_with_username.data
-    user_to_share_with = db.session.scalar(sa.select(User).where(User.username == username_to_share_with))
+username_to_share_with = form.share_with_username.data
+user_to_share_with = db.session.scalar(sa.select(User).where(User.username == username_to_share_with))
 
-        if not user_to_share_with:
-            flash(f'User "{username_to_share_with}" not found.', 'warning')
-        elif user_to_share_with == current_user:
-            flash('You cannot share an analysis with yourself.', 'info')
-        else:
-            # Check if already shared with this user
-            # For WriteOnlyCollection, query using with_parent
-            # Use the actual class attribute for the relationship
-            already_shared_query = db.session.query(User).with_parent(result_to_share, Result.shared_with_recipients).filter(User.id == user_to_share_with.id)
-            is_already_shared = db.session.query(already_shared_query.exists()).scalar()
+if not user_to_share_with:
+    flash(f'User "{username_to_share_with}" not found.', 'warning')
+elif user_to_share_with == current_user:
+    flash('You cannot share an analysis with yourself.', 'info')
+else:
+    # Check if already shared with this user
+    # For WriteOnlyCollection, query using with_parent
+    # Use the actual class attribute for the relationship
+    already_shared_query = db.session.query(User).with_parent(result_to_share, Result.shared_with_recipients).filter(User.id == user_to_share_with.id)
+    is_already_shared = db.session.query(already_shared_query.exists()).scalar()
 
-            if is_already_shared:
-                flash(f'This result is already shared with {user_to_share_with.username}.', 'info')
-            else:
-                try:
-                    # Add the user to the recipients list
-                    result_to_share.shared_with_recipients.add(user_to_share_with)
-                    db.session.commit()
-                    flash(f'Analysis result shared successfully with {user_to_share_with.username}!', 'success')
-                    return redirect(url_for('main.results'))
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f'Error sharing result: {str(e)}', 'danger')
-    
-    return render_template('share_analysis.html', title='Share Analysis', form=form, result=result_to_share)
+    if is_already_shared:
+        flash(f'This result is already shared with {user_to_share_with.username}.', 'info')
+    else:
+        try:
+            # Add the user to the recipients list
+            result_to_share.shared_with_recipients.add(user_to_share_with)
+            db.session.commit()
+            flash(f'Analysis result shared successfully with {user_to_share_with.username}!', 'success')
+            return redirect(url_for('main.results'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error sharing result: {str(e)}', 'danger')
+
+return render_template('share_analysis.html', title='Share Analysis', form=form, result=result_to_share)
 
 @bp.route('/visualization')
 @login_required
 def visualization():
-    results = Result.query.filter_by(user_id=current_user.id).order_by(Result.timestamp).all()
+    # 这里假设 NewsItem 模型包含 timestamp 与 sentiment_label 字段
+    results = NewsItem.query.filter_by(user_id=current_user.id).order_by(NewsItem.timestamp).all()
 
-    # Obtain the quantity of each emotion category
     sentiment_counts = {
-        'Positive': sum(1 for r in results if r.sentiment.lower() == 'positive'),
-        'Neutral': sum(1 for r in results if r.sentiment.lower() == 'neutral'),
-        'Negative': sum(1 for r in results if r.sentiment.lower() == 'negative')
+        'Positive': sum(1 for r in results if r.sentiment_label.lower() == 'positive'),
+        'Neutral': sum(1 for r in results if r.sentiment_label.lower() == 'neutral'),
+        'Negative': sum(1 for r in results if r.sentiment_label.lower() == 'negative')
     }
     sentiment_counts_list = [
         sentiment_counts['Positive'],
@@ -624,13 +627,12 @@ def visualization():
         sentiment_counts['Negative']
     ]
 
-    # Prepare the time series and emotion scores (for line charts)
     dates = [r.timestamp.strftime('%Y-%m-%d %H:%M') for r in results]
     scores = []
     for r in results:
-        if r.sentiment.lower() == "positive":
+        if r.sentiment_label.lower() == "positive":
             scores.append(1)
-        elif r.sentiment.lower() == "neutral":
+        elif r.sentiment_label.lower() == "neutral":
             scores.append(0.5)
         else:
             scores.append(0)
