@@ -60,17 +60,17 @@
       {
         label: 'Positive',
         data: [{{ sentiment_counts[0] }}],
-        backgroundColor: '#4caf50'
+        backgroundColor: '#198754'
       },
       {
         label: 'Neutral',
         data: [{{ sentiment_counts[1] }}],
-        backgroundColor: '#ffc107'
+        backgroundColor: '#6c757d'
       },
       {
         label: 'Negative',
         data: [{{ sentiment_counts[2] }}],
-        backgroundColor: '#f44336'
+        backgroundColor: '#dc3545'
       }
     ]
   },
@@ -93,6 +93,12 @@
           font: {
             weight: 'bold',
             size: 14
+          },
+          formatter: (value, context) => {
+            const data = context.chart.data.datasets.map(d => d.data[0]);
+            const total = data.reduce((acc, val) => acc + val, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${value} (${percentage}%)`;
           }
         }
       }
@@ -105,7 +111,7 @@
       labels: ['Positive', 'Neutral', 'Negative'],
       datasets: [{
         data: {{ sentiment_counts | safe }},
-        backgroundColor: ['#4caf50', '#ffc107', '#f44336']
+        backgroundColor: ['#198754', '#6c757d', '#dc3545']
       }]
     },
     plugins: [ChartDataLabels],
@@ -115,7 +121,10 @@
         datalabels: {
           color: '#fff',
           formatter: (value, context) => {
-            return value;
+            const data = context.chart.data.datasets[0].data;
+            const total = data.reduce((acc, val) => acc + val, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${value} (${percentage}%)`;
           },
           font: {
             weight: 'bold',
