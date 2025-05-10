@@ -222,14 +222,14 @@ This project uses [Flask-Migrate](https://flask-migrate.readthedocs.io/) (which 
     ```bash
     flask db migrate -m "A short, descriptive message of the changes"
     ```
-    This command compares your models to the current database schema (as tracked by previous migrations) and generates a new script in the `migrations/versions/` directory.
-3.  **Review Script:** **Always open and review the generated migration script.** Alembic does its best, but for complex changes (e.g., data transformations, renaming columns that SQLite doesn't natively support well), you might need to manually adjust the script.
+    This command compares your models to the current database schema (as tracked by previous migrations) and generates a new script in the `migrations/versions/` directory. **Make this message meaningful**, as it helps you and your team understand the purpose of each migration when looking at the history.
+3.  **Review Script:** **Always open and review the generated migration script.** Alembic does its best, but for complex changes (e.g., data transformations, renaming columns that SQLite doesn't natively support well), you might need to manually adjust the script. See "Important Notes" below.
 4.  **Apply Migration:**
     ```bash
     flask db upgrade
     ```
     This applies the latest (or all pending) migration scripts to your database.
-5.  **Commit Changes:** Commit both your model changes (`app/models.py`) and the new migration script (`migrations/versions/your_new_script.py`) to version control.
+5.  **Commit Changes:** Commit both your model changes (`app/models.py`) and the new migration script (`migrations/versions/your_new_script.py`) to version control. This ensures that other developers and your deployment process can apply the same schema changes.
 
 ### Common Migration Commands
 
@@ -245,42 +245,49 @@ Ensure `FLASK_APP=run.py` is set (e.g., in your `.env` file or exported in your 
     ```bash
     flask db migrate -m "description of changes"
     ```
+    Remember to provide a clear and descriptive message.
 
 *   **Apply Migrations to Database (Upgrade):**
     ```bash
     flask db upgrade
     ```
-    Applies all pending migrations. To upgrade to a specific version: `flask db upgrade <revision_id>`
+    Applies all pending migrations to bring the database to the latest revision. To upgrade to a specific version: `flask db upgrade <revision_id>`
 
 *   **Revert Last Migration (Downgrade):**
     ```bash
     flask db downgrade
     ```
-    To downgrade to a specific version: `flask db downgrade <revision_id>`
+    Reverts the single most recent migration. To downgrade to a specific version (which must be an earlier revision): `flask db downgrade <revision_id>`
 
 *   **View Migration History:**
     ```bash
     flask db history
     ```
+    Shows a list of migrations, their IDs, and messages.
 
 *   **View Current Database Revision:**
     ```bash
     flask db current
     ```
+    Shows the revision ID currently applied to the database.
 
 *   **Stamp Database with a Revision (Advanced):**
-    If the database schema already matches a certain migration but Alembic doesn't know it:
+    If the database schema already matches a certain migration (e.g., after a manual setup or restore) but Alembic doesn't know it:
     ```bash
-    flask db stamp head  # Marks current schema as up-to-date with latest migration
+    flask db stamp head  # Marks current schema as up-to-date with the latest migration script
     flask db stamp <revision_id> # Marks current schema as matching a specific revision
     ```
+    Use with caution, as this doesn't run any migration code.
 
 ### Important Notes for Migrations:
 
-*   **Review Generated Scripts:** Crucial for preventing unintended changes or data loss.
-*   **Backup Production Data:** Always back up your production database before applying migrations.
-*   **SQLite Limitations:** Alembic's "batch mode" (enabled by default for SQLite in Flask-Migrate) helps work around some SQLite limitations regarding `ALTER TABLE` operations. However, complex changes like renaming tables/columns or changing column types with constraints might still require manual steps or more complex migration scripts.
-*   **Development vs. Production:** While `flask db upgrade` is used in all environments, the initial setup and generation of migrations (`init`, `migrate`) are typically development tasks.
+*   **Review Generated Scripts:** This is crucial for preventing unintended changes or data loss. Do not blindly trust auto-generated scripts for complex operations.
+*   **Handling Incorrectly Generated Migrations:** If `flask db migrate` generates a script that isn't what you intended (e.g., due to a mistake in model changes or an Alembic misinterpretation), **do not apply it with `flask db upgrade`**. You can simply delete the incorrect migration Python file from the `migrations/versions/` directory, correct your models or the underlying issue, and then re-run `flask db migrate -m "..."` to generate a new, correct script.
+*   **Backup Production Data:** Always back up your production database before applying any migrations.
+*   **SQLite Limitations:** Alembic's "batch mode" (enabled by default for SQLite in Flask-Migrate) helps work around some SQLite limitations regarding `ALTER TABLE` operations (like dropping columns or altering constraints). However, complex changes like renaming tables/columns or certain type changes with constraints might still require manual adjustments in the migration script or a multi-step migration process.
+*   **Development vs. Production:** While `flask db upgrade` is used in all environments to apply migrations, the generation of migrations (`flask db migrate`) is typically a development task. Migration scripts are then committed to version control and applied to staging/production environments.
+*   **Migrations in Tests:** Our testing setup (configured in `tests/conftest.py`) automatically runs `flask db upgrade` before tests. This ensures the test database schema is always consistent with the latest migrations, providing a reliable testing environment.
+*   **Team Collaboration:** When working in a team, always pull the latest changes (including any new migration files from others) before creating your own migrations to avoid conflicts. If conflicts do occur (e.g., two developers create migrations from the same base revision), they need to be resolved carefully, sometimes involving `flask db merge` or by re-generating one of the migrations on top of the other.
 
 ## Development-Only Database Scripts (Use with Caution)
 
