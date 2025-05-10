@@ -20,6 +20,7 @@ This application provides a platform for users to perform sentiment analysis on 
 *   **Public Shared View:** A dedicated page allows all users (including anonymous visitors) to browse results that have been marked as "shared" by others.
 *   **CSRF Protection:** All forms are protected against Cross-Site Request Forgery attacks using Flask-WTF.
 *   **Secure API Key Handling:** OpenAI API keys are managed securely using environment variables loaded via `python-dotenv`.
+*   **Database Migrations:** Evolve the database schema safely with Flask-Migrate.
 
 ## Technology Stack
 
@@ -31,7 +32,7 @@ This application provides a platform for users to perform sentiment analysis on 
 *   **Charting:** Chart.js
 *   **API Integration:** OpenAI Python Client Library (`openai`)
 *   **Environment Variables:** `python-dotenv`
-*   **Database Migrations:** Flask-Migrate (with Alembic) # Added
+*   **Database Migrations:** Flask-Migrate (with Alembic)
 *   **Testing:**
     *   Unit Testing: `pytest`
     *   Functional Testing: `selenium`
@@ -45,7 +46,7 @@ news-sentiment-analyzer/
 │   └── app.db
 ├── app/                  # Main application package
 │   ├── __init__.py       # Application factory, initializes extensions
-│   ├── models.py         # SQLAlchemy database models (User, Result)
+│   ├── models.py         # SQLAlchemy database models (User, AnalysisReport, NewsItem)
 │   ├── forms.py          # WTForms definitions (Login, Register, Analysis)
 │   ├── openai_api.py     # Logic for interacting with OpenAI API
 │   ├── auth/             # Authentication blueprint
@@ -79,6 +80,8 @@ news-sentiment-analyzer/
 ├── .gitignore            # Specifies intentionally untracked files
 ├── requirements.txt      # Python package dependencies
 ├── run.py                # Application entry point script
+├── clear_database.py     # DEV-ONLY: Script to clear data from tables
+├── reset_database.py     # DEV-ONLY: Script to drop and recreate all tables
 └── README.md             # This file
 ```
 
@@ -91,15 +94,10 @@ news-sentiment-analyzer/
 
 ## Setup and Installation
 1.  **Clone the Repository:**
-   ```bash
-   # Clone the repository
-   git clone https://github.com/xdifu/cits5505-masters-group37.git
-   cd cits5505-masters-group37
-
-   # The main branch should be checked out by default.
-   # If you need to switch to it explicitly:
-   # git checkout main
-   ```
+    ```bash
+    git clone https://github.com/xdifu/cits5505-masters-group37.git
+    cd cits5505-masters-group37
+    ```
 
 2.  **Create and Activate a Virtual Environment:**
     *   **Linux/macOS:**
@@ -110,7 +108,7 @@ news-sentiment-analyzer/
     *   **Windows:**
         ```bash
         python -m venv venv
-        .\venv\Scripts\activate
+        .\\venv\\Scripts\\activate
         ```
 
 3.  **Install Dependencies:**
@@ -126,29 +124,41 @@ news-sentiment-analyzer/
     *   Edit the `.env` file and add your credentials:
         ```dotenv
         # .env
-        FLASK_APP=run.py # Ensures Flask CLI can find the app
+        FLASK_APP=run.py # Essential for Flask CLI (flask db, flask run)
+        FLASK_ENV=development # Set to 'production' for production deployments
         SECRET_KEY='a-very-strong-random-secret-key-please-change' # Replace with a real secret key
         OPENAI_API_KEY='your-openai-api-key-here'
-        # DATABASE_URL='sqlite:///instance/app.db' # Optional: Defaults to this if not set
+        # For development, DEV_DATABASE_URL in config.py defaults to 'sqlite:///instance/app-dev.db'
+        # For production, DATABASE_URL in config.py defaults to 'sqlite:///instance/app.db'
+        # You can override these here if needed, e.g.:
+        # DEV_DATABASE_URL='postgresql://user:pass@host:port/dbname'
+        # DATABASE_URL='postgresql://user:pass@host:port/dbname_prod'
         ```
-        *   **`FLASK_APP`**: Tells the `flask` command how to load your application. Essential for `flask db` commands.
-        *   **`SECRET_KEY`**: Used by Flask for session security and CSRF protection. Generate a strong random key.
-        *   **`OPENAI_API_KEY`**: Your API key obtained from OpenAI.
+        *   **`FLASK_APP`**: Tells the `flask` command how to load your application.
+        *   **`FLASK_ENV`**: Sets the environment (e.g., `development`, `production`). Influences which config is loaded.
+        *   **`SECRET_KEY`**: Used by Flask for session security and CSRF protection.
+        *   **`OPENAI_API_KEY`**: Your API key from OpenAI.
+
+5.  **Initialize/Upgrade the Database:**
+    This step ensures your database schema is up-to-date with the models.
+    ```bash
+    # If this is the very first time setting up the project, initialize the migration environment:
+    # flask db init 
+    # (This creates the migrations/ folder. Commit this folder to your repository.)
+
+    # Generate a new migration if you've made changes to app/models.py:
+    # flask db migrate -m "Brief description of model changes"
+    # (Review the generated script in migrations/versions/)
+
+    # Apply migrations to the database:
+    flask db upgrade
+    ```
+    *Note: Ensure `FLASK_APP=run.py` is set in your `.env` file or exported in your shell for `flask db` commands to work correctly.*
 
 ## Running the Application
 
 1.  **Ensure your virtual environment is activated.**
-2.  **Initialize or Upgrade the Database (if first time or after model changes):**
-    ```bash
-    # Set up the migration environment (only needs to be run once per project setup)
-    # FLASK_APP=run.py flask db init 
-
-    # Generate an initial migration (or a new migration after model changes)
-    # FLASK_APP=run.py flask db migrate -m "Descriptive migration message"
-
-    # Apply the migration to the database
-    FLASK_APP=run.py flask db upgrade
-    ```
+2.  **Ensure your database is migrated to the latest version (see `flask db upgrade` above).**
 3.  **Start the Flask Development Server:**
     ```bash
     flask run
@@ -161,11 +171,11 @@ news-sentiment-analyzer/
 ### Unit Tests (`pytest`)
 
 1.  **Ensure your virtual environment is activated and dependencies are installed.**
-2.  **Run pytest from the project root directory (`news-sentiment-analyzer/`):**
+2.  **The test environment uses an in-memory SQLite database by default.** Migrations should be applied during test setup (see `tests/conftest.py` if customization is needed).
+3.  **Run pytest from the project root directory:**
     ```bash
     pytest
     ```
-    *   Pytest will automatically discover and run tests in the `tests/` directory.
 
 ### Functional Tests (`selenium`)
 
@@ -203,81 +213,90 @@ news-sentiment-analyzer/
 
 ## Database Migrations (Flask-Migrate)
 
-This project uses [Flask-Migrate](https://flask-migrate.readthedocs.io/) (which uses [Alembic](https://alembic.sqlalchemy.org/)) to handle database schema migrations. This allows for evolving the database structure over time without losing data.
+This project uses [Flask-Migrate](https://flask-migrate.readthedocs.io/) (which builds on [Alembic](https://alembic.sqlalchemy.org/)) to handle database schema migrations. This is the **recommended way** to evolve your database structure over time, especially in production, as it helps preserve existing data.
 
-### Common Migration Commands
+### Workflow
 
-Make sure your `FLASK_APP=run.py` environment variable is set (e.g., in your `.env` file or exported in your shell).
-
-*   **Initialize the migration environment (run once per project):**
+1.  **Modify Models:** Make changes to your SQLAlchemy models in `app/models.py` (e.g., add a table, add/remove a column, change a data type).
+2.  **Generate Migration Script:**
     ```bash
-    flask db init
+    flask db migrate -m "A short, descriptive message of the changes"
     ```
-    This creates the `migrations/` directory. You should commit this directory to version control.
-
-*   **Generate a new migration script after model changes:**
-    Whenever you change your SQLAlchemy models in `app/models.py` (e.g., add a table, add a column, change a type), you need to generate a migration script:
-    ```bash
-    flask db migrate -m "A short message describing the changes"
-    ```
-    Review the generated script in `migrations/versions/` before applying it.
-
-*   **Apply migrations to the database:**
-    This command applies any pending migrations to your database, bringing its schema up to date with your models.
+    This command compares your models to the current database schema (as tracked by previous migrations) and generates a new script in the `migrations/versions/` directory.
+3.  **Review Script:** **Always open and review the generated migration script.** Alembic does its best, but for complex changes (e.g., data transformations, renaming columns that SQLite doesn't natively support well), you might need to manually adjust the script.
+4.  **Apply Migration:**
     ```bash
     flask db upgrade
     ```
+    This applies the latest (or all pending) migration scripts to your database.
+5.  **Commit Changes:** Commit both your model changes (`app/models.py`) and the new migration script (`migrations/versions/your_new_script.py`) to version control.
 
-*   **Downgrade a migration (revert):**
-    To revert the last applied migration:
+### Common Migration Commands
+
+Ensure `FLASK_APP=run.py` is set (e.g., in your `.env` file or exported in your shell).
+
+*   **Initialize Migration Environment (run once per project):**
+    ```bash
+    flask db init
+    ```
+    Creates `migrations/` directory and configuration. Commit this.
+
+*   **Generate a New Migration Script:**
+    ```bash
+    flask db migrate -m "description of changes"
+    ```
+
+*   **Apply Migrations to Database (Upgrade):**
+    ```bash
+    flask db upgrade
+    ```
+    Applies all pending migrations. To upgrade to a specific version: `flask db upgrade <revision_id>`
+
+*   **Revert Last Migration (Downgrade):**
     ```bash
     flask db downgrade
     ```
-    You can also downgrade to a specific migration version.
+    To downgrade to a specific version: `flask db downgrade <revision_id>`
 
-*   **View migration history:**
+*   **View Migration History:**
     ```bash
     flask db history
     ```
 
-*   **View current database revision:**
+*   **View Current Database Revision:**
     ```bash
     flask db current
     ```
 
+*   **Stamp Database with a Revision (Advanced):**
+    If the database schema already matches a certain migration but Alembic doesn't know it:
+    ```bash
+    flask db stamp head  # Marks current schema as up-to-date with latest migration
+    flask db stamp <revision_id> # Marks current schema as matching a specific revision
+    ```
+
 ### Important Notes for Migrations:
 
-*   Always **review auto-generated migration scripts** before applying them, especially for complex changes, to ensure they correctly reflect your intentions.
-*   For SQLite, Flask-Migrate is configured to use "batch mode" which helps with limitations in SQLite's `ALTER TABLE` support.
-*   The old `reset_database.py` and `clear_database.py` scripts are still available but should primarily be used for development convenience (e.g., quickly resetting to a known state). **They are destructive and do not replace the migration workflow for schema evolution.**
+*   **Review Generated Scripts:** Crucial for preventing unintended changes or data loss.
+*   **Backup Production Data:** Always back up your production database before applying migrations.
+*   **SQLite Limitations:** Alembic's "batch mode" (enabled by default for SQLite in Flask-Migrate) helps work around some SQLite limitations regarding `ALTER TABLE` operations. However, complex changes like renaming tables/columns or changing column types with constraints might still require manual steps or more complex migration scripts.
+*   **Development vs. Production:** While `flask db upgrade` is used in all environments, the initial setup and generation of migrations (`init`, `migrate`) are typically development tasks.
 
-## Database Management
+## Development-Only Database Scripts (Use with Caution)
 
-(This section might be deprecated or updated based on the new migration workflow)
+The following scripts are provided for **development convenience only**. They are **destructive** and should **NOT** be used on a production database or if you need to preserve data. For schema evolution, always use the Flask-Migrate workflow described above.
 
-The application provides two scripts for managing the database:
+*   **`clear_database.py`**:
+    *   **Action:** Deletes all data from all tables but preserves the table structure.
+    *   **Use Case:** Quickly empty the database during development without affecting the schema.
+    *   **Command:** `python clear_database.py`
 
-### Clearing Database Data
+*   **`reset_database.py`**:
+    *   **Action:** Drops all tables and then recreates them based on the current models (effectively `db.drop_all()` then `db.create_all()`). **This bypasses the migration history.**
+    *   **Use Case:** Drastic reset for development if the database or migration state becomes corrupted and you want a completely fresh start based on current models.
+    *   **Command:** `python reset_database.py`
 
-To clear all user data, analysis results, and sharing relationships while preserving the database structure:
-
-```bash
-python clear_database.py
-```
-
-Options:
-- Clear all data
-- Clear a specific user's data
-
-### Resetting the Database
-
-To completely reset the database by dropping and recreating all tables:
-
-```bash
-python reset_database.py
-```
-
-This method is more drastic and will delete all data and reset the database structure to its initial state.
+**Warning:** Using `reset_database.py` means your database will no longer be in sync with Alembic's migration history. You might need to re-stamp the database (`flask db stamp head`) or re-initialize migrations if you intend to use Flask-Migrate afterwards.
 
 ## Team Members
 
