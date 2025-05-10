@@ -3,8 +3,17 @@
 """
 Database Reset Tool
 
-This script completely resets the database by dropping all tables and recreating them.
-This is different from clear_database.py which only removes data but keeps the tables.
+************************************************************************************
+** WARNING: DEVELOPMENT USE ONLY - DESTRUCTIVE OPERATION **
+This script completely resets the database by dropping all tables and recreating them
+based on the current models (db.drop_all(), db.create_all()).
+IT BYPASSES THE FLASK-MIGRATE/ALEMBIC MIGRATION HISTORY.
+USE FLASK-MIGRATE (flask db upgrade/downgrade) FOR SCHEMA EVOLUTION.
+This script is for quickly resetting to a clean slate during development if needed,
+but be aware that it will WIPE ALL DATA and your database will NOT be in sync
+with migration history afterwards. You might need to re-stamp or re-initialize
+migrations if you use this and then want to use Flask-Migrate.
+************************************************************************************
 """
 
 from app import create_app, db

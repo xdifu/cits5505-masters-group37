@@ -3,8 +3,15 @@
 """
 Database Clearing Tool
 
-This script provides functionality to clear user data, analysis results, 
-and sharing relationships from the database.
+************************************************************************************
+** WARNING: DEVELOPMENT USE ONLY - DESTRUCTIVE OPERATION **
+This script provides functionality to clear user data, analysis results,
+and sharing relationships from the database by deleting rows from tables.
+It preserves the database schema (table structures).
+USE FLASK-MIGRATE (flask db upgrade/downgrade) FOR SCHEMA EVOLUTION.
+This script is for quickly clearing data during development.
+IT WILL WIPE DATA FROM TABLES.
+************************************************************************************
 """
 
 from app import create_app, db
