@@ -3,7 +3,7 @@
 
 from flask_wtf import FlaskForm # Base class for Flask-WTF forms
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, EmailField, SelectMultipleField, HiddenField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email, Optional as WTFormsOptional
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email, Optional as WTFormsOptional, Regexp
 import sqlalchemy as sa
 
 # Import the User model to check for existing usernames during registration
@@ -28,7 +28,14 @@ class RegistrationForm(FlaskForm):
     """Form for new user registration."""
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     email = EmailField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)]) # Enforce minimum password length
+    password = PasswordField('Password', validators=[
+        DataRequired(), 
+        Length(min=6),
+        Regexp(
+            regex=r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$',
+            message="Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+        )
+    ]) # Enforce minimum password length
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match.')]) # Ensure passwords match
     submit = SubmitField('Register')
@@ -117,3 +124,14 @@ class ManageReportSharingForm(FlaskForm):
     # but can be added as a HiddenField if the form needs to post it explicitly.
     # report_id = HiddenField(validators=[DataRequired()]) 
     submit = SubmitField('Update Sharing Settings')
+
+    def __init__(self, current_user_id, *args, **kwargs):
+        super(ManageReportSharingForm, self).__init__(*args, **kwargs)
+        if db and User:
+            # Populate choices dynamically, excluding the current user
+            self.users_to_share_with.choices = [
+                (user.id, user.username) 
+                for user in db.session.scalars(
+                    sa.select(User).where(User.id != current_user_id)
+                ).all()
+            ]
