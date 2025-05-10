@@ -9,8 +9,8 @@
 
 {% if results %}
 <div class="row">
-    {# Left column for report cards #}
-    <div class="col-lg-8">
+    {# Left column for report cards - now full width #}
+    <div class="col-lg-12">
         <div class="results-list-container"> {# New container for report cards #}
             {% for report_item in results %}
             <div class="report-card mb-4 tilt-card"> {# Added tilt-card here for potential JS tilt on individual small cards #}
@@ -51,41 +51,6 @@
             {% endfor %}
         </div>
     </div>
-    
-    {# Right column for summary and chart #}
-    <div class="col-lg-4">
-        <div class="results-summary-card sticky-top" style="top: 100px;"> {# Added sticky-top for summary card #}
-            <h2 class="h4 mb-3 chart-heading no-animation text-center">Overall Sentiments</h2>
-            <div class="sentiment-distribution-chart-container mb-4"> {# Container for canvas #}
-                <canvas id="sentimentChart"></canvas>
-            </div>
-            
-            <h3 class="h5 mb-3 text-center summary-counts-title">Summary Counts</h3>
-            <div class="row text-center summary-counts">
-                <div class="col-4">
-                    <div class="sentiment-stat positive">
-                        <span class="stat-label">Positive</span>
-                        <h3 class="stat-value">{{ sentiment_counts.positive or 0 }}</h3>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="sentiment-stat neutral">
-                        <span class="stat-label">Neutral</span>
-                        <h3 class="stat-value">{{ sentiment_counts.neutral or 0 }}</h3>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="sentiment-stat negative">
-                        <span class="stat-label">Negative</span>
-                        <h3 class="stat-value">{{ sentiment_counts.negative or 0 }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center mt-3 total-analyzed">
-                <p>Total analyzed items: <strong>{{ (sentiment_counts.positive or 0) + (sentiment_counts.neutral or 0) + (sentiment_counts.negative or 0) }}</strong></p>
-            </div>
-        </div>
-    </div>
 </div>
 {% else %}
 <div class="card tilt-card p-4 text-center"> {# Keep tilt-card for this "empty" state card if desired and small enough #}
@@ -100,113 +65,4 @@
 
 {% block scripts %}
 {{ super() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Define sentiment data as a global variable
-  var sentimentData = JSON.parse('{{ sentiment_counts|tojson|safe }}');
-  
-  document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('sentimentChart');
-    if (ctx && sentimentData && (sentimentData.positive !== undefined || sentimentData.neutral !== undefined || sentimentData.negative !== undefined)) {
-      // Register a custom plugin for background color and center text
-      Chart.register({
-        id: 'doughnutBackground',
-        beforeDraw: (chart) => {
-          const {width, height, ctx} = chart;
-          ctx.save();
-          // Optional: Fill background of chart area if needed
-          // ctx.fillStyle = 'rgba(255, 255, 255, 0.03)'; // Very subtle background for chart area
-          // ctx.fillRect(0, 0, width, height);
-          ctx.restore();
-        }
-      });
-
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Positive', 'Neutral', 'Negative'],
-          datasets: [{
-            label: 'Sentiment Distribution',
-            data: [
-              sentimentData.positive || 0,
-              sentimentData.neutral || 0,
-              sentimentData.negative || 0
-            ],
-            backgroundColor: [
-              'rgba(40, 167, 69, 0.75)',  // Positive - slightly more vibrant
-              'rgba(108, 117, 125, 0.75)', // Neutral
-              'rgba(220, 53, 69, 0.75)'   // Negative
-            ],
-            borderColor: [ // Using a consistent border color related to the dark theme
-              'rgba(10, 15, 31, 0.8)', // Matches new body background
-              'rgba(10, 15, 31, 0.8)',
-              'rgba(10, 15, 31, 0.8)'
-            ],
-            borderWidth: 3, // Slightly thicker border for definition
-            hoverOffset: 10, // Increased hover offset
-            hoverBorderColor: 'rgba(255,255,255,0.5)', // Lighter hover border
-            hoverBorderWidth: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '70%', // Thinner doughnut for a sleeker look
-          animation: {
-            animateScale: true,
-            animateRotate: true,
-            duration: 1500, // Slower, smoother animation
-            easing: 'easeInOutQuart' // Smoother easing
-          },
-          plugins: {
-              legend: {
-                position: 'bottom',
-                align: 'center',
-                labels: { 
-                    color: 'rgba(255,255,255,0.7)', // Lighter legend text
-                    font: { size: 12, family: "'Poppins', sans-serif" }, 
-                    padding: 20, 
-                    usePointStyle: true,
-                    pointStyle: 'circle', // Use circle for point style
-                    boxWidth: 8, // Size of point style
-                    boxHeight: 8
-                }
-              },
-            title: { // Remove the default chart title if the sidebar heading is sufficient
-                display: false, // Set to false to remove "Your Sentiment Analysis..."
-                // text: 'Sentiment Distribution', // Or change text
-                // color: 'rgba(255,255,255,0.8)',
-                // font: { size: 16, family: "'Poppins', sans-serif", weight: '600' },
-                // padding: { top: 0, bottom: 20 }
-            },
-            tooltip: {
-              enabled: true,
-              backgroundColor: 'rgba(0,0,0,0.9)', // Darker tooltip
-              titleColor: 'rgba(255,255,255,0.9)',
-              bodyColor: 'rgba(255,255,255,0.8)',
-              titleFont: { size: 13, family: "'Poppins', sans-serif", weight: 'bold' },
-              bodyFont: { size: 12, family: "'Poppins', sans-serif" },
-              padding: 12, // More padding
-              cornerRadius: 8, // More rounded
-              displayColors: true, // Show color box in tooltip
-              borderColor: 'rgba(255,255,255,0.2)',
-              borderWidth: 1,
-              callbacks: {
-                label: function(context) {
-                  const label = context.label || '';
-                  const value = context.raw || 0;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                  return `${label}: ${value} (${percentage}%)`;
-                }
-              }
-            }
-          }
-        }
-      });
-    } else if (ctx) {
-        ctx.parentNode.innerHTML = '<p class="text-center text-muted mt-3" style="color: rgba(255,255,255,0.5) !important;">Not enough data for sentiment distribution chart.</p>';
-    }
-  });
-</script>
 {% endblock %}
