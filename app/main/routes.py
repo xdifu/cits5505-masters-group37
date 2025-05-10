@@ -578,8 +578,8 @@ def shared_report_details(report_id):
 # Old /results route (from before AnalysisReport) is now /results_list
 # Old /share_analysis and /manage_sharing are updated to /share_report and /manage_report_sharing
 # Old /shared_results/<id> is now /shared_report_details/<id>
-        username_to_share_with = form.share_with_username.data
-        user_to_share_with = db.session.scalar(sa.select(User).where(User.username == username_to_share_with))
+    username_to_share_with = form.share_with_username.data
+    user_to_share_with = db.session.scalar(sa.select(User).where(User.username == username_to_share_with))
 
         if not user_to_share_with:
             flash(f'User "{username_to_share_with}" not found.', 'warning')
