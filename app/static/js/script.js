@@ -242,47 +242,51 @@ function createSimpleParticleEffect(container) {
 
 /**
  * Initializes 3D tilt effects for cards and result containers.
- * Uses vanilla-tilt.js if available, otherwise creates a simple hover effect.
+ * Uses vanilla-tilt.js if available, but only on narrow elements
+ * to avoid excessive rotation on large panels.
  */
 function initialize3DTiltEffects() {
-    // Check if vanilla-tilt is available
     if (typeof VanillaTilt !== 'undefined') {
-        VanillaTilt.init(document.querySelectorAll('.tilt-card'), {
-            max: 10,
-            speed: 400,
-            glare: true,
-            "max-glare": 0.3,
+        // Find all tilt-card elements
+        document.querySelectorAll('.tilt-card').forEach(el => {
+            // Only initialize on elements narrower than 600px
+            if (el.offsetWidth < 600) {
+                VanillaTilt.init(el, {
+                    max: 5,           // smaller max tilt angle
+                    speed: 300,
+                    glare: true,
+                    'max-glare': 0.2,
+                    scale: 1.02
+                });
+            }
         });
-        console.log('VanillaTilt initialized');
     } else {
-        // Apply the tilt-card class to appropriate elements
-        const cardElements = document.querySelectorAll('.card, .result, .list-group-item');
-        cardElements.forEach(card => card.classList.add('tilt-card'));
-        
-        // Implement a simple hover effect for cards as fallback
+        // Fallback: Apply a simple JS-driven tilt on hover for .tilt-card elements
+        // that are narrower than 600px.
         document.querySelectorAll('.tilt-card').forEach(card => {
-            card.addEventListener('mousemove', function(e) {
-                const cardRect = card.getBoundingClientRect();
-                const cardCenterX = cardRect.left + cardRect.width / 2;
-                const cardCenterY = cardRect.top + cardRect.height / 2;
+            // ADDED: Width check for the fallback mechanism
+            if (card.offsetWidth < 600) {
+                card.addEventListener('mousemove', function(e) {
+                    const cardRect = card.getBoundingClientRect();
+                    const cardCenterX = cardRect.left + cardRect.width / 2;
+                    const cardCenterY = cardRect.top + cardRect.height / 2;
+                    
+                    const mouseX = e.clientX - cardCenterX;
+                    const mouseY = e.clientY - cardCenterY;
+                    
+                    // Calculate the rotation values (limited to -5 to 5 degrees)
+                    const rotateY = mouseX / (cardRect.width / 2) * 5;
+                    const rotateX = -mouseY / (cardRect.height / 2) * 5;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                });
                 
-                // Calculate the position of the mouse relative to the center of the card
-                const mouseX = e.clientX - cardCenterX;
-                const mouseY = e.clientY - cardCenterY;
-                
-                // Calculate the rotation values (limited to -5 to 5 degrees)
-                const rotateY = mouseX / (cardRect.width / 2) * 5;
-                const rotateX = -mouseY / (cardRect.height / 2) * 5;
-                
-                // Apply the rotation
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
-            });
+                card.addEventListener('mouseleave', function() {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+                });
+            }
         });
-        console.log('Simple tilt effect initialized as fallback');
+        console.log('Simple tilt effect initialized as fallback for narrow cards.');
     }
 }
 
@@ -390,20 +394,20 @@ function renderSentimentChart() {
                                 bottom: 30
                             }
                         },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value} (${percentage}%)`;
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
+                });
         } catch (error) {
             console.error("Error rendering chart:", error);
             // Display a user-friendly message
@@ -424,37 +428,37 @@ function renderSentimentChart() {
  * Sets up AJAX submission for the main analysis form.
  */
 function setupAjaxFormSubmissions() {
-    // Get the analysis form
-    const analysisForm = document.getElementById('analysis-form');
-    // Get result display element
-    const resultDisplay = document.getElementById('ajax-result-display');
-    // Get loading indicator
+    const form = document.getElementById('analysis-form');
     const loadingIndicator = document.getElementById('loading-indicator');
-
-    if (analysisForm && resultDisplay && loadingIndicator) {
-        analysisForm.addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent default form submission
-            console.log('Intercepting analysis form submission for AJAX.');
-
-            loadingIndicator.style.display = 'flex'; // Show loading
-            resultDisplay.innerHTML = ''; // Clear previous results
-
-            const formData = new FormData(analysisForm);
-            const url = analysisForm.action; // Get URL from form's action attribute
-
+    const resultDisplay = document.getElementById('ajax-result-display');
+    
+    if (form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            // Show loading indicator
+            if (loadingIndicator) loadingIndicator.style.display = 'block';
+            if (resultDisplay) resultDisplay.innerHTML = ''; // Clear previous results
+            
             try {
-                const response = await fetch(url, {
+                const formData = new FormData(form);
+                
+                // Submit form data via AJAX
+                const response = await fetch(form.action, {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest' // Identify as AJAX request
+                        'X-Requested-With': 'XMLHttpRequest'  // 添加这个头部以标识 AJAX 请求
                     }
                 });
-
+                
+                // Hide loading indicator
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+                
                 const data = await response.json(); // Expect JSON response from Flask
 
                 // Display result with animation

@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from datetime import datetime # Import datetime for context processor
+from config import config # Import the config dictionary
 
 # Load environment variables first
 load_dotenv()
@@ -19,33 +20,27 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message_category = 'info'
 
 
-def create_app(config_class=None):
+def create_app(config_name='default'): # Changed parameter name and default
     """
     Factory function to create and configure the Flask application instance.
 
     Loads environment variables, initializes Flask, configures extensions,
     and registers blueprints.
 
+    Args:
+        config_name (str): The name of the configuration to use (e.g., 'development', 'testing').
+
     Returns:
         Flask: The configured Flask application instance.
     """
     app = Flask(__name__)
 
+    # --- Configuration ---
+    # Load configuration from config.py using config_name
+    app.config.from_object(config[config_name])
+
     # Enable Jinja2 'do' extension
     app.jinja_options['extensions'] = ['jinja2.ext.do'] # Add DoExtension
-
-    # --- Configuration ---
-    # Secret Key: Essential for session security and CSRF protection
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-replace-in-production')
-
-    # Database Configuration: Use SQLite
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    # Ensure the 'instance' folder exists for the SQLite DB
-    instance_path = os.path.join(basedir, '../instance')
-    os.makedirs(instance_path, exist_ok=True)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(instance_path, 'app.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Disable modification tracking
 
     # --- Initialize Extensions with App ---
     db.init_app(app)
@@ -67,12 +62,6 @@ def create_app(config_class=None):
 
     from .main.routes import bp as main_bp
     app.register_blueprint(main_bp) # Register main blueprint without prefix
-
-    # --- Create Database Tables ---
-    # Create tables within the application context if they don't exist
-    with app.app_context():
-        db.create_all()
-        print(f"Database initialized at: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
     # --- Context Processor ---
     # Make variables available to all templates
