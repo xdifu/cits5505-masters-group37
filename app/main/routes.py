@@ -578,36 +578,27 @@ def shared_report_details(report_id):
 @bp.route('/visualization')
 @login_required
 def visualization():
-    results = db.session.query(NewsItem).join(NewsItem.analysis_report).filter(
-        AnalysisReport.user_id == current_user.id
-    ).order_by(NewsItem.publication_date).all()
+    # Fetch all analysis reports for current user (trend by report)
+    reports = AnalysisReport.query \
+        .filter_by(user_id=current_user.id) \
+        .order_by(AnalysisReport.timestamp) \
+        .all()
+    dates = [r.timestamp.strftime('%Y-%m-%d %H:%M') for r in reports]
+    scores = [r.overall_sentiment_score or 0 for r in reports]
 
-    sentiment_counts = {
-        'Positive': sum(1 for r in results if r.sentiment_label.lower() == 'positive'),
-        'Neutral': sum(1 for r in results if r.sentiment_label.lower() == 'neutral'),
-        'Negative': sum(1 for r in results if r.sentiment_label.lower() == 'negative')
-    }
+    # Compute overall sentiment counts from news items
+    items = db.session.query(NewsItem) \
+        .join(NewsItem.analysis_report) \
+        .filter(AnalysisReport.user_id == current_user.id) \
+        .all()
     sentiment_counts_list = [
-        sentiment_counts['Positive'],
-        sentiment_counts['Neutral'],
-        sentiment_counts['Negative']
+        sum(1 for i in items if i.sentiment_label.lower() == 'positive'),
+        sum(1 for i in items if i.sentiment_label.lower() == 'neutral'),
+        sum(1 for i in items if i.sentiment_label.lower() == 'negative'),
     ]
 
-    dates = []
-    scores = []
-
-    for r in results:
-        if r.publication_date:
-            dates.append(r.publication_date.strftime('%Y-%m-%d %H:%M'))
-            if r.sentiment_label.lower() == "positive":
-                scores.append(1)
-            elif r.sentiment_label.lower() == "neutral":
-                scores.append(0.5)
-            else:
-                scores.append(0)
-
     return render_template(
-        "visualization.html",
+        'visualization.html',
         dates=dates,
         scores=scores,
         sentiment_counts=sentiment_counts_list
