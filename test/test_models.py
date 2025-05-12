@@ -1,4 +1,5 @@
 import pytest
+import sqlalchemy as sa
 from app.models import User, AnalysisReport  # Changed Result to AnalysisReport
 from werkzeug.security import check_password_hash
 from datetime import datetime, timezone
@@ -23,7 +24,7 @@ def test_user_creation(_db, user_data):
     assert not user.check_password('wrongpass'), f"Invalid password check passed"
 
 @pytest.mark.parametrize('sentiment_label', ['Positive', 'Neutral', 'Negative'])
-def test_result_creation(test_user, _db, sentiment_label):
+def test_analysis_report_creation(test_user, _db, sentiment_label):
     """Test successful creation of AnalysisReport instances with different overall sentiments."""
     report = AnalysisReport(
         name=f'Test Report - {sentiment_label}', # Using the 'name' field
@@ -31,8 +32,6 @@ def test_result_creation(test_user, _db, sentiment_label):
         overall_sentiment_score=0.5, # Example score
         author=test_user,
         timestamp=datetime.now(timezone.utc)
-        # Removed original_text and sentiment as direct fields
-        # To test text and individual sentiments, NewsItem instances would be needed
     )
     _db.session.add(report)
     _db.session.commit()
@@ -42,12 +41,13 @@ def test_result_creation(test_user, _db, sentiment_label):
     assert report.author == test_user, f"Author relationship error"
     assert isinstance(report.timestamp, datetime), f"Timestamp type error"
 
-def test_user_relationships(_db, test_user, test_result):
-    """Test user relationships with results and shared results."""
-    # Verify authored results
-    user_results = list(test_user.authored_results)
-    assert len(user_results) == 1, "Incorrect number of authored results"
-    assert user_results[0] == test_result, "Result not found in authored_results"
+def test_user_relationships(_db, test_user, test_analysis_report):
+    """Test user relationships with analysis reports and shared reports."""
+    # Verify authored analysis reports using SQLAlchemy 2.0 style select
+    stmt = sa.select(AnalysisReport).where(AnalysisReport.author == test_user)
+    user_reports = list(_db.session.scalars(stmt))
+    assert len(user_reports) == 1, "Incorrect number of authored analysis reports"
+    assert test_analysis_report in user_reports, "Report not found in authored_analysis_reports"
 
     # Test sharing with multiple users
     users = []
@@ -60,26 +60,26 @@ def test_user_relationships(_db, test_user, test_result):
 
     # Share with all users
     for user in users:
-        test_result.shared_with_recipients.add(user)
+        test_analysis_report.shared_with_recipients.append(user)
     _db.session.commit()
 
     # Verify sharing relationships
     for user in users:
-        assert test_result in [r for r in user.results_shared_with_me], \
-            f"Result not shared with {user.username}"
-        assert user in [u for u in test_result.shared_with_recipients], \
+        assert test_analysis_report in user.analysis_reports_shared_with_me, \
+            f"Report not shared with {user.username}"
+        assert user in test_analysis_report.shared_with_recipients, \
             f"User {user.username} not in shared_with_recipients"
 
-def test_cascading_delete(_db, test_user, test_result):
-    """Test that deleting a user cascades to their results."""
-    result_id = test_result.id
+def test_cascading_delete(_db, test_user, test_analysis_report):
+    """Test that deleting a user cascades to their analysis reports."""
+    report_id = test_analysis_report.id
     user_id = test_user.id
     
     _db.session.delete(test_user)
     _db.session.commit()
 
-    assert AnalysisReport.query.get(result_id) is None, "Result not deleted with user"
-    assert User.query.get(user_id) is None, "User not deleted"
+    assert _db.session.get(AnalysisReport, report_id) is None, "Analysis report not deleted with user"
+    assert _db.session.get(User, user_id) is None, "User not deleted"
 
 @pytest.mark.parametrize('invalid_model_args, expected_error_part', [
     # Test cases for User model remain the same if they are valid
