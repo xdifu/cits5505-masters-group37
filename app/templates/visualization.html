@@ -4,11 +4,11 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
-        <h1 class="mb-4">Sentiment Data Visualization</h1>
+        <h1 class="mb-4">Sentiment Analytics Dashboard</h1>
         <p>This page visualizes your past sentiment analysis results.</p>
 
         <div class="card mb-4 p-4 text-center">
-          <h2 class="h5 mb-4">Sentiment Summary</h2>
+          <h2 class="h5 mb-4">Quick Sentiment Overview</h2>
           <div class="d-flex justify-content-around mb-3">
             <div>
               <span class="badge rounded-pill bg-success fs-6 px-3 py-2">Positive</span>
@@ -27,19 +27,19 @@
         </div>
 
         <div class="card mb-4 p-3">
-            <h2 class="h5 mb-3">Sentiment Distribution (Bar Chart)</h2>
+            <h2 class="h5 mb-3">Overall Sentiment Breakdown</h2>
             <canvas id="barChart"></canvas>
         </div>
 
         <div class="card mb-4 p-3">
-            <h2 class="h5 mb-3">Sentiment Proportion (Pie Chart)</h2>
+            <h2 class="h5 mb-3">Sentiment Composition</h2>
             <div class="text-center d-flex justify-content-center">
               <canvas id="pieChart" width="400" height="400"></canvas>
             </div>
         </div>
 
         <div class="card mb-4 p-3">
-            <h2 class="h5 mb-3">Sentiment Trend Over Time (Line Chart)</h2>
+            <h2 class="h5 mb-3">Weekly Sentiment Trend</h2>
             <canvas id="lineChart"></canvas>
         </div>
     </div>
@@ -161,7 +161,7 @@
       data: {
         labels: aggregatedDates,
         datasets: [{
-          label: 'Sentiment Score',
+          label: 'Daily Sentiment',
           data: aggregatedScores,
           borderColor: '#0d6efd',
           backgroundColor: 'rgba(13, 110, 253, 0.2)',
