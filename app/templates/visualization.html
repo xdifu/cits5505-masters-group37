@@ -135,16 +135,34 @@
     }
   });
 
+  // Aggregate to last 7 days with daily sums
   const dates = {{ dates | tojson | safe }};
   const scores = {{ scores | tojson | safe }};
+  // Prepare 7-day labels (YYYY-MM-DD)
+  const dayLabels = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dayLabels.push(d.toISOString().slice(0, 10));
+  }
+  // Sum up scores per day
+  const dailyMap = {};
+  dates.forEach((d, i) => {
+    const day = d.slice(0, 10);
+    if (dayLabels.includes(day)) {
+      dailyMap[day] = (dailyMap[day] || 0) + scores[i];
+    }
+  });
+  const aggregatedDates = dayLabels;
+  const aggregatedScores = dayLabels.map(day => dailyMap[day] || 0);
   window.addEventListener('load', function() {
     new Chart(lineCtx, {
       type: 'line',
       data: {
-        labels: dates,
+        labels: aggregatedDates,
         datasets: [{
           label: 'Sentiment Score',
-          data: scores,
+          data: aggregatedScores,
           borderColor: '#0d6efd',
           backgroundColor: 'rgba(13, 110, 253, 0.2)',
           tension: 0.3,
@@ -156,7 +174,11 @@
         scales: {
           y: {
             beginAtZero: true,
-            suggestedMax: 1
+            suggestedMax: 1,
+            ticks: {
+              stepSize: 1,
+              callback: value => Number.isInteger(value) ? value : ''
+            }
           }
         }
       }

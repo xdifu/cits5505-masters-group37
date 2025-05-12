@@ -584,7 +584,12 @@ def visualization():
         .order_by(AnalysisReport.timestamp) \
         .all()
     dates = [r.timestamp.strftime('%Y-%m-%d %H:%M') for r in reports]
-    scores = [r.overall_sentiment_score or 0 for r in reports]
+    scores = [
+    1 if (r.overall_sentiment_score or 0) > 0 
+    else -1 if (r.overall_sentiment_score or 0) < 0 
+    else 0
+    for r in reports
+]
 
     # Compute overall sentiment counts from news items
     items = db.session.query(NewsItem) \
