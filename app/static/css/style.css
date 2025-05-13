@@ -1432,3 +1432,143 @@ canvas#sentimentChart {
     padding: var(--space-3);
     border-left: 4px solid var(--primary-color);
 }
+
+/* --- Analysis Result Modal Styles --- */
+
+/* Enhanced modal styling with subtle animation and glass morphism */
+.modal-content {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: var(--box-shadow-md);
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Modal animation */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stylish modal header with gradient */
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    background: var(--gradient-primary);
+    padding: 1rem 1.5rem;
+}
+
+.modal-title {
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    font-weight: var(--heading-font-weight);
+    letter-spacing: 0.5px;
+}
+
+/* Modal body with improved spacing and typography */
+.modal-body {
+    padding: 1.8rem;
+}
+
+/* Modal footer with subtle separation */
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(248, 249, 250, 0.5);
+}
+
+/* Enhanced close button */
+.btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.btn-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Style for sentiment badges in modal */
+#analysis-result-content .badge {
+    padding: 0.5em 1em;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+#analysis-result-content .badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom styling for modal buttons */
+.modal .btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 102, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.modal .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 102, 255, 0.4);
+}
+
+.modal .btn-secondary {
+    background: var(--gradient-neutral);
+    border: none;
+    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s ease;
+}
+
+.modal .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+}
+
+/* Highlight animation for newly displayed results */
+#analysis-result-content {
+    animation: highlightResult 1s ease-out;
+}
+
+@keyframes highlightResult {
+    0% {
+        background-color: rgba(0, 102, 255, 0.1);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+/* Make modal dialog responsive on smaller screens */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+    
+    .modal-content {
+        border-radius: var(--border-radius);
+    }
+}
+
+/* Loading indicator enhancements */
+#loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1050;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-md);
+    min-width: 300px;
+    text-align: center;
+}
