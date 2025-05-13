@@ -969,6 +969,7 @@ canvas#sentimentChart {
 .report-card-sentiment {
     font-size: 1rem;
     margin-bottom: 0.75rem; /* Adjusted spacing */
+    white-space: nowrap; /* Ensure "Overall Sentiment" stays on one line */
 }
 
 .report-card-sentiment strong {
