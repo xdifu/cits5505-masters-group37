@@ -6,36 +6,54 @@
 {% block title %}Analyze Text - Sentiment Analyzer{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-        <h1 class="mb-4 display-5 cyberpunk-title" data-text="Analyze News Sentiment">Analyze News Sentiment</h1>
-        
-        <div class="card tilt-card mb-4">
-            <div class="card-body">
-                <p class="lead">Paste the news text into the box below and click "Analyze Sentiment" to discover the underlying tone.</p>
-                <p>Our advanced AI will analyze whether the content is <span class="badge bg-success">Positive</span>, <span class="badge bg-secondary">Neutral</span>, or <span class="badge bg-danger">Negative</span>.</p>
+<!-- Wrapper div with analyze-section class for targeted CSS -->
+<div class="analyze-section">
+    <h1 class="mb-3 display-5 cyberpunk-title text-center" data-text="Analyze News Sentiment">Analyze News Sentiment</h1>
+    
+    <!-- Single column layout with instructions above form -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <!-- Instructions section above the form -->
+            <div class="instructions-section mb-3">
+                <p class="lead text-center">Paste the news text into the box below and click "Analyze and Create Report" to discover the underlying tone.</p>
+                <div class="d-flex justify-content-center gap-3 mb-3">
+                    <span class="badge bg-success">Positive</span>
+                    <span class="badge bg-secondary">Neutral</span>
+                    <span class="badge bg-danger">Negative</span>
+                </div>
             </div>
+            
+            <!-- Form card - single column taking up most of the width -->
+            <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate class="card tilt-card">
+                <div class="card-body">
+                    {{ form.hidden_tag() }} <!-- Include CSRF token -->
+                    
+                    <!-- Form field label with enhanced styling -->
+                    <div class="form-header mb-3">
+                        <h2 class="h5">News Articles Text <small class="text-muted">(one article per line or separated by double newlines)</small></h2>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {# Assuming wtf.form_field renders the label and field for news_text #}
+                        {{ wtf.form_field(form.news_text, class="form-control form-control-lg cyberpunk-textarea", rows="12", placeholder="Enter news article text here...", label=False) }}
+                    </div>
+                    
+                    <!-- Character count element -->
+                    <div class="text-end mb-3">
+                        <small class="text-muted character-count">0 characters</small>
+                    </div>
+                    
+                    {# Render the submit button directly, applying Bootstrap classes #}
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg cyberpunk-btn px-5", value="Analyze and Create Report") }}
+                    </div>
+                </div>
+            </form>
         </div>
-
-        <!-- Add id for AJAX targeting -->
-        <!-- Assuming the route passes the 'form' object -->
-        <form id="analysis-form" method="POST" action="{{ url_for('main.analyze') }}" novalidate class="card tilt-card">
-            <div class="card-body">
-                {{ form.hidden_tag() }} <!-- Include CSRF token -->
-                <div class="mb-4">
-                    {# Assuming wtf.form_field renders the label and field for news_text #}
-                    {{ wtf.form_field(form.news_text, class="form-control form-control-lg cyberpunk-textarea", rows="10", placeholder="Enter news article text here...") }}
-                </div>
-                {# Render the submit button directly, applying Bootstrap classes #}
-                {# Avoid using wtf.form_field for submit buttons to prevent duplicate labels #}
-                <div class="mb-3 text-center">
-                    {{ form.submit(class="btn btn-primary btn-lg cyberpunk-btn") }}
-                </div>
-            </div>
-        </form>
+    </div>
 
         <!-- Add loading indicator element (hidden by default) -->
-        <div id="loading-indicator" style="display: none;" class="text-center mt-4">
+        <div id="loading-indicator" style="display: none;" class="text-center mt-3">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
@@ -43,53 +61,91 @@
         </div>
 
         <!-- Add element for displaying AJAX results -->
-        <div id="ajax-result-display" class="mt-4">
+        <div id="ajax-result-display" class="mt-3">
             <!-- AJAX results will be injected here -->
         </div>
 
         <!-- Keep original result display for non-AJAX fallback or initial load -->
         {# Updated to display sentiment, intents, and keywords from analysis_data #}
         {% if analysis_data and not request.is_xhr %}
-        <div class="result mt-4 tilt-card p-4">
-            <h2 class="h4 cyberpunk-subheader">Analysis Result:</h2>
-            
-            <p class="display-6 mt-3">
-                <strong>Sentiment:</strong>
-                {% if analysis_data.sentiment == 'Positive' %}
-                    <span class="badge bg-success fs-5">{{ analysis_data.sentiment }}</span>
-                {% elif analysis_data.sentiment == 'Negative' %}
-                    <span class="badge bg-danger fs-5">{{ analysis_data.sentiment }}</span>
-                {% else %}
-                    <span class="badge bg-secondary fs-5">{{ analysis_data.sentiment }}</span>
+        <div class="result mt-3 tilt-card">
+            <div class="card-body">
+                <h2 class="h4 cyberpunk-subheader mb-3">Analysis Result:</h2>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <strong class="me-2">Sentiment:</strong>
+                    {% if analysis_data.sentiment == 'Positive' %}
+                        <span class="badge bg-success fs-5">{{ analysis_data.sentiment }}</span>
+                    {% elif analysis_data.sentiment == 'Negative' %}
+                        <span class="badge bg-danger fs-5">{{ analysis_data.sentiment }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary fs-5">{{ analysis_data.sentiment }}</span>
+                    {% endif %}
+                </div>
+
+                {% if analysis_data.intents %}
+                <div class="mb-3">
+                    <h3 class="h5 mb-2">Identified Intents:</h3>
+                    <ul class="list-inline">
+                        {% for intent in analysis_data.intents %}
+                        <li class="list-inline-item mb-1"><span class="badge bg-info text-dark">{{ intent }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 {% endif %}
-            </p>
 
-            {% if analysis_data.intents %}
-            <div class="mt-3">
-                <h3 class="h5">Identified Intents:</h3>
-                <ul class="list-inline">
-                    {% for intent in analysis_data.intents %}
-                    <li class="list-inline-item"><span class="badge bg-info text-dark">{{ intent }}</span></li>
-                    {% endfor %}
-                </ul>
+                {% if analysis_data.keywords %}
+                <div class="mb-3">
+                    <h3 class="h5 mb-2">Extracted Keywords:</h3>
+                    <ul class="list-inline">
+                        {% for keyword in analysis_data.keywords %}
+                        <li class="list-inline-item mb-1"><span class="badge bg-light text-dark border">{{ keyword }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <p class="mt-3 mb-0"><small>This result has been saved to your history.</small></p>
             </div>
-            {% endif %}
-
-            {% if analysis_data.keywords %}
-            <div class="mt-3">
-                <h3 class="h5">Extracted Keywords:</h3>
-                <ul class="list-inline">
-                    {% for keyword in analysis_data.keywords %}
-                    <li class="list-inline-item"><span class="badge bg-light text-dark border">{{ keyword }}</span></li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-            
-            <p class="mt-3"><small>This result has been saved to your history.</small></p>
         </div>
         {% endif %}
 
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Character counter for the text area
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.querySelector('.cyberpunk-textarea');
+        const charCount = document.querySelector('.character-count');
+        const form = document.getElementById('analysis-form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        // Initialize character count
+        if (textarea && charCount) {
+            // Update on page load
+            charCount.textContent = textarea.value.length + ' characters';
+            
+            // Update on input
+            textarea.addEventListener('input', function() {
+                charCount.textContent = this.value.length + ' characters';
+            });
+        }
+        
+        // Show loading state when form is submitted
+        if (form && submitBtn && loadingIndicator) {
+            form.addEventListener('submit', function() {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'block';
+                }, 300);
+            });
+        }
+    });
+</script>
 {% endblock %}

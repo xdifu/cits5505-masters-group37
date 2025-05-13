@@ -459,6 +459,23 @@ main.container {
     transform: translateY(-2px);
 }
 
+/* Subtle focus animation for form elements */
+@keyframes formFocusPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 102, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 102, 255, 0);
+    }
+}
+
+.analyze-section .form-control:focus {
+    animation: formFocusPulse 2s infinite;
+}
+
 textarea.form-control {
     min-height: 150px; /* Ensure textarea has a decent default height */
 }
@@ -977,12 +994,10 @@ canvas#sentimentChart {
 }
 
 .sentiment-badge { /* General badge styling, specific colors below */
-    padding: 0.4em 0.9em; /* Adjusted padding */
-    font-size: 0.85rem; /* Slightly smaller for better fit */
+    display: inline-block;
+    padding: 0.5em 0.8em; /* Adjusted padding */
+    border-radius: 20px; /* Pill shape */
     font-weight: 500;
-    border-radius: 50px; /* Pill shape */
-    color: #fff;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
     transition: transform 0.2s ease;
 }
 .sentiment-badge:hover {
@@ -1247,4 +1262,225 @@ canvas#sentimentChart {
     #particles-js {
         opacity: 0.7;
     }
+}
+
+/* --- Analyze Page Enhancements --- */
+.analyze-section {
+    /* Overall spacing and alignment */
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-4);
+    max-width: 900px; /* Reduced max width for the single column layout */
+    margin: 0 auto;
+}
+
+.analyze-section h1.display-5 {
+    margin-bottom: var(--space-3);
+    padding-top: var(--space-2);
+    font-size: var(--step-4);
+    letter-spacing: var(--letter-spacing-wide);
+    background: var(--gradient-text-blue-glow);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Instructions section styling */
+.instructions-section {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto var(--space-3);
+}
+
+.instructions-section .lead {
+    font-size: var(--step-1);
+    margin-bottom: var(--space-2);
+}
+
+.instructions-section .badge {
+    font-size: 0.95rem;
+    padding: 0.5em 1.2em;
+    margin: 0 0.5rem;
+    transition: all 0.3s ease;
+}
+
+/* Enhanced card styling for the form card */
+.analyze-section .card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--card-border-radius);
+    transition: all var(--transition-speed) ease;
+}
+
+.analyze-section .card:hover {
+    box-shadow: var(--depth-shadow);
+    transform: translateY(-3px); /* Reduced transform for a more subtle effect */
+}
+
+.analyze-section .card-body {
+    padding: var(--space-3);
+}
+
+/* Form header styling */
+.form-header {
+    border-bottom: 1px solid rgba(0, 102, 255, 0.2);
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
+}
+
+.form-header h2 {
+    font-size: var(--step-1);
+    color: var(--primary-color);
+    margin-bottom: 0;
+}
+
+.form-header small {
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+/* Styling for the text area */
+.analyze-section .cyberpunk-textarea {
+    min-height: 12rem;
+    resize: vertical;
+    border: 2px solid rgba(0, 102, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    padding: 1rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.analyze-section .cyberpunk-textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+    background: white;
+}
+
+/* Character count styling */
+.text-end .character-count {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+
+/* Button styling */
+.analyze-section .btn-primary {
+    background-image: var(--gradient-primary);
+    border: none;
+    border-radius: 50px;
+    padding: 0.75rem 2.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    margin-top: var(--space-2);
+    box-shadow: 0 4px 10px rgba(0, 102, 255, 0.3);
+}
+
+.analyze-section .btn-primary:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
+}
+
+.analyze-section .btn-primary::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(45deg);
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.analyze-section .btn-primary:hover::after {
+    opacity: 1;
+    transform: rotate(45deg) translate(10%, 10%);
+}
+
+/* Loading state for button */
+.analyze-section .btn-primary.loading {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* Badge styling - more modern and vibrant */
+.analyze-section .badge {
+    padding: 0.5em 0.8em;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.analyze-section .badge:hover {
+    transform: scale(1.1);
+}
+
+/* Specifically style result cards */
+.analyze-section .result {
+    margin-top: var(--space-3);
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--card-border-radius);
+    padding: var(--space-3);
+    border-left: 4px solid var(--primary-color);
+}
+
+.analyze-section .result .card-body {
+    padding: 0; /* Remove padding since we added it to the result itself */
+}
+
+.analyze-section .result h2.cyberpunk-subheader {
+    color: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 102, 255, 0.2);
+    padding-bottom: var(--space-1);
+}
+
+/* Fix the "Sentiment: Positive" on one line issue */
+.d-flex.align-items-center.mb-3 {
+    white-space: nowrap;
+    display: flex !important;
+    flex-wrap: nowrap;
+}
+
+/* Loading indicator animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.analyze-section #loading-indicator {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Results appearing animation */
+@keyframes resultAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.analyze-section .result {
+    animation: resultAppear 0.7s ease-out forwards;
 }
