@@ -545,55 +545,37 @@
         const form = DOM.get(CONFIG.SELECTORS.analysisForm);
         const loadingIndicator = DOM.get(CONFIG.SELECTORS.loadingIndicator);
         const resultDisplay = DOM.get(CONFIG.SELECTORS.resultDisplay);
-        
+
         if (form) {
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
-                
-                // Show loading indicator, clear previous results
                 DOM.show(loadingIndicator);
-                if (resultDisplay) resultDisplay.innerHTML = '';
-                
+                resultDisplay.innerHTML = '';
+
                 try {
                     const formData = new FormData(form);
-                    
-                    // Form validation
-                    const textInput = formData.get('text');
-                    if (!textInput || textInput.trim().length < 10) {
-                        throw new Error('Please enter at least 10 characters for analysis.');
-                    }
-                    
-                    // Submit form data via AJAX
+
+                    // ← REMOVE these lines if your input isn't named "text"
+                    // const textInput = formData.get('text');
+                    // if (!textInput || textInput.trim().length < 10) {
+                    //   throw new Error('Please enter at least 10 characters for analysis.');
+                    // }
+
                     const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
-                    
-                    // Hide loading indicator
                     DOM.hide(loadingIndicator);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    // Validate response data
-                    if (!data || !data.sentiment) {
-                        throw new Error('Invalid response from server.');
-                    }
 
-                    // Display result with animation
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const data = await response.json();
+
                     displayAnalysisResult(data, resultDisplay);
-                    
                 } catch (error) {
                     ErrorHandler.handle(error, 'Analysis failed. Please try again.');
-                    if (resultDisplay) {
-                        resultDisplay.innerHTML = `<div class="alert alert-danger">Analysis failed. Please try again.</div>`;
-                    }
+                    resultDisplay.innerHTML =
+                      `<div class="alert alert-danger">Analysis failed. Please try again.</div>`;
                 } finally {
                     DOM.hide(loadingIndicator);
                 }
@@ -610,17 +592,20 @@
         if (!container) return;
         
         let resultHtml = `<h2>Analysis Result:</h2>`;
+        // Fallback to 'N/A' if sentiment is not directly available
         resultHtml += `<p class="result-sentiment"><strong>${data.sentiment || 'N/A'}</strong></p>`;
         
         // Add badge based on sentiment
-        let badgeClass = 'bg-secondary';
+        let badgeClass = 'bg-secondary'; // Default badge class
+        let sentimentText = data.sentiment || 'Neutral'; // Default sentiment text for badge
+
         if (data.sentiment === 'Positive') {
             badgeClass = 'bg-success';
         } else if (data.sentiment === 'Negative') {
             badgeClass = 'bg-danger';
         }
-        
-        resultHtml += `<span class="badge ${badgeClass} mb-3">${data.sentiment}</span>`;
+        // If data.sentiment was undefined, sentimentText is 'Neutral'. Otherwise, it's the actual sentiment.
+        resultHtml += `<span class="badge ${badgeClass} mb-3">${sentimentText}</span>`;
         
         if (data.message) {
             resultHtml += `<p><small>${data.message}</small></p>`;
@@ -635,15 +620,7 @@
         }
         
         // Add fade-in animation using a CSS class.
-        // Ensure 'animate-fadeInUp' class and its @keyframes 'fadeInUp' are defined in your CSS.
-        // The duration (CONFIG.ANIMATION.FADE_DURATION) should be part of the .animate-fadeInUp class definition.
         DOM.addClass(container, 'animate-fadeInUp');
-        
-        // Optional: Remove the animation class after it completes to allow re-triggering if needed,
-        // or if the animation properties interfere with other states.
-        // setTimeout(() => {
-        //     DOM.removeClass(container, 'animate-fadeInUp');
-        // }, CONFIG.ANIMATION.FADE_DURATION);
     }
 
     /**
