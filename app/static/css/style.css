@@ -270,7 +270,8 @@ h1.display-5 {
 
 .navbar .nav-link:hover {
     color: white !important;
-    transform: translateY(-3px);
+    transform: scale(1.05); /* Adjust scale factor for desired "growth" */
+    transform-origin: center bottom; /* Scale from the bottom-center */
     box-shadow: var(--depth-shadow);
     animation: navLinkPulse 1.5s infinite;
 }
@@ -374,7 +375,9 @@ main.container {
 }
 
 .card:hover, .result:hover, .list-group-item:hover {
-    transform: translateY(-8px) scale(1.02);
+    /* transform: translateY(-8px) scale(1.02); */ /* Original transform */
+    transform: scale(1.05); /* Adjust scale factor (e.g., for ~10px upward growth on a 200px tall card) */
+    transform-origin: center bottom; /* Scale from the bottom-center */
     box-shadow: var(--depth-shadow-hover);
 }
 
@@ -449,7 +452,9 @@ textarea.form-control {
 }
 
 .btn-primary:hover {
-    transform: translateY(-3px) scale(1.05);
+    /* transform: translateY(-3px) scale(1.05); */ /* Original transform */
+    transform: scale(1.08); /* Adjust scale factor */
+    transform-origin: center bottom; /* Scale from the bottom-center */
     box-shadow: var(--depth-shadow);
 }
 
@@ -861,7 +866,9 @@ canvas#sentimentChart {
 }
 
 .report-card:hover {
-    transform: translateY(-10px) scale(1.02); /* Keep existing hover from general .card */
+    /* transform: translateY(-10px) scale(1.02); */ /* Original transform */
+    transform: scale(1.05); /* Adjust scale factor (e.g., for ~10px upward growth on a 200px tall card) */
+    transform-origin: center bottom; /* Scale from the bottom-center */
     box-shadow: var(--depth-shadow-hover);
 }
 
@@ -950,7 +957,9 @@ canvas#sentimentChart {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 .btn-cyber-primary:hover, .btn-cyber-secondary:hover, .btn-cyber-outline:hover {
-    transform: translateY(-3px) scale(1.03); /* Consistent hover transform */
+    /* transform: translateY(-3px) scale(1.03); */ /* Original transform */
+    transform: scale(1.06); /* Adjust scale factor */
+    transform-origin: center bottom; /* Scale from the bottom-center */
     box-shadow: var(--depth-shadow); /* Use existing depth shadow */
 }
 
