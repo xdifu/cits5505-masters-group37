@@ -48,23 +48,29 @@ body {
     position: relative;
     overflow-x: hidden;
     min-height: 100vh;
+    padding-top: 70px; /* Adjust if navbar height changes */
+    transition: background-color 0.3s, color 0.3s;
 }
 
-/* Advanced animated background with particles effect */
-body::before {
-    content: '';
+/* General body styling */
+body {
+    font-family: 'Arial', sans-serif;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    padding-top: 70px; /* Adjust if navbar height changes */
+    transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden; /* Prevent horizontal scroll from animations */
+}
+
+/* ADDED styles for Three.js canvas */
+#threejs-canvas {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: 
-        radial-gradient(rgba(0, 102, 255, 0.05) 2px, transparent 2px),
-        radial-gradient(rgba(0, 102, 255, 0.03) 2px, transparent 2px);
-    background-size: 50px 50px;
-    background-position: 0 0, 25px 25px;
-    z-index: -1;
-    animation: gradientShift 15s ease infinite;
+    z-index: -2; /* Ensure it's behind all other content */
+    display: block; /* Ensure canvas takes up space */
 }
 
 /* Particle canvas container */

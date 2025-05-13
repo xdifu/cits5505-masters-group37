@@ -19,10 +19,10 @@
             navLinks: '.navbar-nav .nav-link',
             tiltCards: '.tilt-card',
             shareForms: '.toggle-share-form',
-            particlesContainer: '#particles-js',
+            threeJsCanvas: '#threejs-canvas', // ADDED Three.js canvas selector
             headings: {
-                primary: 'h1.display-5',
-                secondary: 'h2:not(.typing-active)'
+                animated: '.animated-heading',
+                subAnimated: '.animated-subheading'
             }
         },
         ANIMATION: {
@@ -50,75 +50,6 @@
             SIMPLE_SIZE_RANGE: [1, 5],
             ANIMATION_DURATION_RANGE: [10, 30]
         }
-    };
-    
-    // Particles.js configuration
-    const PARTICLES_CONFIG = {
-        "particles": {
-            "number": {
-                "value": 80,
-                "density": {
-                    "enable": true,
-                    "value_area": 800
-                }
-            },
-            "color": {
-                "value": "#0066ff"
-            },
-            "shape": {
-                "type": "circle",
-            },
-            "opacity": {
-                "value": 0.5,
-                "random": true,
-            },
-            "size": {
-                "value": 3,
-                "random": true,
-            },
-            "line_linked": {
-                "enable": true,
-                "distance": 150,
-                "color": "#0066ff",
-                "opacity": 0.2,
-                "width": 1
-            },
-            "move": {
-                "enable": true,
-                "speed": 2,
-                "direction": "none",
-                "random": true,
-                "straight": false,
-                "out_mode": "out",
-                "bounce": false,
-            }
-        },
-        "interactivity": {
-            "detect_on": "canvas",
-            "events": {
-                "onhover": {
-                    "enable": true,
-                    "mode": "grab"
-                },
-                "onclick": {
-                    "enable": true,
-                    "mode": "push"
-                },
-                "resize": true
-            },
-            "modes": {
-                "grab": {
-                    "distance": 140,
-                    "line_linked": {
-                        "opacity": 0.8
-                    }
-                },
-                "push": {
-                    "particles_nb": 4
-                }
-            }
-        },
-        "retina_detect": true
     };
     
     // Environment detection
@@ -152,6 +83,13 @@
          * @returns {NodeList} - Collection of matching elements
          */
         getAll: (selector) => document.querySelectorAll(selector),
+        
+        /**
+         * Create a new element
+         * @param {string} tagName - The tag name of the element to create
+         * @returns {HTMLElement} - The newly created element
+         */
+        create: (tagName) => document.createElement(tagName),
         
         /**
          * Show an element
@@ -198,7 +136,32 @@
          */
         animate: (element, animation) => {
             if (element) element.style.animation = animation;
-        }
+        },
+        
+        /**
+         * Toggles a class on the element, adding it if not present, removing it if it is.
+         * @param {HTMLElement} element - Target element
+         * @param {string} className - Class to toggle
+         */
+        toggleClass: (element, className) => {
+            if (element) element.classList.toggle(className);
+        },
+        
+        /**
+         * Adds an event listener to an element
+         * @param {HTMLElement} element - Target element
+         * @param {string} eventType - Type of the event (e.g., 'click')
+         * @param {Function} handler - Event handler function
+         */
+        on: (element, eventType, handler) => {
+            if (element) element.addEventListener(eventType, handler);
+        },
+        
+        /**
+         * Executes a function when the DOM is fully loaded
+         * @param {Function} handler - The function to execute
+         */
+        ready: (handler) => document.addEventListener('DOMContentLoaded', handler)
     };
     
     /**
@@ -267,67 +230,100 @@
     }
 
     /**
-     * Initializes particle animations for background effects.
-     * Uses particles.js library if available, otherwise creates a simple custom effect.
+     * Initializes the Three.js dynamic background.
      */
-    function initializeParticleEffects() {
-        // Check if particles.js is available
-        if (typeof particlesJS !== 'undefined') {
-            particlesJS(CONFIG.SELECTORS.particlesContainer.substring(1), PARTICLES_CONFIG);
-            log('Particles.js initialized');
-        } else {
-            // Fallback: Create particles container if it doesn't exist
-            if (!DOM.get(CONFIG.SELECTORS.particlesContainer)) {
-                const particlesContainer = document.createElement('div');
-                particlesContainer.id = CONFIG.SELECTORS.particlesContainer.substring(1);
-                document.body.prepend(particlesContainer);
-                
-                // Create simple custom particle effect
-                createSimpleParticleEffect(particlesContainer);
-                log('Custom particle effect initialized');
-            }
+    function initThreeJSBackground() {
+        const canvas = DOM.get(CONFIG.SELECTORS.threeJsCanvas);
+        if (!canvas || typeof THREE === 'undefined') {
+            log('Three.js canvas not found or THREE library not loaded.');
+            return;
         }
-    }
 
-    /**
-     * Creates a simple particle effect as a fallback when particles.js is not available.
-     * @param {HTMLElement} container - The container element for particles
-     */
-    function createSimpleParticleEffect(container) {
-        const particleCount = CONFIG.PARTICLES.COUNT;
-        
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            // Ensure 'simple-particle' class is defined in CSS for base styling and animation name
-            particle.className = 'simple-particle'; 
-            
-            // Random positioning and properties
-            const sizeMin = CONFIG.PARTICLES.SIMPLE_SIZE_RANGE[0];
-            const sizeMax = CONFIG.PARTICLES.SIMPLE_SIZE_RANGE[1];
-            const size = Math.random() * (sizeMax - sizeMin) + sizeMin;
-            
-            const posX = Math.random() * 100;
-            const posY = Math.random() * 100;
-            
-            const durationMin = CONFIG.PARTICLES.ANIMATION_DURATION_RANGE[0];
-            const durationMax = CONFIG.PARTICLES.ANIMATION_DURATION_RANGE[1];
-            const duration = Math.random() * (durationMax - durationMin) + durationMin;
-            
-            const delay = Math.random() * 5;
-            
-            // Apply styles for size and position
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            particle.style.left = `${posX}%`;
-            particle.style.top = `${posY}%`;
-            
-            // Set CSS custom properties for dynamic animation values
-            // The .simple-particle class in CSS will use these via var()
-            particle.style.setProperty('--particle-duration', `${duration}s`);
-            particle.style.setProperty('--particle-delay', `${delay}s`);
-            
-            container.appendChild(particle);
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0020); // A dark purple, adjust as needed
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 50;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 7000;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorsArray = new Float32Array(particlesCount * 3); // For individual particle colors
+
+        const colorPalette = [
+            new THREE.Color(0x0066ff), // Primary blue
+            new THREE.Color(0x00c6ff), // Lighter blue
+            new THREE.Color(0xff4d6d), // Accent pink/red
+            new THREE.Color(0x6c757d)  // Neutral grey
+        ];
+
+        for (let i = 0; i < particlesCount * 3; i += 3) {
+            posArray[i] = (Math.random() - 0.5) * 200; // x
+            posArray[i + 1] = (Math.random() - 0.5) * 200; // y
+            posArray[i + 2] = (Math.random() - 0.5) * 200; // z
+
+            const randomColor = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            colorsArray[i] = randomColor.r;
+            colorsArray[i+1] = randomColor.g;
+            colorsArray[i+2] = randomColor.b;
         }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.25,
+            vertexColors: true, // Enable vertex colors
+            //blending: THREE.AdditiveBlending, // Optional: for a brighter effect
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+        });
+
+        const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particleMesh);
+
+        // Mouse interaction
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        });
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Animate particles
+            particleMesh.rotation.y = elapsedTime * 0.05;
+            particleMesh.rotation.x = elapsedTime * 0.02;
+
+            // Make camera react to mouse, subtly
+            camera.position.x += (mouseX * 5 - camera.position.x) * 0.02;
+            camera.position.y += (mouseY * 5 - camera.position.y) * 0.02;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+        log('Three.js dynamic background initialized.');
     }
 
     /**
@@ -383,7 +379,7 @@
      */
     function initializeTextAnimations() {
         // Add cyberpunk title effect
-        DOM.getAll(CONFIG.SELECTORS.headings.primary).forEach(heading => {
+        DOM.getAll(CONFIG.SELECTORS.headings.animated).forEach(heading => {
             if (!heading.classList.contains('cyberpunk-title')) {
                 DOM.addClass(heading, 'cyberpunk-title');
                 heading.setAttribute('data-text', heading.textContent);
@@ -391,7 +387,7 @@
         });
         
         // Add typing animation to secondary headings
-        DOM.getAll(CONFIG.SELECTORS.headings.secondary).forEach(heading => {
+        DOM.getAll(CONFIG.SELECTORS.headings.subAnimated).forEach(heading => {
             const text = heading.textContent;
             heading.textContent = '';
             
@@ -762,7 +758,7 @@
     function init() {
         // Initialize components, event listeners, and charts
         initializeBootstrapComponents();
-        initializeParticleEffects();
+        initThreeJSBackground(); // ADDED call to Three.js background initialization
         initialize3DTiltEffects();
         initializeTextAnimations();
         renderSentimentChart();
