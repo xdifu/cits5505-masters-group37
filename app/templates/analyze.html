@@ -61,7 +61,7 @@
 </div>
 
 <!-- Modal for displaying analysis results -->
-<div class="modal fade" id="analysisResultModal" tabindex="-1" aria-labelledby="analysisResultModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+<div class="modal fade" id="analysisResultModal" tabindex="-1" aria-labelledby="analysisResultModalLabel" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -127,7 +127,7 @@
 
             // Create the modal instance with proper configuration
             const resultModal = new bootstrap.Modal(modal, {
-                backdrop: true,
+                backdrop: false,  // disable overlay so background remains clickable
                 keyboard: true
             });
 
@@ -320,7 +320,7 @@
             
             // Create a new Bootstrap modal instance with proper backdrop handling
             const resultModal = new bootstrap.Modal(modal, {
-                backdrop: true, // Enable backdrop but make it clickable
+                backdrop: false, // Disable backdrop to keep background elements clickable
                 keyboard: true  // Close when escape key is pressed
             });
             
