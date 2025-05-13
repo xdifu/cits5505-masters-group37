@@ -240,10 +240,11 @@
         }
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0020); // A dark purple, adjust as needed
+        // Cyberpunk background color
+        scene.background = new THREE.Color(0x000000); // Black or very dark (e.g., 0x030508)
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 50;
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); // Adjusted FOV for a wider view if needed
+        camera.position.z = 300; // Adjust Z based on particle spread and desired perspective
 
         const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -251,79 +252,109 @@
 
         // Particles
         const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 7000;
+        const particlesCount = 15000; // Adjust count for desired density
         const posArray = new Float32Array(particlesCount * 3);
-        const colorsArray = new Float32Array(particlesCount * 3); // For individual particle colors
+        const colorsArray = new Float32Array(particlesCount * 3);
+        const sizesArray = new Float32Array(particlesCount);
+        const velocityArray = new Float32Array(particlesCount); // For individual particle speeds
 
-        const colorPalette = [
-            new THREE.Color(0x0066ff), // Primary blue
-            new THREE.Color(0x00c6ff), // Lighter blue
-            new THREE.Color(0xff4d6d), // Accent pink/red
-            new THREE.Color(0x6c757d)  // Neutral grey
+        // Cyberpunk color palette
+        const cyberpunkColors = [
+            new THREE.Color(0xff00ff), // Magenta/Pink
+            new THREE.Color(0x00ffff), // Cyan
+            new THREE.Color(0x00ff00), // Bright Green
+            new THREE.Color(0x6600ff), // Electric Purple
+            new THREE.Color(0xff3399)  // Hot Pink
         ];
 
-        for (let i = 0; i < particlesCount * 3; i += 3) {
-            posArray[i] = (Math.random() - 0.5) * 200; // x
-            posArray[i + 1] = (Math.random() - 0.5) * 200; // y
-            posArray[i + 2] = (Math.random() - 0.5) * 200; // z
+        const spreadWidth = window.innerWidth * 1.5; // Spread particles wider than screen for edges
+        const spreadHeight = window.innerHeight * 1.5;
 
-            const randomColor = colorPalette[Math.floor(Math.random() * colorPalette.length)];
-            colorsArray[i] = randomColor.r;
-            colorsArray[i+1] = randomColor.g;
-            colorsArray[i+2] = randomColor.b;
+        for (let i = 0; i < particlesCount; i++) {
+            const i3 = i * 3;
+            // Initial positions - spread out, some starting above the viewport
+            posArray[i3]     = (Math.random() - 0.5) * spreadWidth;  // x
+            posArray[i3 + 1] = (Math.random() - 0.5) * spreadHeight + spreadHeight / 4; // y, start some above
+            posArray[i3 + 2] = (Math.random() - 0.5) * 500;         // z, some depth
+
+            const color = cyberpunkColors[Math.floor(Math.random() * cyberpunkColors.length)];
+            colorsArray[i3]     = color.r;
+            colorsArray[i3 + 1] = color.g;
+            colorsArray[i3 + 2] = color.b;
+
+            sizesArray[i] = Math.random() * 1.5 + 0.5; // Smaller, sharper points: 0.5 to 2.0
+            velocityArray[i] = Math.random() * 1.0 + 0.5; // Random speed for each particle (0.5 to 1.5)
         }
 
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorsArray, 3));
+        particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizesArray, 1));
+        // Store velocities as a custom attribute if needed for more complex shader logic,
+        // or manage them in JS array as done with velocityArray.
 
         const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.25,
-            vertexColors: true, // Enable vertex colors
-            //blending: THREE.AdditiveBlending, // Optional: for a brighter effect
+            vertexColors: true,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.85,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
             sizeAttenuation: true
         });
-
+        
         const particleMesh = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particleMesh);
 
-        // Mouse interaction
         let mouseX = 0, mouseY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
         document.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
         });
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            // Update spreadWidth/Height if they are dependent on window size and particles are regenerated
         });
 
         const clock = new THREE.Clock();
+        const fallBoundary = -window.innerHeight / 1.5; // When particles reset (adjust based on camera Z and FOV)
+        const resetBoundary = window.innerHeight / 1.5;
 
         function animate() {
             requestAnimationFrame(animate);
 
             const elapsedTime = clock.getElapsedTime();
+            const positions = particlesGeometry.attributes.position.array;
 
-            // Animate particles
-            particleMesh.rotation.y = elapsedTime * 0.05;
-            particleMesh.rotation.x = elapsedTime * 0.02;
+            for (let i = 0; i < particlesCount; i++) {
+                const i3 = i * 3;
+                positions[i3 + 1] -= velocityArray[i]; // Move particle down
 
-            // Make camera react to mouse, subtly
-            camera.position.x += (mouseX * 5 - camera.position.x) * 0.02;
-            camera.position.y += (mouseY * 5 - camera.position.y) * 0.02;
+                // If particle falls below boundary, reset it to the top with a new random X and Z
+                if (positions[i3 + 1] < fallBoundary) {
+                    positions[i3 + 1] = resetBoundary + Math.random() * 50; // Reset to top, slightly randomized
+                    positions[i3]     = (Math.random() - 0.5) * spreadWidth; // New random X
+                    // positions[i3 + 2] = (Math.random() - 0.5) * 500; // Optionally, new random Z
+                    velocityArray[i] = Math.random() * 1.0 + 0.5; // Optionally, new random speed
+                }
+            }
+            particlesGeometry.attributes.position.needsUpdate = true;
+
+            // Subtle camera movement based on mouse
+            camera.position.x += (mouseX * 0.0005 - camera.position.x) * 0.02;
+            camera.position.y += (-mouseY * 0.0005 - camera.position.y) * 0.02;
             camera.lookAt(scene.position);
 
             renderer.render(scene, camera);
         }
 
         animate();
-        log('Three.js dynamic background initialized.');
+        log('Three.js Cyberpunk background initialized.');
     }
 
     /**
@@ -758,7 +789,7 @@
     function init() {
         // Initialize components, event listeners, and charts
         initializeBootstrapComponents();
-        initThreeJSBackground(); // ADDED call to Three.js background initialization
+        initThreeJSBackground(); // Call to Three.js background initialization
         initialize3DTiltEffects();
         initializeTextAnimations();
         renderSentimentChart();
