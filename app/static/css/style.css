@@ -1558,17 +1558,36 @@ canvas#sentimentChart {
     }
 }
 
-/* Loading indicator enhancements */
-#loading-indicator {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+/* --- Modal Backdrop Fix --- */
+
+/* Ensure modal backdrop is properly removed and doesn't block interaction */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1040; /* Ensure proper z-index stacking */
+}
+
+/* Prevent multiple backdrops from stacking */
+.modal-backdrop + .modal-backdrop {
+    display: none;
+}
+
+/* Set proper z-index for modal */
+.modal {
     z-index: 1050;
-    background-color: rgba(255, 255, 255, 0.9);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow-md);
-    min-width: 300px;
-    text-align: center;
+}
+
+/* Ensure body doesn't retain modal-related styles after modal closes */
+body:not(.modal-open) {
+    overflow: auto !important;
+    padding-right: 0 !important;
+}
+
+/* Override Bootstrap default modal fade transition for smoother experience */
+.modal.fade .modal-dialog {
+    transition: transform 0.2s ease-out !important;
+}
+
+/* Make sure tooltips and popovers appear above modals */
+.tooltip, .popover {
+    z-index: 1060;
 }
