@@ -61,7 +61,7 @@
 </div>
 
 <!-- Modal for displaying analysis results -->
-<div class="modal fade" id="analysisResultModal" tabindex="-1" aria-labelledby="analysisResultModalLabel" aria-hidden="true">
+<div class="modal fade" id="analysisResultModal" tabindex="-1" aria-labelledby="analysisResultModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -122,9 +122,30 @@
                 <p class="mt-3 mb-0"><small>This result has been saved to your history.</small></p>
             `;
 
+            // Get the modal element
+            const modal = document.getElementById('analysisResultModal');
+
+            // Create the modal instance with proper configuration
+            const resultModal = new bootstrap.Modal(modal, {
+                backdrop: true,
+                keyboard: true
+            });
+
             // Show the modal
-            const resultModal = new bootstrap.Modal(document.getElementById('analysisResultModal'));
             resultModal.show();
+
+            // Ensure backdrop is removed properly when modal is closed
+            modal.addEventListener('hidden.bs.modal', function () {
+                // Remove any lingering backdrop elements
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    backdrop.parentNode.removeChild(backdrop);
+                });
+                // Make sure body doesn't retain modal classes
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+            });
         });
     </script>
 {% endif %}
@@ -133,8 +154,25 @@
 {% block scripts %}
 {{ super() }}
 <script>
+    // Cleanup function to remove any lingering modal elements
+    function cleanupModalElements() {
+        // Check for lingering backdrops and remove them
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => {
+            backdrop.parentNode.removeChild(backdrop);
+        });
+        
+        // Reset body styles that might be left from previous modal
+        document.body.classList.remove('modal-open');
+        document.body.style.paddingRight = '';
+        document.body.style.overflow = '';
+    }
+
     // Character counter for the text area and form submission handler
     document.addEventListener('DOMContentLoaded', function() {
+        // Clean up any lingering modal elements first
+        cleanupModalElements();
+        
         const textarea = document.querySelector('.cyberpunk-textarea');
         const charCount = document.querySelector('.character-count');
         const form = document.getElementById('analysis-form');
@@ -280,9 +318,27 @@
             // Insert the HTML into the modal
             modalBody.innerHTML = resultHtml;
             
+            // Create a new Bootstrap modal instance with proper backdrop handling
+            const resultModal = new bootstrap.Modal(modal, {
+                backdrop: true, // Enable backdrop but make it clickable
+                keyboard: true  // Close when escape key is pressed
+            });
+            
             // Show the modal
-            const resultModal = new bootstrap.Modal(modal);
             resultModal.show();
+            
+            // Ensure backdrop is removed properly when modal is closed
+            modal.addEventListener('hidden.bs.modal', function () {
+                // Remove any lingering backdrop elements
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    backdrop.parentNode.removeChild(backdrop);
+                });
+                // Make sure body doesn't retain modal classes
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+            });
         }
     });
 </script>
