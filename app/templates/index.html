@@ -93,25 +93,25 @@
             </div>
           </div>
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#introCarousel" data-bs-slide="prev">
+        <button class="carousel-control-prev" type="button" data-bs-target="#introCarousel" data-bs-slide="prev" aria-label="Previous slide">
           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Previous</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#introCarousel" data-bs-slide="next">
+        <button class="carousel-control-next" type="button" data-bs-target="#introCarousel" data-bs-slide="next" aria-label="Next slide">
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Next</span>
         </button>
       </div>
       
       <!-- Action buttons adapting to user authentication status -->
-      <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+      <div class="cta-group">
         {% if not current_user.is_authenticated %}
         <!-- Show Login and Register buttons for anonymous users -->
-        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4">Login</a>
         <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg px-4">Register</a>
         {% else %}
         <!-- Show Analyze Text and View Results buttons for logged-in users -->
-        <a href="{{ url_for('main.analyze') }}" class="btn btn-primary btn-lg px-4 gap-3">Analyze Text</a>
+        <a href="{{ url_for('main.analyze') }}" class="btn btn-primary btn-lg px-4">Analyze Text</a>
         <a href="{{ url_for('main.results') }}" class="btn btn-outline-secondary btn-lg px-4">View My Results</a>
         {% endif %}
       </div>
