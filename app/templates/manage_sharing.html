@@ -15,27 +15,27 @@
             <div class="card-body">
                 <h5 class="card-title">
                     Sentiment:
-                    {% if result.sentiment == 'Positive' %}
-                        <span class="badge bg-success">{{ result.sentiment }}</span>
-                    {% elif result.sentiment == 'Negative' %}
-                        <span class="badge bg-danger">{{ result.sentiment }}</span>
+                    {% if report.sentiment == 'Positive' %} {# Changed result to report #}
+                        <span class="badge bg-success">{{ report.sentiment }}</span> {# Changed result to report #}
+                    {% elif report.sentiment == 'Negative' %} {# Changed result to report #}
+                        <span class="badge bg-danger">{{ report.sentiment }}</span> {# Changed result to report #}
                     {% else %}
-                        <span class="badge bg-secondary">{{ result.sentiment }}</span>
+                        <span class="badge bg-secondary">{{ report.sentiment }}</span> {# Changed result to report #}
                     {% endif %}
                 </h5>
-                <p class="mt-3"><strong>Original Text:</strong> {{ result.original_text }}</p>
-                <p><strong>Analyzed on:</strong> {{ result.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p class="mt-3"><strong>Original Text:</strong> {{ report.original_text }}</p> {# Changed result to report #}
+                <p><strong>Analyzed on:</strong> {{ report.timestamp.strftime('%Y-%m-%d %H:%M') }}</p> {# Changed result to report #}
                 
                 <!-- Visual sentiment indicator -->
                 <div class="sentiment-indicator mt-3 pt-3 border-top">
-                    {% if result.sentiment == 'Positive' %}
+                    {% if report.sentiment == 'Positive' %} {# Changed result to report #}
                         <div class="d-flex align-items-center">
                             <span class="me-2">Sentiment strength:</span>
                             <div class="progress flex-grow-1" style="height: 10px;">
                                 <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
-                    {% elif result.sentiment == 'Negative' %}
+                    {% elif report.sentiment == 'Negative' %} {# Changed result to report #}
                         <div class="d-flex align-items-center">
                             <span class="me-2">Sentiment strength:</span>
                             <div class="progress flex-grow-1" style="height: 10px;">
@@ -61,7 +61,7 @@
             <div class="card-body">
                 <p class="text-muted mb-3">Select the users you want to share this analysis result with. Users with checkmarks will have access to view this result.</p>
                 
-                <form method="POST" action="{{ url_for('main.manage_sharing', result_id=result.id) }}" class="mb-3">
+                <form method="POST" action="{{ url_for('main.manage_report_sharing', report_id=report.id) }}" class="mb-3"> {# Changed result to report and action to manage_report_sharing #}
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
                         {{ form.users_to_share_with.label(class="form-label fw-bold") }}<br>
