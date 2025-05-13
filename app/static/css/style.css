@@ -1321,6 +1321,7 @@ canvas#sentimentChart {
 
 .analyze-section .card-body {
     padding: var(--space-3);
+    position: relative; /* Position relative for absolute positioning of character counter */
 }
 
 /* Form header styling */
@@ -1341,71 +1342,68 @@ canvas#sentimentChart {
     opacity: 0.8;
 }
 
-/* Styling for the text area */
+/* ChatGPT-style textarea - wider and more modern */
 .analyze-section .cyberpunk-textarea {
+    width: 100%;
+    max-width: 100%;
     min-height: 12rem;
     resize: vertical;
-    border: 2px solid rgba(0, 102, 255, 0.2);
+    border: 1px solid rgba(0, 102, 255, 0.2);
     border-radius: 10px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     transition: all 0.3s ease;
     font-size: 1rem;
     padding: 1rem;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    line-height: 1.6;
 }
 
 .analyze-section .cyberpunk-textarea:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 15px rgba(0, 102, 255, 0.3);
+    box-shadow: 0 0 0 1px rgba(0, 102, 255, 0.3);
     background: white;
+    outline: none;
 }
 
-/* Character count styling */
-.text-end .character-count {
+/* Character count styling - positioned at bottom-right of textarea */
+.analyze-section .character-count {
+    position: absolute;
+    bottom: 1rem;
+    right: 1.5rem;
     font-size: 0.85rem;
     color: var(--secondary-color);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 3px 6px;
+    border-radius: 3px;
+    pointer-events: none;
 }
 
-/* Button styling */
-.analyze-section .btn-primary {
-    background-image: var(--gradient-primary);
-    border: none;
-    border-radius: 50px;
-    padding: 0.75rem 2.5rem;
+/* Hide redundant character count if multiple appear */
+.analyze-section .text-end {
+    display: none;
+}
+
+/* ChatGPT-style submit button */
+.analyze-section .cyberpunk-btn {
+    background: var(--gradient-primary);
+    color: #fff;
     font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    border: none;
+    border-radius: 24px;
+    padding: 0.75rem 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
     margin-top: var(--space-2);
-    box-shadow: 0 4px 10px rgba(0, 102, 255, 0.3);
 }
 
-.analyze-section .btn-primary:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
-}
-
-.analyze-section .btn-primary::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: rgba(255, 255, 255, 0.2);
-    transform: rotate(45deg);
-    transition: all 0.3s ease;
-    opacity: 0;
-}
-
-.analyze-section .btn-primary:hover::after {
-    opacity: 1;
-    transform: rotate(45deg) translate(10%, 10%);
+.analyze-section .cyberpunk-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(90deg, #0066ff, #00c6ff);
 }
 
 /* Loading state for button */
-.analyze-section .btn-primary.loading {
+.analyze-section .cyberpunk-btn.loading {
     opacity: 0.8;
     cursor: not-allowed;
 }
@@ -1433,54 +1431,4 @@ canvas#sentimentChart {
     border-radius: var(--card-border-radius);
     padding: var(--space-3);
     border-left: 4px solid var(--primary-color);
-}
-
-.analyze-section .result .card-body {
-    padding: 0; /* Remove padding since we added it to the result itself */
-}
-
-.analyze-section .result h2.cyberpunk-subheader {
-    color: var(--primary-color);
-    font-weight: 600;
-    border-bottom: 1px solid rgba(0, 102, 255, 0.2);
-    padding-bottom: var(--space-1);
-}
-
-/* Fix the "Sentiment: Positive" on one line issue */
-.d-flex.align-items-center.mb-3 {
-    white-space: nowrap;
-    display: flex !important;
-    flex-wrap: nowrap;
-}
-
-/* Loading indicator animation */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.analyze-section #loading-indicator {
-    animation: fadeInUp 0.5s ease-out forwards;
-}
-
-/* Results appearing animation */
-@keyframes resultAppear {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.analyze-section .result {
-    animation: resultAppear 0.7s ease-out forwards;
 }
