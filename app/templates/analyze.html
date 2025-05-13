@@ -46,26 +46,46 @@
         </div>
     </div>
 
-        <!-- Add loading indicator element (hidden by default) -->
-        <div id="loading-indicator" style="display: none;" class="text-center mt-3">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+    <!-- Add loading indicator element (hidden by default) -->
+    <div id="loading-indicator" style="display: none;" class="text-center mt-3">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Analyzing your text with advanced AI...</p>
+    </div>
+
+    <!-- Hidden container for AJAX results that will be transferred to modal -->
+    <div id="ajax-result-container" class="d-none">
+        <!-- AJAX results will be stored here temporarily -->
+    </div>
+</div>
+
+<!-- Modal for displaying analysis results -->
+<div class="modal fade" id="analysisResultModal" tabindex="-1" aria-labelledby="analysisResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title cyberpunk-subheader" id="analysisResultModalLabel">Analysis Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <p class="mt-2">Analyzing your text with advanced AI...</p>
+            <div class="modal-body" id="analysis-result-content">
+                <!-- Modal content will be inserted here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('main.results') }}" class="btn btn-primary">View All Results</a>
+            </div>
         </div>
+    </div>
+</div>
 
-        <!-- Add element for displaying AJAX results -->
-        <div id="ajax-result-display" class="mt-3">
-            <!-- AJAX results will be injected here -->
-        </div>
-
-        <!-- Keep original result display for non-AJAX fallback or initial load -->
-        {# Updated to display sentiment, intents, and keywords from analysis_data #}
-        {% if analysis_data and not request.is_xhr %}
-        <div class="result mt-3 tilt-card">
-            <div class="card-body">
-                <h2 class="h4 cyberpunk-subheader mb-3">Analysis Result:</h2>
-                
+<!-- Server-side rendered results (only for fallback when AJAX fails) -->
+{% if analysis_data and not request.is_xhr %}
+    <script>
+        // For non-AJAX results, show the modal once the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add the result HTML to the modal
+            document.getElementById('analysis-result-content').innerHTML = `
                 <div class="d-flex align-items-center mb-3">
                     <strong class="me-2">Sentiment:</strong>
                     {% if analysis_data.sentiment == 'Positive' %}
@@ -100,24 +120,27 @@
                 {% endif %}
                 
                 <p class="mt-3 mb-0"><small>This result has been saved to your history.</small></p>
-            </div>
-        </div>
-        {% endif %}
+            `;
 
-    </div>
-</div>
+            // Show the modal
+            const resultModal = new bootstrap.Modal(document.getElementById('analysisResultModal'));
+            resultModal.show();
+        });
+    </script>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
-    // Character counter for the text area
+    // Character counter for the text area and form submission handler
     document.addEventListener('DOMContentLoaded', function() {
         const textarea = document.querySelector('.cyberpunk-textarea');
         const charCount = document.querySelector('.character-count');
         const form = document.getElementById('analysis-form');
         const submitBtn = form.querySelector('button[type="submit"]');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const resultContainer = document.getElementById('ajax-result-container');
         
         // Initialize character count
         if (textarea && charCount) {
@@ -130,15 +153,136 @@
             });
         }
         
-        // Show loading state when form is submitted
-        if (form && submitBtn && loadingIndicator) {
-            form.addEventListener('submit', function() {
-                submitBtn.classList.add('loading');
-                submitBtn.disabled = true;
-                setTimeout(() => {
-                    loadingIndicator.style.display = 'block';
-                }, 300);
+        // Set up AJAX form submission
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+                
+                // Show loading state
+                if (submitBtn) {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+                }
+                
+                // Show loading indicator
+                if (loadingIndicator) {
+                    setTimeout(() => {
+                        loadingIndicator.style.display = 'block';
+                    }, 300);
+                }
+                
+                // Prepare form data for AJAX submission
+                const formData = new FormData(form);
+                
+                // Send AJAX request
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    if (loadingIndicator) {
+                        loadingIndicator.style.display = 'none';
+                    }
+                    
+                    // Reset button state
+                    if (submitBtn) {
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                    }
+                    
+                    // Display result in modal
+                    displayAnalysisResultInModal(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    
+                    // Hide loading indicator
+                    if (loadingIndicator) {
+                        loadingIndicator.style.display = 'none';
+                    }
+                    
+                    // Reset button state
+                    if (submitBtn) {
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                    }
+                    
+                    // Show error message
+                    alert('An error occurred during analysis. Please try again.');
+                });
             });
+        }
+        
+        // Function to display analysis result in modal
+        function displayAnalysisResultInModal(data) {
+            // Get the modal elements
+            const modal = document.getElementById('analysisResultModal');
+            const modalBody = document.getElementById('analysis-result-content');
+            
+            // Create result HTML based on data
+            let resultHtml = '';
+            
+            // Add sentiment with appropriate badge color
+            resultHtml += `
+                <div class="d-flex align-items-center mb-3">
+                    <strong class="me-2">Sentiment:</strong>`;
+            
+            if (data.sentiment === 'Positive') {
+                resultHtml += `<span class="badge bg-success fs-5">${data.sentiment}</span>`;
+            } else if (data.sentiment === 'Negative') {
+                resultHtml += `<span class="badge bg-danger fs-5">${data.sentiment}</span>`;
+            } else {
+                resultHtml += `<span class="badge bg-secondary fs-5">${data.sentiment}</span>`;
+            }
+            
+            resultHtml += `</div>`;
+            
+            // Add intents if available
+            if (data.intents && data.intents.length > 0) {
+                resultHtml += `
+                    <div class="mb-3">
+                        <h3 class="h5 mb-2">Identified Intents:</h3>
+                        <ul class="list-inline">`;
+                
+                data.intents.forEach(intent => {
+                    resultHtml += `<li class="list-inline-item mb-1"><span class="badge bg-info text-dark">${intent}</span></li>`;
+                });
+                
+                resultHtml += `
+                        </ul>
+                    </div>`;
+            }
+            
+            // Add keywords if available
+            if (data.keywords && data.keywords.length > 0) {
+                resultHtml += `
+                    <div class="mb-3">
+                        <h3 class="h5 mb-2">Extracted Keywords:</h3>
+                        <ul class="list-inline">`;
+                
+                data.keywords.forEach(keyword => {
+                    resultHtml += `<li class="list-inline-item mb-1"><span class="badge bg-light text-dark border">${keyword}</span></li>`;
+                });
+                
+                resultHtml += `
+                        </ul>
+                    </div>`;
+            }
+            
+            // Add saved message
+            resultHtml += `<p class="mt-3 mb-0"><small>This result has been saved to your history.</small></p>`;
+            
+            // Insert the HTML into the modal
+            modalBody.innerHTML = resultHtml;
+            
+            // Show the modal
+            const resultModal = new bootstrap.Modal(modal);
+            resultModal.show();
         }
     });
 </script>
