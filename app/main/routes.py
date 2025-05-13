@@ -519,7 +519,7 @@ def manage_report_sharing(report_id):
         flash('Analysis report not found or you do not own this report.', 'danger')
         return redirect(url_for('main.results'))
 
-    form = ManageReportSharingForm()
+    form = ManageReportSharingForm(current_user_id=current_user.id) # Pass current_user_id
     potential_recipients = db.session.scalars(db.select(User).where(User.id != current_user.id)).all()
     form.users_to_share_with.choices = [(u.id, u.username) for u in potential_recipients]
 
