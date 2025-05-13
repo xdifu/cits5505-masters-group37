@@ -37,6 +37,42 @@
     --card-tilt-amount: 10deg;
     --text-glow: 0 0 10px rgba(0, 102, 255, 0.5);
     --neon-glow: 0 0 20px rgba(0, 195, 255, 0.7);
+    
+    /* New typography scale for consistent sizing */
+    --step-0: 1rem;      /* Base size: 16px */
+    --step-1: 1.25rem;   /* 20px */
+    --step-2: 1.563rem;  /* 25px */
+    --step-3: 1.953rem;  /* 31px */
+    --step-4: 2.441rem;  /* 39px */
+    --step-5: 3.052rem;  /* 49px */
+    
+    /* Consistent spacing scale */
+    --space-1: 0.5rem;   /* 8px */
+    --space-2: 1rem;     /* 16px */
+    --space-3: 2rem;     /* 32px */
+    --space-4: 4rem;     /* 64px */
+    --space-5: 6rem;     /* 96px */
+    --space-6: 8rem;     /* 128px */
+    
+    /* Improved line heights for readability */
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-loose: 1.8;
+    
+    /* Letter spacing variations */
+    --letter-spacing-tight: -0.5px;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.5px;
+    --letter-spacing-wider: 1px;
+    
+    /* Z-index scale */
+    --z-below: -1;
+    --z-normal: 0;
+    --z-above: 1; 
+    --z-higher: 10;
+    --z-nav: 1000;
+    --z-modal: 2000;
+    --z-toast: 3000;
 }
 
 /* Apply a slightly more modern font stack and background treatment */
@@ -44,7 +80,7 @@ body {
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--background-color);
     color: var(--dark-text);
-    line-height: 1.6;
+    line-height: var(--line-height-normal); /* Updated using new variable */
     position: relative;
     overflow-x: hidden;
     min-height: 100vh;
@@ -79,48 +115,43 @@ body::before {
 }
 
 @keyframes gradientShift {
-    0% {
-        background-position: 0% 0%, 25px 25px;
-    }
-    50% {
-        background-position: 100% 100%, 125px 125px;
-    }
-    100% {
-        background-position: 0% 0%, 25px 25px;
-    }
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
 }
 
-/* Advanced cyberpunk glitch effect for headings */
+/* Animation keyframes */
 @keyframes glitch {
-    0% {
-        transform: translate(0);
-        text-shadow: 0 0 0 var(--primary-color);
-    }
-    2% {
-        transform: translate(-2px, 2px);
-        text-shadow: 2px 0 0 rgba(255, 0, 128, 0.5), -2px 0 0 rgba(0, 255, 255, 0.5);
-    }
-    4% {
-        transform: translate(2px, -2px);
-        text-shadow: -2px 0 0 rgba(255, 0, 128, 0.5), 2px 0 0 rgba(0, 255, 255, 0.5);
-    }
-    6% {
-        transform: translate(0);
-        text-shadow: 0 0 0 var(--primary-color);
-    }
-    100% {
-        transform: translate(0);
-        text-shadow: 0 0 0 var(--primary-color);
-    }
+    0% { transform: translate(0); }
+    2% { transform: translate(-3px, 3px); }
+    4% { transform: translate(3px, -3px); }
+    6% { transform: translate(-3px, -3px); }
+    100% { transform: translate(0); }
+}
+
+/* Main headings with gradients and animations */
+h1.display-5 {
+    background: var(--gradient-futuristic);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    position: relative;
+    text-shadow: var(--text-glow);
+    animation: titlePulse 3s infinite alternate;
+    font-size: var(--step-5); /* Use our typography scale */
+    letter-spacing: var(--letter-spacing-wide); /* Add subtle letter spacing */
+    margin-bottom: var(--space-3); /* Consistent margin */
 }
 
 /* Unified bold style for secondary headings with futuristic effect */
 h2 {
     font-weight: var(--heading-font-weight);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-3);
     position: relative;
     display: inline-block;
     color: var(--primary-color);
+    font-size: var(--step-3); /* Use our typography scale */
+    letter-spacing: var(--letter-spacing-wide);
 }
 
 h2::after {
@@ -138,42 +169,24 @@ h2:hover::after {
     width: 100%;
 }
 
-/* Main headings with gradients and animations */
-h1.display-5 {
-    background: var(--gradient-futuristic);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    position: relative;
-    text-shadow: var(--text-glow);
-    animation: titlePulse 3s infinite alternate;
+h3, h4, h5 {
+    margin-bottom: var(--space-2);
+    font-weight: 600;
 }
 
-@keyframes titlePulse {
-    0% {
-        opacity: 0.9;
-        text-shadow: 0 0 10px rgba(0, 102, 255, 0.2);
-    }
-    100% {
-        opacity: 1;
-        text-shadow: 0 0 20px rgba(0, 102, 255, 0.8);
-    }
+h5 {
+    font-size: var(--step-1);
+    letter-spacing: var(--letter-spacing-tight);
 }
 
-.cyberpunk-title {
-    position: relative;
-    overflow: hidden;
+p {
+    margin-bottom: var(--space-2);
+    line-height: var(--line-height-normal);
 }
 
-.cyberpunk-title::before {
-    content: attr(data-text);
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.8;
-    animation: glitch 5s infinite;
+/* Increase spacing between sections */
+section, .section {
+    margin-bottom: var(--space-4);
 }
 
 /* --- Navigation Bar - Enhanced Glass Morphism --- */
@@ -186,7 +199,8 @@ h1.display-5 {
     transition: all var(--transition-speed);
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: var(--z-nav);
+    padding: 0.7rem 0;
 }
 
 /* Navbar state when scrolled down */
@@ -352,10 +366,39 @@ h1.display-5 {
     transform: scaleX(1);
 }
 
+/* --- Hero Section Improvements --- */
+.px-4.py-5.my-5.text-center {
+    /* Increase vertical breathing room */
+    padding-top: var(--space-6) !important; /* 8rem (128px) top padding */
+    padding-bottom: var(--space-5) !important; /* 6rem (96px) bottom padding */
+    position: relative;
+}
+
+/* Add a subtle overlay for better text contrast against particles */
+.px-4.py-5.my-5.text-center::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(0deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 100%);
+    z-index: -1;
+}
+
+/* Lead paragraph with constrained width for better readability */
+.px-4.py-5.my-5.text-center .lead {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: var(--line-height-loose);
+    font-size: var(--step-1);
+}
+
 /* --- Main Content Area --- */
 main.container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-4);
     position: relative;
     z-index: 1;
 }
@@ -452,7 +495,6 @@ textarea.form-control {
 }
 
 .btn-primary:hover {
-    /* transform: translateY(-3px) scale(1.05); */ /* Original transform */
     transform: scale(1.08); /* Adjust scale factor */
     transform-origin: center bottom; /* Scale from the bottom-center */
     box-shadow: var(--depth-shadow);
@@ -489,6 +531,15 @@ textarea.form-control {
     transform-origin: left;
 }
 
+/* --- Call to Action Button Group --- */
+.cta-group {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    margin-top: var(--space-3);
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
 /* --- Result Display --- */
 .result {
     background: var(--glass-bg);
@@ -520,12 +571,8 @@ textarea.form-control {
 }
 
 @keyframes resultShine {
-    0% {
-        transform: translateX(-100%) rotate(30deg);
-    }
-    15%, 100% {
-        transform: translateX(100%) rotate(30deg);
-    }
+    0% { opacity: 0; transform: translateX(-100%) rotate(30deg); }
+    15%, 100% { opacity: 0.1; transform: translateX(100%) rotate(30deg); }
 }
 
 .result h2 {
@@ -569,18 +616,9 @@ textarea.form-control {
 }
 
 @keyframes badgePulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.5;
-    }
-    50% {
-        transform: scale(5);
-        opacity: 0;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0.5;
-    }
+    0% { transform: scale(0); opacity: 0.8; }
+    50% { transform: scale(1.5); opacity: 0; }
+    100% { transform: scale(0); opacity: 0; }
 }
 
 /* --- Tables (My Results) --- */
@@ -664,14 +702,8 @@ textarea.form-control {
 }
 
 @keyframes alertFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* --- Footer --- */
@@ -702,29 +734,56 @@ footer::before {
     border-radius: var(--card-border-radius);
     overflow: hidden;
     box-shadow: var(--depth-shadow);
+    margin: var(--space-4) 0; /* Add more vertical breathing room */
+    width: 100%; /* Make carousel full-width within its container */
 }
 
 .carousel-item {
     transition: transform 0.6s ease-in-out;
+    height: 350px; /* Fixed height for consistency */
+    overflow: hidden; /* Prevent image overflow */
+}
+
+.carousel-item img {
+    object-fit: cover; /* Make images cover the area nicely */
+    height: 100%;
+    width: 100%;
+    filter: brightness(0.8); /* Slight dimming for better text contrast */
 }
 
 .carousel-caption {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6); /* Darker overlay for better text visibility */
     backdrop-filter: blur(5px);
     border-radius: 10px;
-    padding: 15px;
+    padding: 15px 20px;
     bottom: 20px;
+    max-width: 80%;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
 }
 
 .carousel-control-prev, .carousel-control-next {
     width: 10%;
     opacity: 0.7;
     transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.1); /* Subtle background for controls */
 }
 
 .carousel-control-prev:hover, .carousel-control-next:hover {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3); /* Darker on hover */
+}
+
+/* Reposition carousel indicators for better visibility */
+.carousel-indicators {
+    bottom: -5px; /* Move indicators down (out of view on mobile) */
+}
+
+@media (min-width: 768px) {
+    .carousel-indicators {
+        bottom: 10px; /* Restore on desktop */
+    }
 }
 
 /* --- Chart Enhancements --- */
@@ -791,7 +850,7 @@ canvas#sentimentChart {
         var(--bs-danger), /* Red for -100% */
         var(--bs-danger) 25%, /* Transition to orange/yellow */
         var(--bs-warning) 40%,
-        var(--bs-secondary) 50%, /* Grey for 0% */
+        var(--bs-secondary) 50% /* Grey for 0% */
         var(--bs-info) 60%, /* Transition to light green/blue */
         var(--bs-success) 75%, /* Green for +100% */
         var(--bs-success)
@@ -825,7 +884,10 @@ canvas#sentimentChart {
 /* --- Results Page Enhancements --- */
 
 .results-list-container {
-    /* Container for report cards, can add specific styling if needed */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
 }
 
 .report-card {
@@ -1065,11 +1127,123 @@ canvas#sentimentChart {
 }
 
 @keyframes textGlow {
-    from {
-        /* Adjusted glow to better match the image's softer, more spread glow */
-        text-shadow: 0 0 8px rgba(0, 120, 255, 0.4), 0 0 12px rgba(0, 120, 255, 0.3);
+    0% { text-shadow: 0 0 5px rgba(0, 102, 255, 0.3); }
+    50% { text-shadow: 0 0 15px rgba(0, 102, 255, 0.6); }
+    100% { text-shadow: 0 0 5px rgba(0, 102, 255, 0.3); }
+}
+
+/* --- Feature Cards Grid Layout --- */
+/* Use CSS grid for feature cards instead of Bootstrap's row/col system */
+.row.gx-4.gy-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-3); /* 2rem spacing between cards */
+    align-items: stretch; /* Ensure all cards share the same height */
+}
+
+/* Remove the col-md-4 styles that might conflict with our grid */
+.row.gx-4.gy-4 > [class*="col-"] {
+    padding: 0; /* Remove padding that Bootstrap adds */
+    max-width: none; /* Remove max-width constraints */
+    flex: none; /* Remove flex behavior */
+}
+
+/* Enhanced card styling for feature cards */
+.card.tilt-card {
+    transition: all var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1);
+    height: 100%; /* Ensure full height */
+    border: var(--glass-border);
+    overflow: hidden;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+.card.tilt-card:hover {
+    transform: scale(1.05); /* Consistent scale on hover */
+    transform-origin: center bottom; /* Scale from bottom center */
+    box-shadow: var(--depth-shadow-hover);
+    z-index: var(--z-above); /* Ensure hovered card appears above others */
+}
+
+/* Improved feature icon styling */
+.feature-icon {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.15);
+    background-image: var(--gradient-primary) !important; /* Use gradient background */
+}
+
+.card:hover .feature-icon {
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 102, 255, 0.25);
+}
+
+/* --- Responsive Improvements --- */
+@media (max-width: 768px) {
+    /* Adjust typography for smaller screens */
+    h1.display-5 {
+        font-size: var(--step-4);
     }
-    to {
-        text-shadow: 0 0 12px rgba(0, 120, 255, 0.7), 0 0 20px rgba(0, 120, 255, 0.5);
+    
+    h2 {
+        font-size: var(--step-2);
+    }
+    
+    /* Increase tap targets for mobile */
+    .btn, .nav-link {
+        padding: 0.75rem 1.25rem;
+        min-height: 44px; /* Minimum height for accessible tap targets */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Improve mobile touch experience */
+    .carousel-control-prev, 
+    .carousel-control-next {
+        width: 15%; /* Wider touch targets on mobile */
+    }
+    
+    /* Simplify particles on smaller screens for performance */
+    #particles-js {
+        opacity: 0.3;
+    }
+    
+    /* Adjust feature cards for single column on mobile */
+    .row.gx-4.gy-4 {
+        grid-template-columns: 1fr; /* Single column on mobile */
+        gap: var(--space-2);
+    }
+    
+    /* Ensure main container has appropriate padding */
+    main.container {
+        padding-left: var(--space-2);
+        padding-right: var(--space-2);
+    }
+}
+
+/* Medium screens */
+@media (min-width: 769px) and (max-width: 1199px) {
+    .row.gx-4.gy-4 {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Smaller cards on medium screens */
+    }
+    
+    /* Adjust hero padding slightly */
+    .px-4.py-5.my-5.text-center {
+        padding-top: var(--space-5) !important; 
+        padding-bottom: var(--space-4) !important;
+    }
+}
+
+/* Larger screens - enhance visuals */
+@media (min-width: 1200px) {
+    /* Add more breathing room for large screens */
+    .container {
+        max-width: 1140px;
+        padding: 0 var(--space-3);
+    }
+    
+    /* Enhance particle density on larger screens */
+    #particles-js {
+        opacity: 0.7;
     }
 }
