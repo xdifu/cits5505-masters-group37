@@ -111,7 +111,9 @@ news-sentiment-analyzer/
 
         # Option A: using cmd.exe (no policy change needed)
         .\venv\Scripts\activate.bat
-
+        ```
+        
+        ```bash
         # Option B: using PowerShell (may need to relax execution policy)
         Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
         .\venv\Scripts\Activate.ps1
