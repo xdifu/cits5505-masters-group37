@@ -958,6 +958,7 @@ canvas#sentimentChart {
     margin-bottom: 1rem;
     border-bottom: 1px solid rgba(0, 102, 255, 0.1); /* Lighter separator */
     padding-bottom: 0.85rem;
+    background-color: var(--bs-card-cap-bg, white); /* Ensure background for header */
 }
 
 .report-card-title a {
@@ -1266,328 +1267,71 @@ canvas#sentimentChart {
 
 /* --- Analyze Page Enhancements --- */
 .analyze-section {
-    /* Overall spacing and alignment */
-    padding-top: var(--space-3);
-    padding-bottom: var(--space-4);
-    max-width: 900px; /* Reduced max width for the single column layout */
-    margin: 0 auto;
+    max-width: 1140px; /* Or your preferred max width */
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.analyze-section h1.display-5 {
-    margin-bottom: var(--space-3);
-    padding-top: var(--space-2);
-    font-size: var(--step-4);
-    letter-spacing: var(--letter-spacing-wide);
-    background: var(--gradient-text-blue-glow);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+/* --- Card Enhancements for Analyze Page & Manage Sharing Page --- */
+.analyze-section .card.tilt-card {
+    border-radius: 1rem; 
+    /* background-color: rgba(255, 255, 255, 0.75); */ /* Optional: Frosted glass effect */
+    /* backdrop-filter: blur(10px); */
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
 }
 
-/* Instructions section styling */
-.instructions-section {
-    text-align: center;
-    max-width: 700px;
-    margin: 0 auto var(--space-3);
+.analyze-section .card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    background-color: var(--bs-card-cap-bg, white); /* Ensure background for header */
 }
 
-.instructions-section .lead {
-    font-size: var(--step-1);
-    margin-bottom: var(--space-2);
-}
-
-.instructions-section .badge {
-    font-size: 0.95rem;
-    padding: 0.5em 1.2em;
-    margin: 0 0.5rem;
-    transition: all 0.3s ease;
-}
-
-/* Enhanced card styling for the form card */
-.analyze-section .card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    border-radius: var(--card-border-radius);
-    transition: all var(--transition-speed) ease;
-}
-
-.analyze-section .card:hover {
-    box-shadow: var(--depth-shadow);
-    transform: translateY(-3px); /* Reduced transform for a more subtle effect */
-}
-
-.analyze-section .card-body {
-    padding: var(--space-3);
-    position: relative; /* Position relative for absolute positioning of character counter */
-}
-
-/* Form header styling */
-.form-header {
-    border-bottom: 1px solid rgba(0, 102, 255, 0.2);
-    padding-bottom: var(--space-2);
-    margin-bottom: var(--space-3);
-}
-
-.form-header h2 {
-    font-size: var(--step-1);
-    color: var(--primary-color);
-    margin-bottom: 0;
-}
-
-.form-header small {
-    font-weight: normal;
-    opacity: 0.8;
-}
-
-/* ChatGPT-style textarea - wider and more modern */
-.analyze-section .cyberpunk-textarea {
-    width: 100%;
-    max-width: 100%;
-    min-height: 12rem;
-    resize: vertical;
-    border: 1px solid rgba(0, 102, 255, 0.2);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.95);
-    transition: all 0.3s ease;
-    font-size: 1rem;
-    padding: 1rem;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-    line-height: 1.6;
-}
-
-.analyze-section .cyberpunk-textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 1px rgba(0, 102, 255, 0.3);
-    background: white;
-    outline: none;
-}
-
-/* Character count styling - positioned at bottom-right of textarea */
-.analyze-section .character-count {
-    position: absolute;
-    bottom: 1rem;
-    right: 1.5rem;
-    font-size: 0.85rem;
-    color: var(--secondary-color);
-    background: rgba(255, 255, 255, 0.7);
-    padding: 3px 6px;
-    border-radius: 3px;
-    pointer-events: none;
-}
-
-/* Hide redundant character count if multiple appear */
-.analyze-section .text-end {
-    display: none;
-}
-
-/* ChatGPT-style submit button */
-.analyze-section .cyberpunk-btn {
-    background: var(--gradient-primary);
-    color: #fff;
-    font-weight: 600;
-    border: none;
-    border-radius: 24px;
-    padding: 0.75rem 2rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
-    margin-top: var(--space-2);
-}
-
-.analyze-section .cyberpunk-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-    background: linear-gradient(90deg, #0066ff, #00c6ff);
-}
-
-/* Loading state for button */
-.analyze-section .cyberpunk-btn.loading {
-    opacity: 0.8;
-    cursor: not-allowed;
-}
-
-/* Badge styling - more modern and vibrant */
-.analyze-section .badge {
-    padding: 0.5em 0.8em;
-    border-radius: 20px;
+.analyze-section .card-title {
     font-weight: 500;
-    transition: all 0.3s ease;
 }
 
-.analyze-section .badge:hover {
-    transform: scale(1.1);
+/* --- Sentiment Indicator Progress Bar --- */
+.sentiment-indicator .progress {
+    height: 12px;
+    border-radius: 6px; /* Rounded edges for the progress bar track */
+    background-color: rgba(0,0,0,0.1); /* Darker background for progress track, if not set by BS */
 }
 
-/* Specifically style result cards */
-.analyze-section .result {
-    margin-top: var(--space-3);
-    background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    box-shadow: var(--glass-shadow);
-    border-radius: var(--card-border-radius);
-    padding: var(--space-3);
-    border-left: 4px solid var(--primary-color);
+.sentiment-indicator .progress-bar {
+    border-radius: 6px; /* Ensure the bar itself also has rounded edges if it's full or partial */
+    transition: width 0.6s ease; /* Smooth animation for width changes */
 }
 
-/* --- Analysis Result Modal Styles --- */
 
-/* Enhanced modal styling with subtle animation and glass morphism */
-.modal-content {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: var(--box-shadow-md);
-    animation: modalFadeIn 0.3s ease-out;
+/* --- Form Element Enhancements (re-iterating for clarity, should be covered by previous CSS) --- */
+.analyze-section .form-control-lg,
+.analyze-section .form-control {
+    border-radius: 0.5rem;
 }
 
-/* Modal animation */
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.analyze-section .form-control-lg:focus,
+.analyze-section .form-control:focus {
+    border-color: var(--primary-color, #007bff);
+    box-shadow: 0 0 0 0.25rem rgba(var(--rgb-primary-color, 0, 123, 255), 0.25);
 }
 
-/* Stylish modal header with gradient */
-.modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    background: var(--gradient-primary);
-    padding: 1rem 1.5rem;
+/* --- Button Enhancements (re-iterating for clarity) --- */
+.analyze-section .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: transform 0.2s ease-out, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.modal-title {
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    font-weight: var(--heading-font-weight);
-    letter-spacing: 0.5px;
-}
-
-/* Modal body with improved spacing and typography */
-.modal-body {
-    padding: 1.8rem;
-}
-
-/* Modal footer with subtle separation */
-.modal-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    background: rgba(248, 249, 250, 0.5);
-}
-
-/* Enhanced close button */
-.btn-close {
-    filter: brightness(0) invert(1);
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-
-.btn-close:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-/* Style for sentiment badges in modal */
-#analysis-result-content .badge {
-    padding: 0.5em 1em;
-    font-size: 1rem;
-    font-weight: 500;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-#analysis-result-content .badge:hover {
+.analyze-section .btn-cyber-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(var(--rgb-primary-color, 0, 123, 255), 0.3);
 }
 
-/* Custom styling for modal buttons */
-.modal .btn-primary {
-    background: var(--gradient-primary);
-    border: none;
-    box-shadow: 0 2px 5px rgba(0, 102, 255, 0.3);
-    transition: all 0.3s ease;
-}
-
-.modal .btn-primary:hover {
+.analyze-section .btn-outline-secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 102, 255, 0.4);
 }
 
-.modal .btn-secondary {
-    background: var(--gradient-neutral);
-    border: none;
-    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
-    transition: all 0.3s ease;
-}
-
-.modal .btn-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
-}
-
-/* Highlight animation for newly displayed results */
-#analysis-result-content {
-    animation: highlightResult 1s ease-out;
-}
-
-@keyframes highlightResult {
-    0% {
-        background-color: rgba(0, 102, 255, 0.1);
-    }
-    100% {
-        background-color: transparent;
-    }
-}
-
-/* Make modal dialog responsive on smaller screens */
-@media (max-width: 768px) {
-    .modal-dialog {
-        margin: 0.5rem;
-        max-width: calc(100% - 1rem);
-    }
-    
-    .modal-content {
-        border-radius: var(--border-radius);
-    }
-}
-
-/* --- Modal Backdrop Fix --- */
-
-/* Ensure modal backdrop is properly removed and doesn't block interaction */
-.modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    z-index: 1040; /* Ensure proper z-index stacking */
-}
-
-/* Prevent multiple backdrops from stacking */
-.modal-backdrop + .modal-backdrop {
-    display: none;
-}
-
-/* Set proper z-index for modal */
-.modal {
-    z-index: 1050;
-}
-
-/* Ensure body doesn't retain modal-related styles after modal closes */
-body:not(.modal-open) {
-    overflow: auto !important;
-    padding-right: 0 !important;
-}
-
-/* Override Bootstrap default modal fade transition for smoother experience */
-.modal.fade .modal-dialog {
-    transition: transform 0.2s ease-out !important;
-}
-
-/* Make sure tooltips and popovers appear above modals */
-.tooltip, .popover {
-    z-index: 1060;
-}
+/* Styles for user-selection and user-check-item are kept inline in manage_sharing.html 
+   as they are highly specific to that component and already use CSS variables for theming. 
+   No additional global styles needed for them unless they are reused elsewhere. */
