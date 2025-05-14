@@ -970,8 +970,7 @@ canvas#sentimentChart {
 }
 
 .report-card-title a:hover {
-    color: var(--dark-text);
-    text-shadow: 0 0 5px rgba(0,102,255,0.3);
+    color: var(--primary-color) !important;
 }
 
 .report-card-timestamp {
@@ -1335,3 +1334,28 @@ canvas#sentimentChart {
 /* Styles for user-selection and user-check-item are kept inline in manage_sharing.html 
    as they are highly specific to that component and already use CSS variables for theming. 
    No additional global styles needed for them unless they are reused elsewhere. */
+
+/* 1. Keep the timestamp text blue on hover, not white */
+.report-card-header:hover .report-card-timestamp {
+  color: var(--secondary-color) !important;
+}
+/* Also ensure the link itself stays primary-blue on hover */
+.report-card-title a:hover {
+  color: var(--primary-color) !important;
+}
+
+/* 2. Allow the sentiment badge to wrap or ellipsize instead of overflowing */
+.results-list-container .report-card-sentiment {
+  /* remove forced single-line */
+  white-space: normal !important;
+}
+/* if you’d rather ellipsize rather than wrap: */
+/*
+.sentiment-badge {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+*/
