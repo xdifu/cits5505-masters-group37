@@ -105,19 +105,25 @@ news-sentiment-analyzer/
         python3 -m venv venv
         source venv/bin/activate
         ```
-    *   **Windows:**
+        
+        **Windows**
+
         ```bash
+        # Create the venv (once per project)
         python -m venv venv
 
         # Option A: using cmd.exe (no policy change needed)
         .\venv\Scripts\activate.bat
-        ```
-        
-        ```bash
+         ```
+
+        ````powershell
+        # Create the venv (once per project)
+        python -m venv venv
+
         # Option B: using PowerShell (may need to relax execution policy)
         Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
         .\venv\Scripts\Activate.ps1
-        ```
+        ````
 
 3.  **Install Dependencies:**
     ```bash
