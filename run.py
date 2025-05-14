@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv() # Load environment variables from .env file at the very beginning
 
 from app import create_app
-from config import DevelopmentConfig, ProductionConfig # Import specific configs
+from config import DevelopmentConfig, ProductionConfig, TestingConfig # Import specific configs
 import os
 
 # This 'app' instance is what Flask CLI (e.g., flask db commands) will discover
@@ -16,15 +16,20 @@ print(f"[CLI App Context] SQLALCHEMY_DATABASE_URI: {app.config.get('SQLALCHEMY_D
 
 if __name__ == '__main__':
     # This block executes when running 'python run.py' directly for the dev server
-    selected_config = DevelopmentConfig
-    if os.environ.get('FLASK_ENV') == 'production':
-        selected_config = ProductionConfig
+    flask_env = os.environ.get('FLASK_ENV')
+    
+    if flask_env == 'production':
+        selected_config_class = ProductionConfig
         print("Configuring server for Production.")
+    elif flask_env == 'testing': # Added this condition
+        selected_config_class = TestingConfig
+        print("Configuring server for Testing.")
     else:
-        # Default to DevelopmentConfig if FLASK_ENV is not 'production'
+        # Default to DevelopmentConfig if FLASK_ENV is not 'production' or 'testing'
+        selected_config_class = DevelopmentConfig
         print("Configuring server for Development.")
     
-    server_app = create_app(selected_config)
+    server_app = create_app(selected_config_class)
     # Debug print for server execution
     print(f"[Server App Context] SQLALCHEMY_DATABASE_URI: {server_app.config.get('SQLALCHEMY_DATABASE_URI')}")
     
