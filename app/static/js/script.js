@@ -769,8 +769,157 @@
         setupAjaxFormSubmissions();
         setupAjaxToggleShare();
         initializeScrollEffects();
+        initializeReportSharingModals(); // Add this line
 
         log('Sentiment Analyzer custom script loaded and initialized.');
+    }
+
+    /**
+     * Initializes modal triggers for sharing and managing reports.
+     */
+    function initializeReportSharingModals() {
+        const shareReportModalElement = document.getElementById('shareReportModal');
+        if (shareReportModalElement) {
+            shareReportModalElement.addEventListener('show.bs.modal', async function (event) {
+                const button = event.relatedTarget;
+                const reportId = button.getAttribute('data-report-id');
+                const reportName = button.getAttribute('data-report-name');
+                
+                const modalTitle = shareReportModalElement.querySelector('#shareReportName');
+                const modalBody = shareReportModalElement.querySelector('#shareReportModalBody');
+
+                if (modalTitle) modalTitle.textContent = reportName || 'Report';
+                if (modalBody) modalBody.innerHTML = '<div class="d-flex justify-content-center align-items-center" style="min-height: 150px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                try {
+                    const response = await fetch(`/report/${reportId}/share_form_content`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const htmlContent = await response.text();
+                    if (modalBody) modalBody.innerHTML = htmlContent;
+                    setupModalFormSubmission(shareReportModalElement, `#shareReportFormInstance`, reportId, 'share');
+                } catch (error) {
+                    ErrorHandler.handle(error, 'Could not load the sharing form.');
+                    if (modalBody) modalBody.innerHTML = '<div class="alert alert-danger">Failed to load form. Please try again.</div>';
+                }
+            });
+        }
+
+        const manageSharingModalElement = document.getElementById('manageSharingModal');
+        if (manageSharingModalElement) {
+            manageSharingModalElement.addEventListener('show.bs.modal', async function (event) {
+                const button = event.relatedTarget;
+                const reportId = button.getAttribute('data-report-id');
+                const reportName = button.getAttribute('data-report-name');
+
+                const modalTitle = manageSharingModalElement.querySelector('#manageReportName');
+                const modalBody = manageSharingModalElement.querySelector('#manageSharingModalBody');
+
+                if (modalTitle) modalTitle.textContent = reportName || 'Report';
+                if (modalBody) modalBody.innerHTML = '<div class="d-flex justify-content-center align-items-center" style="min-height: 150px;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                try {
+                    const response = await fetch(`/report/${reportId}/manage_sharing_form_content`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const htmlContent = await response.text();
+                    if (modalBody) modalBody.innerHTML = htmlContent;
+                    setupModalFormSubmission(manageSharingModalElement, `#manageSharingFormInstance`, reportId, 'manage');
+                } catch (error) {
+                    ErrorHandler.handle(error, 'Could not load the manage sharing form.');
+                    if (modalBody) modalBody.innerHTML = '<div class="alert alert-danger">Failed to load form. Please try again.</div>';
+                }
+            });
+        }
+    }
+
+    /**
+     * Sets up AJAX submission for forms within modals.
+     * @param {HTMLElement} modalElement - The modal element.
+     * @param {string} formSelector - CSS selector for the form inside the modal.
+     * @param {string} reportId - The ID of the report being actioned on.
+     * @param {string} actionType - 'share' or 'manage'.
+     */
+    function setupModalFormSubmission(modalElement, formSelector, reportId, actionType) {
+        const form = modalElement.querySelector(formSelector);
+        if (!form) {
+            log(`Modal form not found with selector: ${formSelector} in modal:`, modalElement);
+            return;
+        }
+
+        // Remove any existing listeners to prevent multiple submissions
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        // const newForm = form; // If cloneNode causes issues with event listeners on complex fields
+
+        newForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const submitButton = newForm.querySelector('button[type="submit"], input[type="submit"]');
+            const originalButtonHTML = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+            // Clear previous errors
+            newForm.querySelectorAll('.invalid-feedback, .form-error-message, .alert-danger').forEach(el => el.remove());
+            newForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+            try {
+                const formData = new FormData(newForm);
+                const response = await fetch(newForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    showToastNotification(data.message || `${actionType === 'share' ? 'Sharing' : 'Management'} successful!`, 'success');
+                    const bsModal = bootstrap.Modal.getInstance(modalElement);
+                    if (bsModal) bsModal.hide();
+                } else {
+                    let errorMessageText = data.message || `Failed to ${actionType} report. Please check the form for errors.`;
+                    if (data.errors) {
+                        for (const field in data.errors) {
+                            const inputField = newForm.querySelector(`[name="${field}"]`);
+                            if (inputField) {
+                                inputField.classList.add('is-invalid');
+                                let errorDiv = inputField.parentElement.querySelector(`.invalid-feedback[data-field-error-for="${field}"]`);
+                                if (!errorDiv) {
+                                    errorDiv = document.createElement('div');
+                                    errorDiv.className = 'invalid-feedback d-block';
+                                    errorDiv.setAttribute('data-field-error-for', field); // Mark for easier selection
+                                    // Insert after the input field or its direct wrapper if any (e.g. input-group)
+                                    if (inputField.nextSibling) {
+                                        inputField.parentElement.insertBefore(errorDiv, inputField.nextSibling);
+                                    } else {
+                                        inputField.parentElement.appendChild(errorDiv);
+                                    }
+                                }
+                                errorDiv.textContent = data.errors[field];
+                            } else {
+                                errorMessageText += `\n- ${field}: ${data.errors[field]}`;
+                            }
+                        }
+                    }
+                    // Display a general error message at the top of the form
+                    const generalErrorDiv = document.createElement('div');
+                    generalErrorDiv.className = 'alert alert-danger mt-2 form-error-message';
+                    generalErrorDiv.setAttribute('role', 'alert');
+                    generalErrorDiv.textContent = errorMessageText;
+                    newForm.prepend(generalErrorDiv);
+                    showToastNotification(errorMessageText, 'error');
+                }
+            } catch (error) {
+                ErrorHandler.handle(error, `An unexpected error occurred while trying to ${actionType} the report.`);
+                const generalErrorDiv = document.createElement('div');
+                generalErrorDiv.className = 'alert alert-danger mt-2 form-error-message';
+                generalErrorDiv.setAttribute('role', 'alert');
+                generalErrorDiv.textContent = `An unexpected error occurred. Please try again.`;
+                newForm.prepend(generalErrorDiv);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonHTML;
+            }
+        });
     }
 
     // Initialize when the DOM is fully loaded

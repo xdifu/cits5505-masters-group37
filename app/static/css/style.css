@@ -1437,157 +1437,141 @@ canvas#sentimentChart {
 
 /* Enhanced modal styling with subtle animation and glass morphism */
 .modal-content {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: var(--box-shadow-md);
+    /* background: rgba(255, 255, 255, 0.85); */ /* Using existing glass-bg */
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px); /* Increased blur for modals */
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
+    box-shadow: var(--depth-shadow); /* More prominent shadow for modals */
     animation: modalFadeIn 0.3s ease-out;
+    border-radius: var(--card-border-radius); /* Consistent border radius */
 }
 
-/* Modal animation */
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Stylish modal header with gradient */
 .modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    background: var(--gradient-primary);
+    background: var(--gradient-primary); /* Using primary gradient for header */
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Lighter border for glass effect */
     padding: 1rem 1.5rem;
 }
 
-.modal-title {
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-    font-weight: var(--heading-font-weight);
-    letter-spacing: 0.5px;
+.modal-header .btn-close {
+    filter: brightness(0) invert(1); /* Ensure close button is visible on dark header */
+    opacity: 0.9;
 }
-
-/* Modal body with improved spacing and typography */
-.modal-body {
-    padding: 1.8rem;
-}
-
-/* Modal footer with subtle separation */
-.modal-footer {
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    background: rgba(248, 249, 250, 0.5);
-}
-
-/* Enhanced close button */
-.btn-close {
-    filter: brightness(0) invert(1);
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-
-.btn-close:hover {
+.modal-header .btn-close:hover {
     opacity: 1;
-    transform: scale(1.1);
 }
 
-/* Style for sentiment badges in modal */
-#analysis-result-content .badge {
-    padding: 0.5em 1em;
-    font-size: 1rem;
+.modal-title {
+    color: white; /* Ensure title text is white on gradient background */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    font-weight: 600; /* Make title a bit bolder */
+}
+.modal-title #shareReportName,
+.modal-title #manageReportName {
+    font-weight: normal; /* Report name part normal weight */
+    /* color: var(--primary-color); */ /* Color will be white due to .modal-title */
+    opacity: 0.9; /* Slightly less prominent than main title part */
+}
+
+
+.modal-body {
+    padding: 1.5rem 1.75rem; /* Standard padding */
+}
+.modal-body .form-control,
+.modal-body .form-select { /* Ensure form controls in modal also get nice styling */
+    background: rgba(255, 255, 255, 0.9); /* Slightly less transparent for readability */
+    border-color: rgba(0,0,0,0.15);
+}
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    background: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 255, 0.25);
+}
+.modal-body p {
+    margin-bottom: 0.75rem; /* Adjust paragraph spacing in modal */
+}
+.modal-body strong {
+    color: var(--dark-text);
+}
+
+
+.modal-footer {
+    background-color: rgba(248, 249, 250, 0.7); /* Slightly off-white transparent background */
+    border-top: 1px solid rgba(0,0,0,0.08);
+    padding: 1rem 1.5rem;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Styles for user selection list in manage sharing modal */
+.user-selection-list {
+    max-height: 250px; /* Adjust height as needed */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.8); /* Slight background */
+    margin-bottom: 1rem; /* Space below the list */
+}
+
+.user-check-item {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid rgba(0, 102, 255, 0.08);
+    transition: background-color 0.2s ease;
+    border-radius: 4px; /* Slightly rounded items */
+    margin-bottom: 0.25rem; /* Small gap between items */
+}
+
+.user-check-item:last-child {
+    border-bottom: none;
+}
+
+.user-check-item:hover {
+    background-color: rgba(0, 102, 255, 0.05); /* Subtle hover */
+}
+
+.user-check-item .form-check-input {
+    margin-top: 0.2em; /* Align checkbox better with label */
+    transform: scale(1.1); /* Slightly larger checkboxes */
+}
+.user-check-item .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 255, 0.2);
+}
+
+.user-check-item .form-check-label {
+    padding-left: 0.35rem; /* Space between checkbox and label */
+}
+
+.user-check-item .form-check-input:checked + .form-check-label {
+    color: var(--primary-color);
     font-weight: 500;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
 }
 
-#analysis-result-content .badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.modal-body .loading-spinner-container { /* Already used in JS, just for reference */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px; /* Ensure spinner has space */
+}
+.modal-body .loading-spinner-container .spinner-border { /* Bootstrap 5 spinner */
+    width: 3rem;
+    height: 3rem;
+    color: var(--primary-color);
 }
 
-/* Custom styling for modal buttons */
-.modal .btn-primary {
-    background: var(--gradient-primary);
-    border: none;
-    box-shadow: 0 2px 5px rgba(0, 102, 255, 0.3);
-    transition: all 0.3s ease;
+/* Ensure form error messages in modals are visible and styled */
+.modal-body .invalid-feedback {
+    display: block !important; /* Override Bootstrap if necessary */
+    width: 100%;
+    margin-top: .25rem;
+    font-size: .875em;
+    color: var(--bs-danger); /* Bootstrap danger color */
 }
-
-.modal .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 102, 255, 0.4);
-}
-
-.modal .btn-secondary {
-    background: var(--gradient-neutral);
-    border: none;
-    box-shadow: 0 2px 5px rgba(108, 117, 125, 0.3);
-    transition: all 0.3s ease;
-}
-
-.modal .btn-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
-}
-
-/* Highlight animation for newly displayed results */
-#analysis-result-content {
-    animation: highlightResult 1s ease-out;
-}
-
-@keyframes highlightResult {
-    0% {
-        background-color: rgba(0, 102, 255, 0.1);
-    }
-    100% {
-        background-color: transparent;
-    }
-}
-
-/* Make modal dialog responsive on smaller screens */
-@media (max-width: 768px) {
-    .modal-dialog {
-        margin: 0.5rem;
-        max-width: calc(100% - 1rem);
-    }
-    
-    .modal-content {
-        border-radius: var(--border-radius);
-    }
-}
-
-/* --- Modal Backdrop Fix --- */
-
-/* Ensure modal backdrop is properly removed and doesn't block interaction */
-.modal-backdrop {
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    z-index: 1040; /* Ensure proper z-index stacking */
-}
-
-/* Prevent multiple backdrops from stacking */
-.modal-backdrop + .modal-backdrop {
-    display: none;
-}
-
-/* Set proper z-index for modal */
-.modal {
-    z-index: 1050;
-}
-
-/* Ensure body doesn't retain modal-related styles after modal closes */
-body:not(.modal-open) {
-    overflow: auto !important;
-    padding-right: 0 !important;
-}
-
-/* Override Bootstrap default modal fade transition for smoother experience */
-.modal.fade .modal-dialog {
-    transition: transform 0.2s ease-out !important;
-}
-
-/* Make sure tooltips and popovers appear above modals */
-.tooltip, .popover {
-    z-index: 1060;
+.modal-body .form-error-message, /* General form error message */
+.modal-body .alert-danger { /* For general error messages prepended to form */
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
 }

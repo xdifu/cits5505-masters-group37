@@ -44,14 +44,57 @@
                 </div>
                 <div class="report-card-actions">
                     <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}" class="btn btn-sm btn-cyber-primary">View Dashboard</a>
-                    <a href="{{ url_for('main.share_report', report_id=report_item.id) }}" class="btn btn-sm btn-cyber-secondary">Share Report</a>
-                    <a href="{{ url_for('main.manage_report_sharing', report_id=report_item.id) }}" class="btn btn-sm btn-cyber-outline">Manage Sharing</a>
+                    <button type="button" class="btn btn-sm btn-cyber-secondary" data-bs-toggle="modal" data-bs-target="#shareReportModal" data-report-id="{{ report_item.id }}" data-report-name="{{ report_item.name }}">Share Report</button>
+                    <button type="button" class="btn btn-sm btn-cyber-outline" data-bs-toggle="modal" data-bs-target="#manageSharingModal" data-report-id="{{ report_item.id }}" data-report-name="{{ report_item.name }}">Manage Sharing</button>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
+<!-- Share Report Modal -->
+<div class="modal fade" id="shareReportModal" tabindex="-1" aria-labelledby="shareReportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- modal-lg for wider modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareReportModalLabel">Share Report: <span id="shareReportName" class="fw-normal"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="shareReportModalBody">
+                <!-- Content will be loaded here by JavaScript -->
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 150px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Footer might be part of the loaded content if form includes submit/cancel -->
+        </div>
+    </div>
+</div>
+
+<!-- Manage Sharing Modal -->
+<div class="modal fade" id="manageSharingModal" tabindex="-1" aria-labelledby="manageSharingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- modal-lg for wider modal -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageSharingModalLabel">Manage Sharing for: <span id="manageReportName" class="fw-normal"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="manageSharingModalBody">
+                <!-- Content will be loaded here by JavaScript -->
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 150px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+             <!-- Footer might be part of the loaded content -->
+        </div>
+    </div>
+</div>
+
 {% else %}
 <div class="card tilt-card p-4 text-center"> {# Keep tilt-card for this "empty" state card if desired and small enough #}
     <div class="card-body">
@@ -65,4 +108,5 @@
 
 {% block scripts %}
 {{ super() }}
+{# Specific scripts for this page can be added here if needed, but modal logic is in script.js #}
 {% endblock %}
