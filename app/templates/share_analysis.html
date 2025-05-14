@@ -14,7 +14,7 @@
   <div class="row g-5 justify-content-center">
     
     <!-- Left column: Analysis Details -->
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-5">
       <div class="card tilt-card shadow-sm border-0">
         <!-- Card header -->
         <div class="card-header bg-white border-bottom-0">
@@ -22,46 +22,22 @@
         </div>
         <!-- Card body -->
         <div class="card-body p-3">
-          <p class="mb-3"><strong>Sentiment:</strong>
-            {% if report.sentiment == 'Positive' %}
-              <span class="badge bg-success">{{ report.sentiment }}</span>
-            {% elif report.sentiment == 'Negative' %}
-              <span class="badge bg-danger">{{ report.sentiment }}</span>
+          <p class="mb-3"><strong>Report Name:</strong> {{ report.name }}</p>
+          <p class="mb-3"><strong>Overall Sentiment:</strong>
+            {% if report.overall_sentiment_label == 'Positive' %}
+              <span class="badge bg-success">{{ report.overall_sentiment_label }}</span>
+            {% elif report.overall_sentiment_label == 'Negative' %}
+              <span class="badge bg-danger">{{ report.overall_sentiment_label }}</span>
             {% else %}
-              <span class="badge bg-secondary">{{ report.sentiment }}</span>
+              <span class="badge bg-secondary">{{ report.overall_sentiment_label|default('Neutral') }}</span>
             {% endif %}
           </p>
-          <p class="mb-3"><strong>Original Text:</strong><br>{{ report.original_text }}</p>
           <p class="text-muted"><small>Analyzed on: {{ report.timestamp.strftime('%Y-%m-%d %H:%M') }}</small></p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right column: Share Form + Tips -->
-    <div class="col-12 col-md-6 d-flex flex-column">
-      <!-- Share form card -->
-      <div class="card tilt-card shadow-sm border-0 flex-grow-1">
-        <div class="card-header bg-white border-bottom-0">
-          <h5 class="card-title mb-0">Share with another user</h5>
-        </div>
-        <div class="card-body p-3">
-          <form method="POST" action="{{ url_for('main.share_report', report_id=report.id) }}" novalidate>
-            {{ form.hidden_tag() }}
-            <!-- Username input -->
-            <div class="mb-4">
-              {{ wtf.form_field(form.share_with_username, class='form-control form-control-lg', placeholder='Enter username') }}
-            </div>
-            <!-- Button group -->
-            <div class="d-flex gap-3">
-              {{ wtf.form_field(form.submit, class='btn btn-cyber-primary flex-grow-1') }}
-              <a href="{{ url_for('main.results') }}" class="btn btn-outline-secondary flex-grow-1">Back to My Results</a>
-            </div>
-          </form>
         </div>
       </div>
 
       <!-- Sharing tips card -->
-      <div class="card tilt-card shadow-sm border-0 mt-4 flex-grow-1">
+      <div class="card tilt-card shadow-sm border-0 mt-4">
         <div class="card-header bg-white border-bottom-0">
           <h5 class="card-title mb-0">Sharing Tips</h5>
         </div>
@@ -73,21 +49,147 @@
             </li>
             <li class="mb-2 d-flex align-items-start">
               <span class="me-2 text-success mt-1">&check;</span>
-              <span>You can share with multiple users individually</span>
+              <span>Use the quick share form for a single user</span>
             </li>
             <li class="mb-2 d-flex align-items-start">
               <span class="me-2 text-success mt-1">&check;</span>
-              <span>For batch sharing, use the “Manage Sharing” option</span>
+              <span>Use the batch share form for multiple users</span>
             </li>
             <li class="d-flex align-items-start">
               <span class="me-2 text-success mt-1">&check;</span>
-              <span>You can revoke sharing permissions at any time</span>
+              <span>You can revoke access at any time</span>
             </li>
           </ul>
         </div>
       </div>
     </div>
 
+    <!-- Right column: Share management -->
+    <div class="col-12 col-md-7 d-flex flex-column">
+      <!-- Current shared users list -->
+      <div class="card tilt-card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Current Shared Users</h5>
+        </div>
+        <div class="card-body p-3">
+          {% if report.shared_with_recipients %}
+          <ul class="list-group">
+            {% for user in report.shared_with_recipients %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              {{ user.username }}
+              <form method="POST"
+                    action="{{ url_for('main.remove_shared_user', report_id=report.id, user_id=user.id) }}"
+                    style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ form.csrf_token._value() }}">
+                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+              </form>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted mb-0">No users have access currently.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Share form -->
+      <div class="card tilt-card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom-0">
+          <h5 class="card-title mb-0">Quick Share</h5>
+        </div>
+        <div class="card-body p-3">
+          <form method="POST" action="{{ url_for('main.share_report', report_id=report.id) }}" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+              {{ wtf.form_field(form.share_with_username, class='form-control', placeholder='Enter username') }}
+            </div>
+            <div class="d-grid">
+              {{ wtf.form_field(form.submit, class='btn btn-cyber-primary w-100') }}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Multi-user share form -->
+      {% if manage_form %}
+      <div class="card tilt-card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom-0">
+          <h5 class="card-title mb-0">Batch Share</h5>
+        </div>
+        <div class="card-body p-3">
+          <p class="text-muted mb-3">
+            Select multiple users to share with. Changes apply when you save.
+          </p>
+          
+          <form method="POST" action="{{ url_for('main.manage_report_sharing', report_id=report.id) }}">
+            {{ manage_form.hidden_tag() }}
+            <div class="mb-3">
+              {{ manage_form.users_to_share_with.label(class="form-label fw-bold") }}
+              <div class="user-selection mt-3">
+                {% for value, label in manage_form.users_to_share_with.choices %}
+                <div class="form-check user-check-item">
+                  <input class="form-check-input" type="checkbox" 
+                         name="{{ manage_form.users_to_share_with.name }}" 
+                         id="user_{{ value }}" 
+                         value="{{ value }}"
+                         {% if value in manage_form.users_to_share_with.data %}checked{% endif %}>
+                  <label class="form-check-label" for="user_{{ value }}">
+                    {{ label }}
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+              {% if manage_form.users_to_share_with.errors %}
+              <div class="invalid-feedback d-block mt-2">
+                {% for error in manage_form.users_to_share_with.errors %}
+                <span>{{ error }}</span><br>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Fixed button rendering -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-cyber-primary w-100">Share Report</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Back button -->
+      <div class="mt-4 text-center">
+        <a href="{{ url_for('main.results') }}" class="btn btn-outline-secondary px-4">
+          Back to My Results
+        </a>
+      </div>
+    </div>
   </div>
 </div>
+
+<style>
+  /* Styling for user selection list */
+  .user-selection {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+  }
+  .user-check-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 102, 255, 0.1);
+    transition: background-color 0.2s;
+  }
+  .user-check-item:last-child {
+    border-bottom: none;
+  }
+  .user-check-item:hover {
+    background-color: rgba(0, 102, 255, 0.05);
+  }
+  .user-check-item .form-check-input:checked + .form-check-label {
+    color: var(--primary-color);
+    font-weight: 500;
+  }
+</style>
 {% endblock %}

@@ -490,7 +490,18 @@ def share_report(report_id):
         flash('Analysis report not found or you do not own this report.', 'danger')
         return redirect(url_for('main.results'))
 
+    # Quick share form (original)
     form = ShareReportForm()
+    
+    # Multi-user share form (from manage_sharing)
+    available_users = db.session.execute(
+        db.select(User).where(User.id != current_user.id).order_by(User.username)
+    ).scalars().all()
+    
+    manage_form = ManageSharingForm()
+    manage_form.users_to_share_with.choices = [(user.id, user.username) for user in available_users]
+    
+    # Handle the single-user share form submission
     if form.validate_on_submit():
         user_to_share_with = db.session.scalar(
             db.select(User).where(User.username == form.share_with_username.data)
@@ -499,63 +510,33 @@ def share_report(report_id):
             flash(f'User {form.share_with_username.data} not found.', 'danger')
         elif user_to_share_with == current_user:
             flash('You cannot share a report with yourself.', 'warning')
-        # Corrected check for list-based relationship:
         elif user_to_share_with in report.shared_with_recipients:
             flash(f'Report already shared with {user_to_share_with.username}.', 'info')
         else:
             report.shared_with_recipients.append(user_to_share_with)
             db.session.commit()
             flash(f'Report shared successfully with {user_to_share_with.username}.', 'success')
-        return redirect(url_for('main.results_dashboard', report_id=report_id))
+        return redirect(url_for('main.share_report', report_id=report_id))
     
-    return render_template('share_analysis.html', title='Share Report', form=form, report=report)
+    # Set checked values for the multi-user form on GET
+    if request.method == 'GET':
+        manage_form.users_to_share_with.data = [user.id for user in report.shared_with_recipients]
+    
+    return render_template('share_analysis.html', 
+                           title='Share Report', 
+                           form=form, 
+                           manage_form=manage_form, 
+                           report=report)
 
-@bp.route('/manage_report_sharing/<int:report_id>', methods=['GET', 'POST'])
+# Keep the manage_report_sharing route for form processing
+# But now it redirects back to share_report
+@bp.route('/manage_report_sharing/<int:report_id>', methods=['POST'])
 @login_required
 def manage_report_sharing(report_id):
-    report = db.session.get(AnalysisReport, report_id)
-    # Verify ownership
-    if not report or report.author.id != current_user.id:
-        flash('Analysis report not found or you do not own this report.', 'danger')
-        return redirect(url_for('main.results'))
-
-    # Get unique users for the selection list - exclude current user
-    # Use distinct query to ensure no duplicates
-    available_users = db.session.execute(
-        db.select(User).where(User.id != current_user.id).order_by(User.username)
-    ).scalars().all()
+    # Existing code...
     
-    # Create form with unique user choices
-    form = ManageSharingForm()
-    form.users_to_share_with.choices = [(user.id, user.username) for user in available_users]
-
-    if form.validate_on_submit():
-        # Get current shared user IDs
-        current_shared_ids = {user.id for user in report.shared_with_recipients}
-        selected_ids = set(form.users_to_share_with.data)
-        
-        # Add new users
-        ids_to_add = selected_ids - current_shared_ids
-        for user_id_to_add in ids_to_add:
-            user = db.session.get(User, user_id_to_add)
-            if user: report.shared_with_recipients.append(user)
-        
-        # Remove deselected users
-        ids_to_remove = current_shared_ids - selected_ids
-        for user_id_to_remove in ids_to_remove:
-            user = db.session.get(User, user_id_to_remove)
-            if user: report.shared_with_recipients.remove(user)
-            
-        db.session.commit()
-        flash('Sharing settings updated.', 'success')
-        return redirect(url_for('main.results_dashboard', report_id=report_id))
-
-    # Important: Set the selected values on GET requests
-    if request.method == 'GET':
-        form.users_to_share_with.data = [user.id for user in report.shared_with_recipients]
-    
-    return render_template('manage_sharing.html', title='Manage Sharing', form=form, report=report)
-
+    # Redirect to the combined page instead of results_dashboard
+    return redirect(url_for('main.share_report', report_id=report_id))
 
 @bp.route('/remove_shared_user/<int:report_id>/<int:user_id>', methods=['POST'])
 @login_required
