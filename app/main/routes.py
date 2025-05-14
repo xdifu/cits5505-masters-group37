@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.main import bp
 from app.models import AnalysisReport, NewsItem, analysis_report_shares, User
-from app.forms import AnalysisForm, ShareReportForm, ManageSharingForm # Fixed class name
+from app.forms import AnalysisForm, ShareReportForm, ManageSharingForm
 from app.openai_api import analyze_text_data, SingleNewsItemAnalysis, PREDEFINED_INTENT_TAGS, SentimentEnum # Added SentimentEnum here
 from sqlalchemy.orm import aliased
 from sqlalchemy import desc, or_, select, func # Ensure select is imported
@@ -533,34 +533,47 @@ def share_report(report_id):
 @bp.route('/manage_report_sharing/<int:report_id>', methods=['POST'])
 @login_required
 def manage_report_sharing(report_id):
-    # Existing code...
-    
-    # Redirect to the combined page instead of results_dashboard
-    return redirect(url_for('main.share_report', report_id=report_id))
-
-@bp.route('/remove_shared_user/<int:report_id>/<int:user_id>', methods=['POST'])
-@login_required
-def remove_shared_user(report_id, user_id):
     """
-    Remove a shared user from the given analysis report.
-    Only the report author can perform this action.
+    Process the batch‐share form: update report.shared_with_recipients
+    according to the selected user IDs, then redirect back.
     """
     report = db.session.get(AnalysisReport, report_id)
-    # Verify the report exists and current user is the author
     if not report or report.author.id != current_user.id:
         flash('Report not found or permission denied.', 'danger')
-        return redirect(url_for('main.results'))
+        return redirect(url_for('main.share_report', report_id=report_id))
 
-    user = db.session.get(User, user_id)
-    # If the user is in the shared recipients, remove and commit
-    if user and user in report.shared_with_recipients:
-        report.shared_with_recipients.remove(user)
+    # Rebuild the form choices exactly as in share_report
+    available_users = db.session.execute(
+        db.select(User).where(User.id != current_user.id).order_by(User.username)
+    ).scalars().all()
+
+    form = ManageSharingForm()
+    form.users_to_share_with.choices = [(u.id, u.username) for u in available_users]
+
+    if form.validate_on_submit():
+        # Compute sets of IDs to add/remove
+        selected_ids = set(form.users_to_share_with.data or [])
+        current_ids  = {u.id for u in report.shared_with_recipients}
+
+        # Add newly checked users
+        for uid in selected_ids - current_ids:
+            user = db.session.get(User, uid)
+            if user:
+                report.shared_with_recipients.append(user)
+
+        # Remove unchecked users
+        for uid in current_ids - selected_ids:
+            user = db.session.get(User, uid)
+            if user:
+                report.shared_with_recipients.remove(user)
+
         db.session.commit()
-        flash(f'Removed access for user {user.username}.', 'success')
+        flash('Sharing settings updated.', 'success')
     else:
-        flash('User was not shared or already removed.', 'info')
+        flash('Failed to update sharing settings.', 'danger')
 
-    return redirect(url_for('main.manage_report_sharing', report_id=report_id))
+    return redirect(url_for('main.share_report', report_id=report_id))
+
 
 @bp.route('/shared_with_me')
 @login_required
