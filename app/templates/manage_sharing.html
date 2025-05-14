@@ -50,10 +50,16 @@
                     <div class="mb-3">
                         {{ form.users_to_share_with.label(class="form-label fw-bold") }}<br>
                         <div class="user-selection mt-3">
-                            {% for subfield in form.users_to_share_with %}
+                            {% for value, label in form.users_to_share_with.choices %}
                             <div class="form-check user-check-item">
-                                {{ subfield(class="form-check-input") }}
-                                {{ subfield.label(class="form-check-label") }}
+                                <input class="form-check-input" type="checkbox" 
+                                       name="{{ form.users_to_share_with.name }}" 
+                                       id="user_{{ value }}" 
+                                       value="{{ value }}"
+                                       {% if value in form.users_to_share_with.data %}checked{% endif %}>
+                                <label class="form-check-label" for="user_{{ value }}">
+                                    {{ label }}
+                                </label>
                             </div>
                             {% endfor %}
                         </div>

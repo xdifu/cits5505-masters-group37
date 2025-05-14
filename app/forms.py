@@ -115,23 +115,9 @@ class ShareReportForm(FlaskForm):
             print("Warning: DB connection or User model not available for username validation during sharing.")
 
 
-class ManageReportSharingForm(FlaskForm):
-    """Form for managing sharing of a specific analysis report with multiple users."""
-    # Renamed from ManageSharingForm to ManageReportSharingForm
-    # Choices for users_to_share_with will be populated dynamically in the route
-    users_to_share_with = SelectMultipleField('Share with Users', coerce=int, validators=[WTFormsOptional()])
-    # report_id is typically handled by the route (e.g., /report/<int:report_id>/manage_sharing)
-    # but can be added as a HiddenField if the form needs to post it explicitly.
-    # report_id = HiddenField(validators=[DataRequired()]) 
+class ManageSharingForm(FlaskForm):
+    """Form for managing multiple sharing recipients."""
+    users_to_share_with = SelectMultipleField('Select users to share with:',
+                                             coerce=int,
+                                             render_kw={"class": "form-select"})
     submit = SubmitField('Update Sharing Settings')
-
-    def __init__(self, current_user_id, *args, **kwargs):
-        super(ManageReportSharingForm, self).__init__(*args, **kwargs)
-        if db and User:
-            # Populate choices dynamically, excluding the current user
-            self.users_to_share_with.choices = [
-                (user.id, user.username) 
-                for user in db.session.scalars(
-                    sa.select(User).where(User.id != current_user_id)
-                ).all()
-            ]
