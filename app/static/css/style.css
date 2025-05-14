@@ -1359,3 +1359,19 @@ canvas#sentimentChart {
   text-overflow: ellipsis;
 }
 */
+/* Fix: Make header background transparent when card is hovered */
+.report-card:hover .report-card-header {
+    background-color: transparent !important;
+}
+
+/* Fix: Keep header background transparent at all times, not just on hover */
+.report-card .report-card-header {
+  background-color: transparent !important;
+  border-bottom-color: rgba(0, 102, 255, 0.1); /* Keep the light blue border bottom */
+}
+
+/* Current hover rules are still needed for the text colors */
+.report-card:hover .report-card-title a,
+.report-card:hover .report-card-timestamp {
+  color: var(--primary-color) !important;
+}
