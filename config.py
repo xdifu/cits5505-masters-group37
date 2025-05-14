@@ -20,9 +20,9 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'sqlite:///:memory:' # Use in-memory SQLite for tests
+        'sqlite:///' + os.path.join(basedir, 'instance', 'test-selenium.db') # Use file-based SQLite for tests
     WTF_CSRF_ENABLED = False # Disable CSRF forms in tests for convenience
-    SERVER_NAME = 'localhost.localdomain' # Added for url_for in tests
+    SERVER_NAME = None # Set to None to allow Flask to bind to any hostname during tests
     APPLICATION_ROOT = '/'  # Added for url_for in tests
     PREFERRED_URL_SCHEME = 'http' # Added for url_for in tests
 

@@ -1,0 +1,44 @@
+2025-05-14 21:25:43,919 - INFO - Starting Flask server...
+2025-05-14 21:25:43,926 - INFO - Flask server started with PID: 19412
+2025-05-14 21:25:48,936 - INFO - Setting up Chrome WebDriver...
+2025-05-14 21:25:50,484 - INFO - Chrome WebDriver initialized successfully
+2025-05-14 21:25:50,484 - INFO - 
+--- Test 1: Homepage ---
+2025-05-14 21:25:51,958 - INFO - Loaded URL: http://localhost:5000/auth/login?next=%2F
+2025-05-14 21:25:51,964 - INFO - Page title: Login - Sentiment Analyzer
+2025-05-14 21:25:52,018 - INFO - 
+--- Test 2: Registration Page ---
+2025-05-14 21:25:52,608 - INFO - Loaded URL: http://localhost:5000/auth/register
+2025-05-14 21:25:52,693 - INFO - 
+--- Test 3: Login Page ---
+2025-05-14 21:25:53,297 - INFO - Loaded URL: http://localhost:5000/auth/login
+2025-05-14 21:25:53,339 - INFO - 
+--- Test 4: User Registration ---
+2025-05-14 21:25:54,469 - INFO - Form filled out, attempting to submit...
+2025-05-14 21:25:54,545 - INFO - 
+--- Test 5: User Login ---
+2025-05-14 21:25:55,378 - INFO - Login form filled out, attempting to submit...
+2025-05-14 21:25:57,716 - INFO - Stopping Flask server...
+2025-05-14 21:25:57,717 - INFO - Flask server terminated
+2025-05-14 21:26:44,520 - INFO - Starting Flask server...
+2025-05-14 21:26:44,531 - INFO - Flask server started with PID: 6472
+2025-05-14 21:26:49,538 - INFO - Setting up Chrome WebDriver...
+2025-05-14 21:26:51,642 - INFO - Chrome WebDriver initialized successfully
+2025-05-14 21:26:51,642 - INFO - 
+--- Test 1: Homepage ---
+2025-05-14 21:26:52,849 - INFO - Loaded URL: http://localhost:5000/auth/login?next=%2F
+2025-05-14 21:26:52,854 - INFO - Page title: Login - Sentiment Analyzer
+2025-05-14 21:26:52,883 - INFO - 
+--- Test 2: Registration Page ---
+2025-05-14 21:26:53,488 - INFO - Loaded URL: http://localhost:5000/auth/register
+2025-05-14 21:26:53,653 - INFO - 
+--- Test 3: Login Page ---
+2025-05-14 21:26:54,063 - INFO - Loaded URL: http://localhost:5000/auth/login
+2025-05-14 21:26:54,164 - INFO - 
+--- Test 4: User Registration ---
+2025-05-14 21:26:56,111 - INFO - Form filled out, attempting to submit...
+2025-05-14 21:26:56,216 - INFO - 
+--- Test 5: User Login ---
+2025-05-14 21:26:57,512 - INFO - Login form filled out, attempting to submit...
+2025-05-14 21:27:00,432 - INFO - Stopping Flask server...
+2025-05-14 21:27:00,432 - INFO - Flask server terminated

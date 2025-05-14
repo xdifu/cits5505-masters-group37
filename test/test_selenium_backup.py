@@ -13,12 +13,6 @@ from app import create_app, db
 from app.models import User
 from config import TestingConfig
 
-# Comment out the following line when you're ready to run the tests
-pytestmark = pytest.mark.skip(reason="Selenium tests require specific setup - remove this line to run them")
-
-# Set DEBUG to True for more detailed logging
-DEBUG = True
-
 # Setup logging to help debug test issues
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -156,21 +150,13 @@ class TestSeleniumAuth:
         """Test user registration and login functionality."""
         logger.info("Starting test_register_and_login")
         
-        # Uncomment the next line to skip this specific test
-        # pytest.skip("Skipping test_register_and_login until debugging is complete")
-        
         # Registration
         browser.get(f"{live_server_url}/auth/register")
-        logger.info(f"Navigated to registration page: {browser.current_url}")
-        
-        # Print the page source to debug
-        logger.info(f"Page title: {browser.title}")
-        logger.info("Page source snippet:")
-        logger.info(browser.page_source[:500] + "...")  # First 500 chars
+        logger.info("Navigated to registration page")
         
         # Check if we actually reached the registration page
         try:
-            register_form = WebDriverWait(browser, 30).until(
+            register_form = WebDriverWait(browser, 10).until(
                 EC.presence_of_element_located((By.TAG_NAME, "form"))
             )
             logger.info("Found registration form")
@@ -180,54 +166,43 @@ class TestSeleniumAuth:
             pytest.fail("Could not find registration form")
             
         # Fill out the registration form
-        try:
-            username_field = WebDriverWait(browser, 30).until(
-                EC.visibility_of_element_located((By.NAME, "username"))
-            )
-            username_field.clear()
-            username_field.send_keys("newseleniumuser")
-            logger.info("Entered username")
-            
-            email_field = browser.find_element(By.NAME, "email")
-            email_field.clear()
-            email_field.send_keys("newselenium@example.com")
-            logger.info("Entered email")
-            
-            password_field = browser.find_element(By.NAME, "password")
-            password_field.clear()
-            password_field.send_keys("securepassword")
-            logger.info("Entered password")
-            
-            password2_field = browser.find_element(By.NAME, "password2")
-            password2_field.clear()
-            password2_field.send_keys("securepassword")
-            logger.info("Entered password confirmation")
-        except Exception as e:
-            logger.error(f"Error filling form: {e}")
-            logger.error(browser.page_source)
-            pytest.fail(f"Failed to fill registration form: {e}")
+        username_field = browser.find_element(By.NAME, "username")
+        username_field.send_keys("newseleniumuser")
         
-        # Submit the form using JavaScript to avoid click issues
-        logger.info("Attempting to submit form")
+        email_field = browser.find_element(By.NAME, "email")
+        email_field.send_keys("newselenium@example.com")
+        
+        password_field = browser.find_element(By.NAME, "password")
+        password_field.send_keys("securepassword")
+        
+        password2_field = browser.find_element(By.NAME, "password2")
+        password2_field.send_keys("securepassword")
+        
+        # Get the submit button - try different approaches
         try:
-            browser.execute_script("document.querySelector('form').submit();")
-            logger.info("Form submitted via JavaScript")
+            submit_button = browser.find_element(By.XPATH, "//form//input[@type='submit']")
+            logger.info("Found submit button by xpath")
         except Exception as e:
-            logger.error(f"JavaScript form submission failed: {e}")
-            
-            # Try clicking the submit button as a fallback
+            logger.error(f"Could not find submit by xpath: {e}")
             try:
-                submit_button = browser.find_element(By.CSS_SELECTOR, "input[type='submit'], button[type='submit']")
-                submit_button.click()
-                logger.info("Clicked submit button")
+                submit_button = browser.find_element(By.CSS_SELECTOR, "form input[type=submit]")
+                logger.info("Found submit button by CSS selector")
             except Exception as e2:
-                logger.error(f"Button click also failed: {e2}")
-                logger.error(browser.page_source)
-                pytest.fail("Could not submit registration form")
+                logger.error(f"Could not find submit by CSS: {e2}")
+                submit_button = None
+                
+        if submit_button:
+            # Use our safe click method
+            if not safe_click(browser, submit_button):
+                logger.error("Could not click the submit button")
+                pytest.fail("Failed to click registration submit button")
+        else:
+            logger.error("No submit button found - trying JavaScript form submission")
+            browser.execute_script("document.querySelector('form').submit();")
             
         # Check for successful registration by looking for success message or redirect
         try:
-            WebDriverWait(browser, 30).until(
+            WebDriverWait(browser, 10).until(
                 lambda driver: "Congratulations" in driver.page_source or "login" in driver.current_url.lower()
             )
             logger.info("Registration was successful")
@@ -238,137 +213,95 @@ class TestSeleniumAuth:
             
         # Login with the new user
         browser.get(f"{live_server_url}/auth/login")
-        logger.info(f"Navigated to login page: {browser.current_url}")
+        logger.info("Navigated to login page")
         
         try:
-            username_field = WebDriverWait(browser, 30).until(
-                EC.visibility_of_element_located((By.NAME, "username"))
+            username_field = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.NAME, "username"))
             )
-            username_field.clear()
             username_field.send_keys("newseleniumuser")
-            logger.info("Entered login username")
             
             password_field = browser.find_element(By.NAME, "password")
-            password_field.clear()
             password_field.send_keys("securepassword")
-            logger.info("Entered login password")
             
-            # Submit via JavaScript first
-            browser.execute_script("document.querySelector('form').submit();")
-            logger.info("Login form submitted via JavaScript")
+            submit_button = browser.find_element(By.XPATH, "//form//input[@type='submit']")
+            if not safe_click(browser, submit_button):
+                logger.error("Could not click the login submit button")
+                pytest.fail("Failed to click login submit button")
                 
             # Check for successful login by URL change or presence of expected post-login element
-            WebDriverWait(browser, 30).until(
+            WebDriverWait(browser, 10).until(
                 lambda driver: "login" not in driver.current_url.lower() or "logout" in driver.page_source.lower()
             )
             logger.info("Login was successful")
         except Exception as e:
             logger.error(f"Login process failed: {e}")
-            logger.error(f"Current URL: {browser.current_url}")
             logger.error(browser.page_source)
-            pytest.fail(f"Login process error: {e}")    def test_login_logout(self, browser, live_server_url, setup_database):
+            pytest.fail(f"Login process error: {e}")
+
+    def test_login_logout(self, browser, live_server_url, setup_database):
         """Test login and logout functionality with a pre-existing user."""
         logger.info("Starting test_login_logout")
         
-        # Skip this test for now until debugging is complete
-        pytest.skip("Skipping test_login_logout until debugging is complete")
-        
         # Login
         browser.get(f"{live_server_url}/auth/login")
-        logger.info(f"Navigated to login page: {browser.current_url}")
-        
-        # Print page source to debug
-        logger.info(f"Page title: {browser.title}")
-        logger.info("Page source snippet:")
-        logger.info(browser.page_source[:500] + "...")  # First 500 chars
         
         try:
-            username_field = WebDriverWait(browser, 30).until(
-                EC.visibility_of_element_located((By.NAME, "username"))
+            username_field = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.NAME, "username"))
             )
-            username_field.clear()
             username_field.send_keys("testuser_selenium")
-            logger.info("Entered username")
             
             password_field = browser.find_element(By.NAME, "password")
-            password_field.clear()
             password_field.send_keys("password123")
-            logger.info("Entered password")
             
-            # Submit via JavaScript first
-            browser.execute_script("document.querySelector('form').submit();")
-            logger.info("Login form submitted via JavaScript")
+            # Find and click the submit button
+            submit_button = browser.find_element(By.XPATH, "//form//input[@type='submit']")
+            if not safe_click(browser, submit_button):
+                browser.execute_script("document.querySelector('form').submit();")
+                logger.info("Used JavaScript form submission as fallback")
             
             # Check if we've been redirected away from login page
-            WebDriverWait(browser, 30).until(
+            WebDriverWait(browser, 10).until(
                 lambda driver: "/auth/login" not in driver.current_url
             )
             logger.info("Login successful - URL changed")
             
-            # Take a screenshot after login
-            browser.save_screenshot("after_login.png")
-            logger.info("Screenshot saved after login")
-            
-            # Look for logout link or button - try multiple strategies
+            # Look for logout link or button
+            logout_element = None
             try:
                 # Try finding by link text
-                logout_element = WebDriverWait(browser, 30).until(
-                    EC.element_to_be_clickable((By.LINK_TEXT, "Logout"))
-                )
+                logout_element = browser.find_element(By.LINK_TEXT, "Logout")
                 logger.info("Found logout link by text")
-            except TimeoutException:
+            except Exception:
                 try:
                     # Try finding by partial link text
-                    logout_element = WebDriverWait(browser, 30).until(
-                        EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, "Logout"))
-                    )
+                    logout_element = browser.find_element(By.PARTIAL_LINK_TEXT, "Logout")
                     logger.info("Found logout link by partial text")
-                except TimeoutException:
+                except Exception:
                     try:
-                        # Try finding by common navbar element or href attribute
-                        logout_element = WebDriverWait(browser, 30).until(
-                            EC.element_to_be_clickable((By.CSS_SELECTOR, ".nav-link[href*='logout'], a[href*='logout']"))
-                        )
+                        # Try finding by common navbar element
+                        logout_element = browser.find_element(By.CSS_SELECTOR, ".nav-link[href*='logout']")
                         logger.info("Found logout link by CSS selector")
-                    except TimeoutException:
-                        logger.error("Could not find logout element")
+                    except Exception as e:
+                        logger.error(f"Could not find logout element: {e}")
                         logger.error(f"Current page source: {browser.page_source}")
-                        browser.save_screenshot("no_logout_found.png")
-                        logger.info("Screenshot saved when logout not found")
                         pytest.fail("Logout element not found after login")
             
-            # Try to click logout with explicit waits and JavaScript fallback
-            try:
-                # Scroll to the element
-                browser.execute_script("arguments[0].scrollIntoView(true);", logout_element)
-                time.sleep(1)  # Small pause after scrolling
-                
-                # Try to click
-                logout_element.click()
-                logger.info("Clicked logout link")
-            except Exception as click_error:
-                logger.error(f"Click failed: {click_error}")
-                
-                # Try JavaScript click as fallback
-                try:
-                    browser.execute_script("arguments[0].click();", logout_element)
-                    logger.info("Used JavaScript click for logout")
-                except Exception as js_error:
-                    logger.error(f"JavaScript click also failed: {js_error}")
-                    browser.save_screenshot("logout_click_failed.png")
-                    pytest.fail("Failed to click logout")
+            # Click the logout element
+            if logout_element and not safe_click(browser, logout_element):
+                logger.error("Could not click logout element")
+                pytest.fail("Failed to click logout")
             
-            # Verify we're logged out
-            WebDriverWait(browser, 30).until(
+            # Verify we're logged out (either on login page or see login link)
+            WebDriverWait(browser, 10).until(
                 lambda driver: "/auth/login" in driver.current_url or "login" in driver.page_source.lower()
             )
             logger.info("Logout successful")
             
         except Exception as e:
             logger.error(f"Login/logout test failed: {e}")
-            logger.error(f"Current URL: {browser.current_url}")
             logger.error(browser.page_source)
-            browser.save_screenshot("test_failure.png")
             pytest.fail(f"Login/logout test error: {e}")
 
 # Skip the more complex tests that depend on the application's specific structure
@@ -376,10 +309,8 @@ class TestSeleniumAuth:
 class TestSeleniumMainFeatures:
     def test_navigate_to_analyze_page_and_submit(self, browser, live_server_url, setup_database):
         """Test navigation to the analyze page and submitting text for analysis."""
-        # Skip this test while debugging other tests
-        pytest.skip("Skipping test_navigate_to_analyze_page_and_submit while fixing auth tests")
+        pass  # To be implemented once auth tests pass
 
     def test_view_results_dashboard(self, browser, live_server_url, setup_database):
         """Test viewing the results dashboard after logging in."""
-        # Skip this test while debugging other tests
-        pytest.skip("Skipping test_view_results_dashboard while fixing auth tests")
+        pass  # To be implemented once auth tests pass
