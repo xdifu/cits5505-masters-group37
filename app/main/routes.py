@@ -545,6 +545,30 @@ def manage_report_sharing(report_id):
     return render_template('manage_sharing.html', title='Manage Sharing', form=form, report=report)
 
 
+@bp.route('/remove_shared_user/<int:report_id>/<int:user_id>', methods=['POST'])
+@login_required
+def remove_shared_user(report_id, user_id):
+    """
+    Remove a shared user from the given analysis report.
+    Only the report author can perform this action.
+    """
+    report = db.session.get(AnalysisReport, report_id)
+    # Verify the report exists and current user is the author
+    if not report or report.author.id != current_user.id:
+        flash('Report not found or permission denied.', 'danger')
+        return redirect(url_for('main.results'))
+
+    user = db.session.get(User, user_id)
+    # If the user is in the shared recipients, remove and commit
+    if user and user in report.shared_with_recipients:
+        report.shared_with_recipients.remove(user)
+        db.session.commit()
+        flash(f'Removed access for user {user.username}.', 'success')
+    else:
+        flash('User was not shared or already removed.', 'info')
+
+    return redirect(url_for('main.manage_report_sharing', report_id=report_id))
+
 @bp.route('/shared_with_me')
 @login_required
 def shared_with_me():
