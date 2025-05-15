@@ -1409,3 +1409,14 @@ canvas#sentimentChart {
 .report-card:hover .report-card-timestamp {
   color: var(--primary-color) !important;
 }
+
+/* Highlight positive/negative with color */
+#sentiment-overview-card .display-5.fw-bold {
+  color: var(--bs-secondary);
+}
+#sentiment-overview-card .display-5.fw-bold.positive {
+  color: var(--bs-success);
+}
+#sentiment-overview-card .display-5.fw-bold.negative {
+  color: var(--bs-danger);
+}
