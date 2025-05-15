@@ -8,77 +8,67 @@
     <div class="col-md-10 col-lg-8">
         <h1 class="mb-4 display-5 cyberpunk-title" data-text="Manage Sharing">Manage Sharing</h1>
         
+        <!-- Current shared users list -->
         <div class="card mb-4 tilt-card">
             <div class="card-header">
-                <h5 class="mb-0">Analysis Result</h5>
+                <h5 class="mb-0">Current Shared Users</h5>
             </div>
             <div class="card-body">
-                <h5 class="card-title">
-                    Sentiment:
-                    {% if report.sentiment == 'Positive' %} {# Changed result to report #}
-                        <span class="badge bg-success">{{ report.sentiment }}</span> {# Changed result to report #}
-                    {% elif report.sentiment == 'Negative' %} {# Changed result to report #}
-                        <span class="badge bg-danger">{{ report.sentiment }}</span> {# Changed result to report #}
-                    {% else %}
-                        <span class="badge bg-secondary">{{ report.sentiment }}</span> {# Changed result to report #}
-                    {% endif %}
-                </h5>
-                <p class="mt-3"><strong>Original Text:</strong> {{ report.original_text }}</p> {# Changed result to report #}
-                <p><strong>Analyzed on:</strong> {{ report.timestamp.strftime('%Y-%m-%d %H:%M') }}</p> {# Changed result to report #}
-                
-                <!-- Visual sentiment indicator -->
-                <div class="sentiment-indicator mt-3 pt-3 border-top">
-                    {% if report.sentiment == 'Positive' %} {# Changed result to report #}
-                        <div class="d-flex align-items-center">
-                            <span class="me-2">Sentiment strength:</span>
-                            <div class="progress flex-grow-1" style="height: 10px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                    {% elif report.sentiment == 'Negative' %} {# Changed result to report #}
-                        <div class="d-flex align-items-center">
-                            <span class="me-2">Sentiment strength:</span>
-                            <div class="progress flex-grow-1" style="height: 10px;">
-                                <div class="progress-bar bg-danger" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="d-flex align-items-center">
-                            <span class="me-2">Sentiment strength:</span>
-                            <div class="progress flex-grow-1" style="height: 10px;">
-                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
+                {% if report.shared_with_recipients %}
+                <ul class="list-group">
+                    {% for user in report.shared_with_recipients %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ user.username }}
+                        <form method="POST"
+                              action="{{ url_for('main.remove_shared_user', report_id=report.id, user_id=user.id) }}"
+                              style="display:inline">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No users have access currently.</p>
+                {% endif %}
             </div>
         </div>
 
+        <!-- Share with Users form -->
         <div class="card tilt-card">
             <div class="card-header">
                 <h5 class="mb-0">Share with Users</h5>
             </div>
             <div class="card-body">
-                <p class="text-muted mb-3">Select the users you want to share this analysis result with. Users with checkmarks will have access to view this result.</p>
+                <p class="text-muted mb-3">
+                    Select the users you want to share this analysis result with.
+                    Checked users will have access to view this result.
+                </p>
                 
-                <form method="POST" action="{{ url_for('main.manage_report_sharing', report_id=report.id) }}" class="mb-3"> {# Changed result to report and action to manage_report_sharing #}
+                <form method="POST" action="{{ url_for('main.manage_report_sharing', report_id=report.id) }}" class="mb-3">
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
                         {{ form.users_to_share_with.label(class="form-label fw-bold") }}<br>
                         <div class="user-selection mt-3">
-                            {% for subfield in form.users_to_share_with %}
-                                <div class="form-check user-check-item">
-                                    {{ subfield(class="form-check-input") }}
-                                    {{ subfield.label(class="form-check-label") }}
-                                </div>
+                            {% for value, label in form.users_to_share_with.choices %}
+                            <div class="form-check user-check-item">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="{{ form.users_to_share_with.name }}" 
+                                       id="user_{{ value }}" 
+                                       value="{{ value }}"
+                                       {% if value in form.users_to_share_with.data %}checked{% endif %}>
+                                <label class="form-check-label" for="user_{{ value }}">
+                                    {{ label }}
+                                </label>
+                            </div>
                             {% endfor %}
                         </div>
                         {% if form.users_to_share_with.errors %}
-                            <div class="invalid-feedback d-block mt-2">
-                                {% for error in form.users_to_share_with.errors %}
-                                    <span>{{ error }}</span><br>
-                                {% endfor %}
-                            </div>
+                        <div class="invalid-feedback d-block mt-2">
+                            {% for error in form.users_to_share_with.errors %}
+                            <span>{{ error }}</span><br>
+                            {% endfor %}
+                        </div>
                         {% endif %}
                     </div>
                     <div class="d-flex justify-content-between">
@@ -92,7 +82,7 @@
 </div>
 
 <style>
-    /* Custom styling for user selection list */
+    /* Styling for user selection list */
     .user-selection {
         max-height: 300px;
         overflow-y: auto;
@@ -100,21 +90,17 @@
         border-radius: 0.5rem;
         padding: 0.5rem;
     }
-    
     .user-check-item {
         padding: 0.75rem 1rem;
         border-bottom: 1px solid rgba(0, 102, 255, 0.1);
-        transition: all 0.2s;
+        transition: background-color 0.2s;
     }
-    
     .user-check-item:last-child {
         border-bottom: none;
     }
-    
     .user-check-item:hover {
         background-color: rgba(0, 102, 255, 0.05);
     }
-    
     .user-check-item .form-check-input:checked + .form-check-label {
         color: var(--primary-color);
         font-weight: 500;
