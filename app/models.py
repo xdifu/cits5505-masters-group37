@@ -92,7 +92,10 @@ class AnalysisReport(db.Model):
 
     # Aggregated sentiment data for the entire report
     overall_sentiment_label: so.Mapped[Optional[str]] = so.mapped_column(sa.String(64)) # e.g., 'Positive', 'Neutral', 'Mixed'
-    overall_sentiment_score: so.Mapped[Optional[float]] = so.mapped_column(sa.Float) # Average score from -1 to +1
+    overall_sentiment_score: so.Mapped[Optional[float]] = so.mapped_column(sa.Float)
+
+    # AI-generated short headline for each report
+    summary: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True)  # New headline column
 
     # JSON fields to store data for dashboard components
     # Stores Top-5 intents for the pie chart: e.g., '{"News Report": 0.4, ...}'
@@ -108,12 +111,11 @@ class NewsItem(db.Model):
     original_text: so.Mapped[str] = so.mapped_column(sa.Text, nullable=False)
     # Sentiment analysis results from OpenAI
     sentiment_label: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False) # Positive, Neutral, Negative
-    # IMPORTANT: Ensure these fields are actually in your model definition.
-    # If not, you need to add them similar to the above (e.g., using so.mapped_column).
     sentiment_score: so.Mapped[float] = so.mapped_column(sa.Float, nullable=False, default=0.0)
     publication_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
     intents: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True) # Should store JSON string of a list
     keywords: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True) # Should store JSON string of a list
+    summary: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True) # Add summary column
 
     analysis_report_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('analysis_report.id'), index=True)
     analysis_report: so.Mapped['AnalysisReport'] = so.relationship(back_populates='news_items')
@@ -128,21 +130,18 @@ class NewsItem(db.Model):
                 data = json.loads(json_str)
                 return data if isinstance(data, list) else []
             except json.JSONDecodeError:
-                # Optionally log this error
                 return []
 
         return {
             'id': self.id,
             'original_text': self.original_text,
-            'summary': (self.original_text[:200] + "...") if len(self.original_text) > 200 else self.original_text,
+            'summary': self.summary or ((self.original_text[:200] + "...") if len(self.original_text) > 200 else self.original_text),
             'sentiment_label': self.sentiment_label,
             'sentiment_score': self.sentiment_score,
             'publication_date': self.publication_date.isoformat() if self.publication_date else None,
-            'intents': parse_json_list(self.intents), # Parse JSON string to list
-            'keywords': parse_json_list(self.keywords), # Parse JSON string to list
+            'intents': parse_json_list(self.intents),
+            'keywords': parse_json_list(self.keywords),
             'analysis_report_id': self.analysis_report_id
-            # 'title' was requested in prompt's feed design but is not a distinct model field.
-            # 'summary' is derived from original_text.
         }
 
 @login_manager.user_loader
