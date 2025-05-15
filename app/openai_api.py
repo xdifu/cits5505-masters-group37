@@ -80,7 +80,8 @@ def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     - "sentiment_label": Overall sentiment (Positive, Neutral, or Negative).
     - "sentiment_score": A score from -1.0 (very negative) to +1.0 (very positive).
     - "intents": A list of AT MOST 5 most relevant intent tags from: {PREDEFINED_INTENT_TAGS}.
-    - "keywords": A list of 10-15 most relevant extracted keywords from the text.
+    - **"keywords": A list of 10-15 single words or short phrases that capture the main topics/themes of the text.
+      Do NOT include generic sentiment adjectives unless they are central to the topic.**
     - "publication_date": The estimated publication date in YYYY-MM-DD format or null.
 
     Ensure the output is valid JSON and that "intents" contains no more than 5 items.

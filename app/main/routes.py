@@ -102,19 +102,26 @@ def _prepare_report_aggregates(news_items: List[NewsItem]) -> Dict[str, Any]:
                           for intent, count in top_5_intents.items()}
 
     # 2. Aggregated Keywords (Top 20 with average sentiment)
-    keyword_occurrences = Counter(kw for kw, score in all_keywords_with_sentiment)
+    # use all_item_keywords (extracted topic words) for frequency
+    keyword_occurrences = Counter(all_item_keywords)
+
     aggregated_keywords_data = []
     for kw, count in keyword_occurrences.most_common(20):
-        # Calculate average sentiment for this keyword
+        # calculate avg_sentiment as before, but now frequency purely reflects topic prevalence
         kw_sentiment_scores = [score for k, score in all_keywords_with_sentiment if k == kw]
-        avg_sentiment = sum(kw_sentiment_scores) / len(kw_sentiment_scores) if kw_sentiment_scores else 0.0
+        avg_sentiment = sum(kw_sentiment_scores)/len(kw_sentiment_scores) if kw_sentiment_scores else 0.0
         # Determine color based on average sentiment
         color = "grey" # Neutral
         if avg_sentiment > 0.2:
             color = "green" # Positive
         elif avg_sentiment < -0.2:
             color = "red" # Negative
-        aggregated_keywords_data.append({"text": kw, "value": count, "avg_sentiment": round(avg_sentiment, 2), "color": color})
+        aggregated_keywords_data.append({
+            "text": kw,
+            "value": count,
+            "avg_sentiment": round(avg_sentiment,2),
+            "color": color
+        })
 
 
     # 3. Sentiment Trend Over Time
