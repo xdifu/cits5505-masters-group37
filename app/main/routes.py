@@ -102,19 +102,26 @@ def _prepare_report_aggregates(news_items: List[NewsItem]) -> Dict[str, Any]:
                           for intent, count in top_5_intents.items()}
 
     # 2. Aggregated Keywords (Top 20 with average sentiment)
-    keyword_occurrences = Counter(kw for kw, score in all_keywords_with_sentiment)
+    # use all_item_keywords (extracted topic words) for frequency
+    keyword_occurrences = Counter(all_item_keywords)
+
     aggregated_keywords_data = []
     for kw, count in keyword_occurrences.most_common(20):
-        # Calculate average sentiment for this keyword
+        # calculate avg_sentiment as before, but now frequency purely reflects topic prevalence
         kw_sentiment_scores = [score for k, score in all_keywords_with_sentiment if k == kw]
-        avg_sentiment = sum(kw_sentiment_scores) / len(kw_sentiment_scores) if kw_sentiment_scores else 0.0
+        avg_sentiment = sum(kw_sentiment_scores)/len(kw_sentiment_scores) if kw_sentiment_scores else 0.0
         # Determine color based on average sentiment
         color = "grey" # Neutral
         if avg_sentiment > 0.2:
             color = "green" # Positive
         elif avg_sentiment < -0.2:
             color = "red" # Negative
-        aggregated_keywords_data.append({"text": kw, "value": count, "avg_sentiment": round(avg_sentiment, 2), "color": color})
+        aggregated_keywords_data.append({
+            "text": kw,
+            "value": count,
+            "avg_sentiment": round(avg_sentiment,2),
+            "color": color
+        })
 
 
     # 3. Sentiment Trend Over Time
@@ -208,6 +215,7 @@ def analyze():
                     sentiment_score=analysis_result.sentiment_score,
                     intents=json.dumps(analysis_result.intents),
                     keywords=json.dumps(analysis_result.keywords),
+                    summary=analysis_result.summary,  # Store the generated summary
                     analysis_report_id=new_report.id,
                     publication_date=parsed_publication_date # Set the publication_date field
                     # timestamp=datetime.now(timezone.utc) # REMOVE: This was causing the error
@@ -234,6 +242,24 @@ def analyze():
             if overall_sentiments:
                 new_report.overall_sentiment_score = sum(overall_sentiments) / len(overall_sentiments)
             
+            # Get all news items created for this report to calculate aggregates
+            news_items = db.session.scalars(
+                db.select(NewsItem)
+                .where(NewsItem.analysis_report_id == new_report.id)
+            ).all()
+            
+            # Generate and store aggregated data for the report
+            aggregates = _prepare_report_aggregates(news_items)
+            new_report.aggregated_intents_json = aggregates['aggregated_intents_json']
+            new_report.aggregated_keywords_json = aggregates['aggregated_keywords_json'] 
+            new_report.sentiment_trend_json = aggregates['sentiment_trend_json']
+            new_report.overall_sentiment_label = aggregates['overall_sentiment_label']
+            # Note: overall_sentiment_score was already set above based on the average of scores
+            
+            # After processing all items, assign AI-headline to report
+            # store the generated headline (or fallback to name)
+            new_report.summary = analysis_result.summary or new_report.name
+
             db.session.commit()
 
             if is_ajax_request():
@@ -245,6 +271,7 @@ def analyze():
                     'sentiment_score': first_item_analysis.get('sentiment_score'),
                     'intents': first_item_analysis.get('intents'),
                     'keywords': first_item_analysis.get('keywords'),
+                    'summary': first_item_analysis.get('summary'),  # Include summary in response
                     'report_id': new_report.id,
                     'report_url': url_for('main.results_dashboard', report_id=new_report.id)
                 })
@@ -545,7 +572,7 @@ def manage_report_sharing(report_id):
     form.users_to_share_with.choices = [(u.id, u.username) for u in available_users]
 
     if form.validate_on_submit():
-        # Compute sets of IDs to add/remove
+        # Compute sets of ID to add/remove
         selected_ids = set(form.users_to_share_with.data or [])
         current_ids  = {u.id for u in report.shared_with_recipients}
 
