@@ -7,9 +7,10 @@
 <h1 class="mb-4 display-5 cyberpunk-title" data-text="{{ report.name if report else 'My Analysis Dashboard' }}">{{ report.name if report else 'My Analysis Dashboard' }}</h1>
 
 {% if results_exist %} {# This variable should be passed from the Flask route #}
+<!-- Dashboard grid: two columns on first row, full width on second row -->
 <div class="dashboard-grid">
     <!-- 1. Intents Share (Top 5) -->
-    <div class="dashboard-card card tilt-card" id="intents-share-card">
+    <div class="dashboard-card card tilt-card main-intent" id="intents-share-card">
         <div class="card-body">
             <h2 class="card-title h5">Main Intent Tags</h2>
             <p class="text-muted small">Most common intent tags in the analyzed content</p>
@@ -26,7 +27,7 @@
     </div>
 
     <!-- 3. Sentiment Overview (simplified, replaces “Entity Overview”) -->
-    <div class="dashboard-card card tilt-card" id="sentiment-overview-card">
+    <div class="dashboard-card card tilt-card sentiment" id="sentiment-overview-card">
       <div class="card-body text-center">
         <h2 class="card-title h5">Sentiment Overview</h2>
         <p class="text-muted small">Overall sentiment score for this report</p>
@@ -40,7 +41,7 @@
     </div>
 
     <!-- 4. Related Topics (Word Cloud) -->
-    <div class="dashboard-card card tilt-card" id="related-topics-card">
+    <div class="dashboard-card card tilt-card related-topics" id="related-topics-card">
         <div class="card-body">
             <h2 class="card-title h5">Related Topics (Top 20 Keywords)</h2>
             {% if top_20_keywords_data %}
