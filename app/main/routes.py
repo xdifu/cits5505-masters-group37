@@ -330,18 +330,17 @@ def results_dashboard(report_id):
     report = db.session.get(AnalysisReport, report_id)
 
     if report is None:
-        flash('Analysis report not found.', 'danger')
-        return redirect(url_for('main.results')) # Redirect to the list of reports
+        flash('Analysis report not found.', 'danger') # Ensure flash message is user-friendly
+        return redirect(url_for('main.results')) 
 
     # Check permission: user must be the author or it must be shared with them
     is_author = report.user_id == current_user.id
     
-    # Use the same method as shared_report_details to check sharing permissions
-    # This ensures consistency between the two routes
-    is_shared_with_current_user = db.session.query(report.shared_with_recipients.filter(User.id == current_user.id).exists()).scalar()
+    # Corrected permission check for shared reports
+    is_shared_with_current_user = current_user in report.shared_with_recipients
 
     if not is_author and not is_shared_with_current_user:
-        flash('You do not have permission to view this report.', 'danger')
+        flash('You do not have permission to view this report.', 'danger') # User-friendly message
         return redirect(url_for('main.results'))
 
     # Fetch all news items associated with this report, explicitly ordered
@@ -357,14 +356,13 @@ def results_dashboard(report_id):
 
     # The aggregated data is already stored in the report model, so we just load it.
     try:
-        top_5_intents_data = json.loads(report.aggregated_intents_json) if report.aggregated_intents_json else {}
-        sentiment_trend_data = json.loads(report.sentiment_trend_json) if report.sentiment_trend_json else {}
-        top_20_keywords_data = json.loads(report.aggregated_keywords_json) if report.aggregated_keywords_json else []
+        top_5_intents_data = json.loads(report.aggregated_intents_json or '{}')
+        sentiment_trend_data = json.loads(report.sentiment_trend_json or '{}')
+        top_20_keywords_data = json.loads(report.aggregated_keywords_json or '[]')
     except json.JSONDecodeError:
-        flash('Error decoding stored report data. Please try re-analyzing.', 'warning')
-        # Provide default empty structures if JSON is corrupted
+        flash('Error decoding analysis data for the report.', 'warning') # User-friendly message
         top_5_intents_data = {}
-        sentiment_trend_data = {'dates': [], 'overall_scores': [], 'keyword_trends': {}}
+        sentiment_trend_data = {}
         top_20_keywords_data = []
     
     overall_sentiment_score_for_gauge = report.overall_sentiment_score if report.overall_sentiment_score is not None else 0.0
@@ -406,7 +404,8 @@ def api_filtered_report_data(report_id):
         return jsonify({'error': 'Report not found'}), 404
 
     is_author = report.user_id == current_user.id
-    is_shared_with_current_user = db.session.query(report.shared_with_recipients.filter(User.id == current_user.id).exists()).scalar()
+    # Corrected permission check for shared reports
+    is_shared_with_current_user = current_user in report.shared_with_recipients
 
     if not is_author and not is_shared_with_current_user:
         return jsonify({'error': 'Permission denied'}), 403
@@ -583,22 +582,20 @@ def shared_with_me():
 @bp.route('/shared_report_details/<int:report_id>')
 @login_required
 def shared_report_details(report_id):
-    # This route should probably just redirect to the main results_dashboard
-    # The permission check is handled there.
     report = db.session.get(AnalysisReport, report_id)
-    if report is None:
-        flash('Shared report not found.', 'danger')
+    if not report:
+        flash('Analysis report not found.', 'danger')
         return redirect(url_for('main.shared_with_me'))
 
-    # Check if it's actually shared with the current user
-    is_shared_with_current_user = db.session.query(report.shared_with_recipients.filter(User.id == current_user.id).exists()).scalar()
-    
-    if not is_shared_with_current_user:
-        flash('This report is not shared with you or access has been revoked.', 'warning')
+    # Check if the report is shared with the current user
+    # Corrected permission check
+    if current_user not in report.shared_with_recipients:
+        flash('You do not have permission to view this report or it is not shared with you.', 'warning')
         return redirect(url_for('main.shared_with_me'))
-        
-    # If shared, show the main dashboard for this report
-    return redirect(url_for('main.results_dashboard', report_id=report_id))
+    
+    # If permission is granted, redirect to the main results_dashboard
+    # The results_dashboard itself will handle displaying the report
+    return redirect(url_for('main.results_dashboard', report_id=report.id))
 
 @bp.route('/visualization')
 @login_required
