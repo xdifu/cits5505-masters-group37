@@ -21,39 +21,39 @@
 <section class="horizontal-scroll-section">
   <div class="horizontal-container">
     <div class="horizontal-content">
-      <!-- Gallery Item 1 - Sentiment Dashboard -->
+      <!-- First feature card -->
       <div class="horizontal-item">
         <div class="gallery-card">
-          <h3>Sentiment Dashboard</h3>
+          <h3>Sentiment Analysis Dashboard</h3>
           <img src="{{ url_for('static', filename='images/analysis_dashboard.jpg') }}" alt="Sentiment Dashboard">
-          <p>Get comprehensive insights with our intuitive sentiment analysis dashboard.</p>
+          <p>Our intuitive dashboard provides a comprehensive overview of sentiment across your analyzed text.</p>
         </div>
       </div>
       
-      <!-- Gallery Item 2 - Entity Recognition -->
+      <!-- Second feature card -->
       <div class="horizontal-item">
         <div class="gallery-card">
           <h3>Entity Recognition</h3>
           <img src="{{ url_for('static', filename='images/entity_recognition.jpg') }}" alt="Entity Recognition">
-          <p>Identify key people, organizations, and locations in your content automatically.</p>
+          <p>Advanced entity recognition identifies key players and topics in your text with precision.</p>
         </div>
       </div>
       
-      <!-- Gallery Item 3 - Trend Analysis -->
+      <!-- Third feature card -->
       <div class="horizontal-item">
         <div class="gallery-card">
-          <h3>Sentiment Trends</h3>
+          <h3>Sentiment Trend Analysis</h3>
           <img src="{{ url_for('static', filename='images/sentiment_trends.jpg') }}" alt="Sentiment Trends">
-          <p>Track sentiment changes over time with advanced trend visualization tools.</p>
+          <p>Track how sentiment evolves over time with our detailed trend analysis visualizations.</p>
         </div>
       </div>
       
-      <!-- Gallery Item 4 - Topic Modeling -->
+      <!-- Fourth feature card -->
       <div class="horizontal-item">
         <div class="gallery-card">
-          <h3>Topic Analysis</h3>
+          <h3>Topic Modeling</h3>
           <img src="{{ url_for('static', filename='images/topic_modeling.jpg') }}" alt="Topic Modeling">
-          <p>Discover hidden themes and topics within your content through AI-powered analysis.</p>
+          <p>Discover hidden themes and topics within your content through advanced modeling techniques.</p>
         </div>
       </div>
     </div>
@@ -65,6 +65,14 @@
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
       <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
     </svg>
+  </div>
+  
+  <!-- Position indicator dots -->
+  <div class="dots-indicator">
+    <div class="dot active" data-index="0"></div>
+    <div class="dot" data-index="1"></div>
+    <div class="dot" data-index="2"></div>
+    <div class="dot" data-index="3"></div>
   </div>
 </section>
 
@@ -225,170 +233,261 @@
 </div>
 {% endblock %}
 
-{% block styles %}
-{{ super() }}
-<style>
-  /* Horizontal scroll section styles */
-  .horizontal-scroll-section {
-    position: sticky;
-    top: 70px; /* Adjust based on your navbar height */
-    height: 100vh;
-    width: 100%;
-    overflow: hidden;
-    z-index: 1;
-    background-color: var(--background-color);
-  }
-
-  .horizontal-container {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .horizontal-content {
-    position: absolute;
-    height: 100%;
-    display: flex;
-    will-change: transform;
-    transition: transform 0.1s ease-out;
-  }
-
-  .horizontal-item {
-    height: 100%;
-    width: 100vw;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-  }
-
-  .gallery-card {
-    width: 80%;
-    max-width: 900px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border: var(--glass-border);
-    border-radius: var(--card-border-radius);
-    box-shadow: var(--depth-shadow);
-    padding: 2rem;
-    text-align: center;
-    transition: all 0.3s ease;
-  }
-
-  .gallery-card h3 {
-    margin-bottom: 1.5rem;
-    color: var(--primary-color);
-    font-weight: 600;
-  }
-
-  .gallery-card img {
-    width: 100%;
-    max-height: 50vh;
-    object-fit: cover;
-    border-radius: 0.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  }
-
-  .gallery-card p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-  }
-
-  .horizontal-scroll-spacer {
-    height: 100vh; /* Same height as the section */
-  }
-
-  .scroll-indicator {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: var(--primary-color);
-    animation: fadeInOut 2s ease-in-out infinite;
-  }
-
-  .scroll-indicator span {
-    margin-bottom: 8px;
-    font-weight: 500;
-  }
-
-  @keyframes fadeInOut {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-</style>
-{% endblock %}
-
 {% block scripts %}
 {{ super() }}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const horizontalSection = document.querySelector('.horizontal-scroll-section');
-    const horizontalContent = document.querySelector('.horizontal-content');
-    const scrollSpacer = document.querySelector('.horizontal-scroll-spacer');
-    const scrollIndicator = document.querySelector('.scroll-indicator');
-    const items = document.querySelectorAll('.horizontal-item');
+document.addEventListener('DOMContentLoaded', function() {
+  // Get all required DOM elements
+  const horizontalSection = document.querySelector('.horizontal-scroll-section');
+  const horizontalContent = document.querySelector('.horizontal-content');
+  const scrollSpacer = document.querySelector('.horizontal-scroll-spacer');
+  const scrollIndicator = document.querySelector('.scroll-indicator');
+  const items = document.querySelectorAll('.horizontal-item');
+  
+  // Calculate total width based on number of items
+  const totalItems = items.length;
+  const totalWidth = totalItems * window.innerWidth;
+  horizontalContent.style.width = totalWidth + 'px';
+  
+  // Set the starting point where horizontal scroll begins
+  const startPoint = horizontalSection.offsetTop;
+  
+  // Assign more scroll distance per item to create "snap" effect
+  // Each card will have a "dwell zone" before and after transition
+  const scrollDistancePerItem = window.innerHeight * 0.8; // Each item takes 80% of viewport height in scrolling distance
+  
+  // Add extra scroll distance to exit sticky mode after last card
+  const exitScrollDistance = window.innerHeight * 0.5;
+  
+  // Calculate total scrolling distance needed
+  const totalScrollDistance = (totalItems * scrollDistancePerItem) + exitScrollDistance;
+  
+  // Set spacer height to accommodate segmented scrolling
+  scrollSpacer.style.height = totalScrollDistance + 'px';
+  
+  // Calculate offset needed to center the last card
+  const lastCardCenterOffset = (window.innerWidth - items[0].offsetWidth) / 2;
+  
+  // Throttle function to limit scroll event frequency
+  function throttle(callback, limit) {
+    let waiting = false;
+    return function() {
+      if (!waiting) {
+        callback.apply(this, arguments);
+        waiting = true;
+        setTimeout(function() {
+          waiting = false;
+        }, limit);
+      }
+    };
+  }
+  
+  // Function to update horizontal scroll position based on vertical scroll
+  function updateScroll() {
+    const scrollPosition = window.pageYOffset;
+    const relativeScroll = scrollPosition - startPoint;
     
-    // Total width of all items
+    // Check if we're in the horizontal scroll section's range
+    if (scrollPosition >= startPoint && relativeScroll <= totalScrollDistance) {
+      // Ensure section remains sticky while in range
+      horizontalSection.style.position = 'sticky';
+      
+      // Calculate which card we're currently on (0-indexed)
+      const currentItemIndex = Math.min(
+        Math.floor(relativeScroll / scrollDistancePerItem),
+        totalItems - 1
+      );
+      
+      // Calculate progress within current card's scroll zone (0-1)
+      const progressInCurrentItem = (relativeScroll % scrollDistancePerItem) / scrollDistancePerItem;
+      
+      // Calculate horizontal position with snapping effect
+      // If progress < 0.2 or > 0.8, card stays in place
+      let horizontalOffset;
+      
+      if (progressInCurrentItem < 0.2) {
+        // Stay on current card
+        horizontalOffset = currentItemIndex * window.innerWidth;
+      } else if (progressInCurrentItem > 0.8) {
+        // Already scrolled to next card
+        horizontalOffset = (currentItemIndex + 1) * window.innerWidth;
+      } else {
+        // Smooth transition between 0.2-0.8 range
+        const transitionProgress = (progressInCurrentItem - 0.2) / 0.6; // Normalize to 0-1
+        horizontalOffset = (currentItemIndex + transitionProgress) * window.innerWidth;
+      }
+      
+      // Special handling for last card to center it in viewport
+      if (currentItemIndex === totalItems - 1) {
+        horizontalOffset -= lastCardCenterOffset;
+      }
+      
+      // Ensure we don't scroll beyond content width
+      horizontalOffset = Math.min(horizontalOffset, totalWidth - window.innerWidth);
+      
+      // Apply transform to move content horizontally
+      horizontalContent.style.transform = `translateX(-${horizontalOffset}px)`;
+      
+      // Hide scroll indicator once scrolling begins
+      scrollIndicator.style.opacity = relativeScroll > 100 ? '0' : '1';
+      
+    } else if (relativeScroll > totalScrollDistance) {
+      // We've scrolled beyond horizontal section, release sticky positioning
+      horizontalSection.style.position = 'relative';
+    }
+  }
+  
+  // Attach throttled scroll event listener
+  window.addEventListener('scroll', throttle(updateScroll, 16)); // Approx. 60fps
+  
+  // Initial update
+  updateScroll();
+  
+  // Recalculate dimensions on window resize
+  window.addEventListener('resize', throttle(function() {
+    // Recalculate all dimensions
     const totalWidth = items.length * window.innerWidth;
     horizontalContent.style.width = totalWidth + 'px';
     
-    // The point where we want to start the horizontal scroll
-    const startPoint = horizontalSection.offsetTop;
+    const scrollDistancePerItem = window.innerHeight * 0.8;
+    const exitScrollDistance = window.innerHeight * 0.5;
+    const totalScrollDistance = (totalItems * scrollDistancePerItem) + exitScrollDistance;
     
-    // The point where we want to end the horizontal scroll
-    const endPoint = startPoint + scrollSpacer.offsetHeight;
+    scrollSpacer.style.height = totalScrollDistance + 'px';
     
-    // Update spacer height to match the total width needed for smooth scrolling
-    scrollSpacer.style.height = window.innerHeight + 'px';
+    // Recalculate offset for centering last card
+    const lastCardCenterOffset = (window.innerWidth - items[0].offsetWidth) / 2;
     
-    // Function to update horizontal scroll position
-    function updateScroll() {
-      // Current scroll position
-      const scrollPosition = window.pageYOffset;
-      
-      // Check if we're in the horizontal scroll section
-      if (scrollPosition >= startPoint && scrollPosition <= endPoint) {
-        // Calculate horizontal scroll amount (0 to totalWidth - window.innerWidth)
-        const scrollPercentage = (scrollPosition - startPoint) / (endPoint - startPoint);
-        const horizontalScroll = scrollPercentage * (totalWidth - window.innerWidth);
-        
-        // Apply the transform to move content horizontally
-        horizontalContent.style.transform = `translateX(-${horizontalScroll}px)`;
-        
-        // Hide the scroll indicator once scrolling starts
-        if (scrollPercentage > 0.05) {
-          scrollIndicator.style.opacity = '0';
-        } else {
-          scrollIndicator.style.opacity = '1';
-        }
-      }
-    }
-    
-    // Add scroll event listener
-    window.addEventListener('scroll', updateScroll);
-    
-    // Initial update
+    // Update scroll position
     updateScroll();
-    
-    // Update on resize
-    window.addEventListener('resize', function() {
-      // Recalculate dimensions
-      const totalWidth = items.length * window.innerWidth;
-      horizontalContent.style.width = totalWidth + 'px';
-      
-      // Update spacer height
-      scrollSpacer.style.height = window.innerHeight + 'px';
-      
-      // Update scroll position
-      updateScroll();
-    });
-  });
+  }, 100));
+});
 </script>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+/* Horizontal scroll section styles */
+.horizontal-scroll-section {
+  position: sticky; /* Default position is sticky */
+  top: 70px; /* Adjust based on navbar height */
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  z-index: 1;
+  background-color: var(--background-color);
+  /* Add transition for smooth position change */
+  transition: position 0.1s ease-out;
+}
+
+.horizontal-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.horizontal-content {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  will-change: transform; /* Optimize for animation performance */
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1); /* Easing for smoother transitions */
+}
+
+.horizontal-item {
+  height: 100%;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.gallery-card {
+  width: 80%;
+  max-width: 900px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: var(--glass-border);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--depth-shadow);
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.gallery-card h3 {
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.gallery-card img {
+  width: 100%;
+  max-height: 50vh;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.gallery-card p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Spacer element to provide scrolling room */
+.horizontal-scroll-spacer {
+  height: 100vh; /* Will be dynamically set by JS */
+}
+
+/* Scroll indicator animation */
+.scroll-indicator {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--primary-color);
+  animation: fadeInOut 2s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+
+.scroll-indicator span {
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Indicator dots for card position */
+.dots-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: background-color 0.3s ease;
+}
+
+.dot.active {
+  background-color: var(--primary-color);
+}
+</style>
 {% endblock %}
