@@ -1,49 +1,41 @@
 <!-- Registration page template. -->
 <!-- Extends the base layout and includes the registration form rendered via Flask-WTF. -->
 {% extends "base.html" %}
-{% import 'bootstrap_wtf.html' as wtf %} <!-- Assuming you have bootstrap_wtf.html or similar -->
+{% import 'bootstrap_wtf.html' as wtf %} <!-- Import for rendering Flask-WTF forms with Bootstrap styling -->
 
-{% block title %}Register - Sentiment Analyzer{% endblock %}
+{% block title %}Register - Sentiment Analyzer{% endblock %} <!-- Sets the title of the page -->
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <h1 class="mb-4 text-center cyberpunk-title" data-text="Register">Register</h1>
+<div class="row justify-content-center"> <!-- Centers the content on the page -->
+    <div class="col-md-6 col-lg-5"> <!-- Defines the column width for medium and large screens -->
+        <h1 class="mb-4 text-center display-5 cyberpunk-title" data-text="Register">Register</h1> <!-- Page heading with gradient effect -->
         
-        <div class="card tilt-card">
-            <div class="card-body p-4">
-                <!-- Render the registration form manually to avoid duplicate submit button label -->
-                <form method="POST" action="" novalidate>
-                    {{ form.hidden_tag() }} <!-- CSRF token -->
+        <div class="card tilt-card"> <!-- Card container for the form -->
+            <div class="card-body p-4"> <!-- Card body with padding -->
+                <!-- Render the registration form manually -->
+                <form method="POST" action="" novalidate> <!-- Registration form -->
+                    {{ form.hidden_tag() }} <!-- CSRF token for security -->
                     
-                    <div class="mb-4">
-                        {{ wtf.form_field(form.username) }}
+                    <div class="mb-4"> <!-- Margin bottom for spacing -->
+                        {{ wtf.form_field(form.username) }} <!-- Renders the username field -->
                     </div>
                     
-                    <div class="mb-4">
-                        {{ wtf.form_field(form.email) }}
+                    <div class="mb-4"> <!-- Margin bottom for spacing -->
+                        {{ wtf.form_field(form.email) }} <!-- Renders the email field -->
                     </div>
                     
-                    <div class="mb-4">
-                        {{ wtf.form_field(form.password) }}
+                    <div class="mb-4"> <!-- Margin bottom for spacing -->
+                        {{ wtf.form_field(form.password) }} <!-- Renders the password field -->
                     </div>
                     
-                    <div class="mb-4">
-                        {{ wtf.form_field(form.password2) }}
+                    <div class="mb-4"> <!-- Margin bottom for spacing -->
+                        {{ wtf.form_field(form.password2) }} <!-- Renders the confirm password field -->
                     </div>
                     
-                    <div class="d-grid mb-3">
-                        {{ form.submit(class='btn btn-primary btn-lg') }} {# Render submit button directly #}
+                    <div class="d-grid mb-3"> <!-- Grid layout for the button, with margin bottom -->
+                        {{ form.submit(class='btn btn-primary btn-lg') }} <!-- Renders the submit button -->
                     </div>
                 </form>
-            </div>
-        </div>
-        
-        <div class="card mt-3 tilt-card">
-            <div class="card-body text-center">
-                <p class="mb-0">
-                    Already have an account? <a href="{{ url_for('auth.login') }}">Click to Sign In!</a>
-                </p>
             </div>
         </div>
     </div>

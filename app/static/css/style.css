@@ -424,15 +424,49 @@ main.container {
     box-shadow: var(--depth-shadow-hover);
 }
 
-/* 3D card tilt effect - will be enhanced with JS */
-.tilt-card {
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+/* Smooth hover zoom effect: elegant scale on hover */
+.tilt-card, .tilt-card-inner {
+    /* Disable 3D tilt and mouse-tracking transforms for a flat appearance. */
+    transform-style: flat;
+    perspective: none; /* No 3D perspective needed for simple scaling. */
+    /* Apply a smooth transition for the scale transform. */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Added box-shadow to transition */
 }
 
-.tilt-card-inner {
-    transform-style: preserve-3d;
-    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+.tilt-card:hover {
+    /* Gently enlarge the card on hover. */
+    transform: scale(1.05);
+    /* Ensure scaling is uniform from the center */
+    transform-origin: center; 
+    /* Optional: Ensure the hovered card is brought to the front if elements overlap. */
+    z-index: var(--z-above, 1);
+    box-shadow: var(--depth-shadow-hover); /* Apply hover shadow */
+}
+
+/* Enhanced card styling for feature cards and general tilt-cards */
+/* This rule applies to elements with both 'card' and 'tilt-card' classes */
+.card.tilt-card {
+    /* The transition for 'transform' and 'box-shadow' is handled by the .tilt-card rule above.
+       If other properties for .card.tilt-card need transitioning, define them specifically.
+       Commenting out 'transition: all...' to avoid conflicts. */
+    /* transition: all var(--transition-speed) cubic-bezier(0.165, 0.84, 0.44, 1); */
+
+    height: 100%; /* Ensure full height */
+    border: var(--glass-border);
+    overflow: hidden;
+    /* Ensure flat style for consistent scaling behavior, reinforcing .tilt-card rule. */
+    transform-style: flat; 
+    perspective: none;
+    backface-visibility: hidden;
+}
+
+.card.tilt-card:hover {
+    /* Transform properties (scale, origin) are inherited from .tilt-card:hover.
+       Explicitly defining them here ensures specificity if needed. */
+    transform: scale(1.05);
+    transform-origin: center; /* Ensure scaling is uniform from the center */
+    box-shadow: var(--depth-shadow-hover); /* Consistent hover shadow */
+    z-index: var(--z-above); /* Ensure hovered card appears above others */
 }
 
 /* Neon glow effect for focus elements */
@@ -1176,7 +1210,7 @@ canvas#sentimentChart {
 
 .card.tilt-card:hover {
     transform: scale(1.05); /* Consistent scale on hover */
-    transform-origin: center bottom; /* Scale from bottom center */
+    transform-origin: center; /* Scale from center */
     box-shadow: var(--depth-shadow-hover);
     z-index: var(--z-above); /* Ensure hovered card appears above others */
 }
