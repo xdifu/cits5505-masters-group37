@@ -338,6 +338,11 @@
     function initialize3DTiltEffects() {
         const maxWidth = CONFIG.TILT.MAX_WIDTH;
         
+        // To achieve a pure CSS-driven scaling effect on hover for .tilt-card elements,
+        // the JavaScript-driven tilt initialization below is disabled.
+        // Commenting out this section allows CSS rules to exclusively control the hover transform.
+
+        /*
         if (typeof VanillaTilt !== 'undefined') {
             // Find all tilt-card elements
             DOM.getAll(CONFIG.SELECTORS.tiltCards).forEach(el => {
@@ -375,6 +380,8 @@
             });
             log('Simple tilt effect initialized as fallback for narrow cards.');
         }
+        */
+        log('JavaScript-driven 3D tilt effects are currently disabled for .tilt-card elements to allow CSS-driven hover effects.');
     }
 
     /**
