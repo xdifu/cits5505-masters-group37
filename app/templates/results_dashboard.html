@@ -8,14 +8,22 @@
 
 {% if results_exist %} {# This variable should be passed from the Flask route #}
 <div class="dashboard-grid">
-    <!-- 1. Intents Share (Pie Chart) -->
+    <!-- 1. Intents Share (Top 5) -->
     <div class="dashboard-card card tilt-card" id="intents-share-card">
         <div class="card-body">
-            <h2 class="card-title h5">Intents Share (Top 5)</h2>
+            <h2 class="card-title h5">Main Intent Tags</h2>
+            <p class="text-muted small">Most common intent tags in the analyzed content</p>
             {% if top_5_intents %}
-            <canvas id="intentsShareChart"></canvas>
+                <div class="intents-list mt-3">
+                    {% for intent, percentage in top_5_intents.items() %}
+                    <div class="intent-item d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                        <span class="badge bg-secondary">{{ intent }}</span>
+                        <span class="text-muted">{{ "%.1f"|format(percentage) }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
             {% else %}
-            <p class="text-muted">Not enough data to display intent distribution.</p>
+                <p class="text-muted">Not enough data to display intent distribution.</p>
             {% endif %}
         </div>
     </div>
@@ -132,12 +140,26 @@
                         </span>
                     </p>
                     <small class="text-muted feed-item-summary">{{ result.original_text|truncate(150) }}</small>
+                    
+                    <!-- Add Intent Tags Display -->
+                    <div class="mb-2 mt-2 feed-item-intents">
+                        {% if result.intents %}
+                            {% set intents_list = result.intents|from_json if result.intents is string else result.intents %}
+                            {% if intents_list and intents_list|length > 0 %}
+                                <small class="text-muted me-2">Intents:</small>
+                                {% for intent in intents_list %}
+                                    <span class="badge bg-secondary me-1 intent-badge">{{ intent }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
                     <div class="mt-2 feed-item-keywords">
                         {% if result.keywords %}
-                            {# Assuming result.keywords is a JSON string list from DB, convert to list #}
                             {% set keywords_list = result.keywords|from_json if result.keywords is string else result.keywords %}
                             {% if keywords_list and keywords_list|length > 0 %}
-                                {% for keyword in keywords_list|slice(5) %} <!-- Show first 5 keywords -->
+                                <small class="text-muted me-2">Keywords:</small>
+                                {% for keyword in keywords_list|slice(5) %}
                                     <span class="badge bg-info text-dark me-1 keyword-badge">{{ keyword }}</span>
                                 {% endfor %}
                             {% endif %}
@@ -225,53 +247,85 @@
 
         // console.log("Entity Overview Score Raw:", entityOverviewScoreRaw); // For debugging
 
-        // 1. Intents Share Chart (Pie)
-        if (intentsData && Object.keys(intentsData).length > 0) {
-            const ctxIntents = document.getElementById('intentsShareChart').getContext('2d');
-            new Chart(ctxIntents, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(intentsData),
-                    datasets: [{
-                        label: 'Intent Share',
-                        data: Object.values(intentsData),
-                        backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)'],
-                        borderColor: 'rgba(255, 255, 255, 0.8)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed !== null) {
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = total > 0 ? (context.parsed / total * 100).toFixed(1) : 0;
-                                        label += `${context.raw} (${percentage}%)`; // JavaScript Template literal
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const chart = elements[0].chart;
-                            const activePoint = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true)[0];
-                            if (activePoint) {
-                                const intentLabel = chart.data.labels[activePoint.index];
-                                filterFeedByIntent(intentLabel);
-                            }
-                        }
-                    }
-                }
-            });
-        }
+        // 1. Intents Share Chart (Doughnut)
+        // if (intentsData && Object.keys(intentsData).length > 0) {
+        //     const ctxIntents = document.getElementById('intentsShareChart').getContext('2d');
+            
+        //     // Neutral color palette for the doughnut chart
+        //     const intentColors = [
+        //         'rgba(108, 117, 125, 0.7)',  // gray
+        //         'rgba(100, 130, 160, 0.7)',  // blue-gray
+        //         'rgba(130, 110, 165, 0.7)',  // purple-gray
+        //         'rgba(160, 120, 95, 0.7)',   // brown-gray 
+        //         'rgba(110, 140, 120, 0.7)'   // green-gray
+        //     ];
+            
+        //     // Calculate total for percentage
+        //     const total = Object.values(intentsData).reduce((sum, val) => sum + val, 0);
+            
+        //     new Chart(ctxIntents, {
+        //         type: 'doughnut',
+        //         data: {
+        //             labels: Object.keys(intentsData),
+        //             datasets: [{
+        //                 label: 'Intent Share',
+        //                 data: Object.values(intentsData),
+        //                 backgroundColor: intentColors,
+        //                 borderColor: 'rgba(255, 255, 255, 0.8)',
+        //                 borderWidth: 1
+        //             }]
+        //         },
+        //         options: {
+        //             responsive: true, 
+        //             maintainAspectRatio: false,
+        //             cutout: '60%',  // Doughnut hole size
+        //             plugins: {
+        //                 legend: { 
+        //                     position: 'right',
+        //                     labels: {
+        //                         generateLabels: function(chart) {
+        //                             // Custom labels showing count and percentage
+        //                             const data = chart.data;
+        //                             if (data.labels.length && data.datasets.length) {
+        //                                 return data.labels.map(function(label, i) {
+        //                                     const value = data.datasets[0].data[i];
+        //                                     const percentage = ((value / total) * 100).toFixed(1);
+        //                                     return {
+        //                                         text: `${label}: ${value} (${percentage}%)`,
+        //                                         fillStyle: intentColors[i],
+        //                                         strokeStyle: intentColors[i],
+        //                                         lineWidth: 0,
+        //                                         hidden: false,
+        //                                         index: i
+        //                                     };
+        //                                 });
+        //                             }
+        //                             return [];
+        //                         }
+        //                     },
+        //                     tooltip: {
+        //                         callbacks: {
+        //                             label: function(context) {
+        //                                 const value = context.parsed;
+        //                                 const percentage = ((value / total) * 100).toFixed(1);
+        //                                 return `${context.label}: ${value} occurrences (${percentage}%)`;
+        //                             }
+        //                         }
+        //                     }
+        //                 },
+        //                 onClick: (event, elements) => {
+        //                     if (elements.length > 0) {
+        //                         const chart = elements[0].chart;
+        //                         const activePoint = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true)[0];
+        //                         if (activePoint) {
+        //                             const intentLabel = chart.data.labels[activePoint.index];
+        //                             filterFeedByIntent(intentLabel);
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         });
+        // }
 
         // 2. Sentiment Trend Chart (Line)
         // Y-axis title and scale (-1 to 1) are set here.

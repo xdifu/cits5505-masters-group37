@@ -75,12 +75,14 @@ def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     # client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     client = OpenAI() # Assuming API key is set in environment variables
 
-    system_prompt = f"""You are an expert news text analyzer. Analyze the provided text and return a JSON object with the following fields:
-    - "sentiment_label": Must be one of "Positive", "Neutral", or "Negative".
-    - "sentiment_score": A float between -1.0 (very negative) and +1.0 (very positive).
-    - "intents": A list of up to 5 most relevant intent tags. Choose from this predefined list: {PREDEFINED_INTENT_TAGS}. If no specific intent from the list is highly relevant, you can return an empty list or a general tag like "News Report".
-    - "keywords": A list of 10-15 most relevant and distinct keywords or key phrases from the text.
-    - "publication_date": The estimated publication date in YYYY-MM-DD format. If not found or ambiguous, return null.
+    system_prompt = f"""
+    Analyze the sentiment of the following text and return a structured JSON response with the following fields:
+    - "sentiment_label": Overall sentiment (Positive, Neutral, or Negative).
+    - "sentiment_score": A score from -1.0 (very negative) to +1.0 (very positive).
+    - "intents": A list of EXACTLY 5 OR FEWER most relevant intent tags from: {PREDEFINED_INTENT_TAGS}. 
+                 Return no more than 5 tags, prioritizing the most relevant ones.
+    - "keywords": A list of 10-15 most relevant extracted keywords from the text.
+    - "publication_date": The estimated publication date in YYYY-MM-DD format or null.
     
     Ensure the output is a valid JSON object matching this structure.
     """
