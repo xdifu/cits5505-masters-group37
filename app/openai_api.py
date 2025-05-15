@@ -41,6 +41,7 @@ class SingleNewsItemAnalysis(BaseModel):
     intents: Optional[List[str]] = Field(default_factory=list, description=f"List of up to 5 most relevant intent tags from the predefined list: {PREDEFINED_INTENT_TAGS}")
     keywords: Optional[List[str]] = Field(default_factory=list, description="List of up to 10-15 most relevant extracted keywords from the text. These should be single words or short multi-word phrases.") # Changed from KeywordSentiment for now
     publication_date: Optional[str] = Field(default=None, description="Estimated publication date of the news item in YYYY-MM-DD format. Return null if not found or ambiguous.")
+    summary: Optional[str] = Field(default=None, description="A concise news-style headline (max 10 words).")
 
 def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     """
@@ -83,6 +84,7 @@ def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     - **"keywords": A list of 10-15 single words or short phrases that capture the main topics/themes of the text.
       Do NOT include generic sentiment adjectives unless they are central to the topic.**
     - "publication_date": The estimated publication date in YYYY-MM-DD format or null.
+    - "summary": A concise news-style headline in no more than 10 words.
 
     Ensure the output is valid JSON and that "intents" contains no more than 5 items.
     """
@@ -157,6 +159,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_pos.intents}")
     print(f"Keywords: {result_pos.keywords}")
     print(f"Publication Date: {result_pos.publication_date}")
+    print(f"Summary: {result_pos.summary}")
     print("-----------------------------")
 
     print("--- Analyzing Negative Text ---")
@@ -165,6 +168,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_neg.intents}")
     print(f"Keywords: {result_neg.keywords}")
     print(f"Publication Date: {result_neg.publication_date}")
+    print(f"Summary: {result_neg.summary}")
     print("-----------------------------")
 
     print("--- Analyzing Mixed Text ---")
@@ -173,6 +177,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_mix.intents}")
     print(f"Keywords: {result_mix.keywords}")
     print(f"Publication Date: {result_mix.publication_date}")
+    print(f"Summary: {result_mix.summary}")
     print("-----------------------------")
 
     print("--- Analyzing Dated Text ---")
@@ -181,6 +186,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_dated.intents}")
     print(f"Keywords: {result_dated.keywords}")
     print(f"Publication Date: {result_dated.publication_date}")
+    print(f"Summary: {result_dated.summary}")
     print("-----------------------------")
 
     # Test the legacy analyze_sentiment function
