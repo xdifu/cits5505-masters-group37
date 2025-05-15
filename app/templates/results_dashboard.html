@@ -25,18 +25,6 @@
         </div>
     </div>
 
-    <!-- 2. Sentiment Trend Over Time (Line Chart) -->
-    <div class="dashboard-card card tilt-card" id="sentiment-trend-card">
-        <div class="card-body">
-            <h2 class="card-title h5">Sentiment Trend Over Time</h2>
-            {% if sentiment_trend_chart_data and sentiment_trend_chart_data.labels %}
-            <canvas id="sentimentTrendChart"></canvas>
-            {% else %}
-            <p class="text-muted">Not enough data to display sentiment trend.</p>
-            {% endif %}
-        </div>
-    </div>
-
     <!-- 3. Sentiment Overview (simplified, replaces “Entity Overview”) -->
     <div class="dashboard-card card tilt-card" id="sentiment-overview-card">
       <div class="card-body text-center">
@@ -190,9 +178,6 @@
 <script id="intentsDataJson" type="application/json">
   {{ top_5_intents|tojson|safe if top_5_intents else '{}' }}
 </script>
-<script id="sentimentTrendDataJson" type="application/json">
-  {{ sentiment_trend_chart_data|tojson|safe if sentiment_trend_chart_data and sentiment_trend_chart_data.labels else '{}' }}
-</script>
 <script id="relatedTopicsDataJson" type="application/json">
   {{ top_20_keywords_data|tojson|safe }}
 </script>
@@ -224,7 +209,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Data for charts and gauge
         const intentsData = getJsonData('intentsDataJson');
-        const sentimentTrendData = getJsonData('sentimentTrendDataJson');
         const relatedTopicsData = getJsonData('relatedTopicsDataJson');
         const entityOverviewScoreRaw = getJsonData('entityOverviewScoreJson'); // Directly use getJsonData
         const allResultsForFeed = getJsonData('allResultsDataJson');
@@ -311,24 +295,6 @@
         //             }
         //         });
         // }
-
-        // 2. Sentiment Trend Chart (Line)
-        // Y-axis title and scale (-1 to 1) are set here.
-        if (sentimentTrendData && sentimentTrendData.labels && sentimentTrendData.labels.length > 0 && sentimentTrendData.datasets) {
-            const ctxTrend = document.getElementById('sentimentTrendChart').getContext('2d');
-            new Chart(ctxTrend, {
-                type: 'line',
-                data: sentimentTrendData, // Expects { labels: [], datasets: [{ label, data, borderColor, fill }, ...] }
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        x: { title: { display: true, text: 'Date' } },
-                        y: { title: { display: true, text: 'Average Sentiment Score' }, min: -1, max: 1 }
-                    },
-                    plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
-                }
-            });
-        }
 
         // 3. Sentiment Overview Gauge (Custom HTML/CSS Version)
         const customGaugePointer = document.getElementById('customGaugePointer');
