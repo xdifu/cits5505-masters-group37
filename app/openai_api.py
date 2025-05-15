@@ -79,12 +79,11 @@ def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     Analyze the sentiment of the following text and return a structured JSON response with the following fields:
     - "sentiment_label": Overall sentiment (Positive, Neutral, or Negative).
     - "sentiment_score": A score from -1.0 (very negative) to +1.0 (very positive).
-    - "intents": A list of EXACTLY 5 OR FEWER most relevant intent tags from: {PREDEFINED_INTENT_TAGS}. 
-                 Return no more than 5 tags, prioritizing the most relevant ones.
+    - "intents": A list of AT MOST 5 most relevant intent tags from: {PREDEFINED_INTENT_TAGS}.
     - "keywords": A list of 10-15 most relevant extracted keywords from the text.
     - "publication_date": The estimated publication date in YYYY-MM-DD format or null.
-    
-    Ensure the output is a valid JSON object matching this structure.
+
+    Ensure the output is valid JSON and that "intents" contains no more than 5 items.
     """
 
     try:
