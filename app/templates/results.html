@@ -16,7 +16,7 @@
             <div class="report-card mb-4 tilt-card"> {# Added tilt-card here for potential JS tilt on individual small cards #}
                 <div class="report-card-header">
                     <h5 class="report-card-title">
-                        <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}">{{ report_item.name }}</a>
+                        <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}">{{ report_item.summary or report_item.name }}</a>
                     </h5>
                     <small class="report-card-timestamp text-muted">{{ report_item.timestamp.strftime('%Y-%m-%d %H:%M') }} UTC</small>
                 </div>
@@ -38,9 +38,9 @@
                             {% if score_percent > 0 %}+{% endif %}{{ score_percent }}% {{ sentiment_label_display }}
                         </span>
                     </div>
-                    <p class="report-card-items-count">
-                        <small class="text-muted">{{ report_item.item_count }} item{{ 's' if report_item.item_count != 1 else '' }} analyzed.</small>
-                    </p>
+                    {% if report_item.summary %}
+                    <p class="text-muted summary-text mt-2 mb-2">{{ report_item.summary }}</p>
+                    {% endif %}
                 </div>
                 <div class="report-card-actions">
                     <a href="{{ url_for('main.results_dashboard', report_id=report_item.id) }}"

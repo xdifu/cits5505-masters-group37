@@ -41,6 +41,7 @@ class SingleNewsItemAnalysis(BaseModel):
     intents: Optional[List[str]] = Field(default_factory=list, description=f"List of up to 5 most relevant intent tags from the predefined list: {PREDEFINED_INTENT_TAGS}")
     keywords: Optional[List[str]] = Field(default_factory=list, description="List of up to 10-15 most relevant extracted keywords from the text. These should be single words or short multi-word phrases.") # Changed from KeywordSentiment for now
     publication_date: Optional[str] = Field(default=None, description="Estimated publication date of the news item in YYYY-MM-DD format. Return null if not found or ambiguous.")
+    summary: Optional[str] = Field(default=None, description="A concise news-style headline (max 10 words).")
 
 def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     """
@@ -75,14 +76,17 @@ def analyze_text_data(text: str) -> SingleNewsItemAnalysis:
     # client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     client = OpenAI() # Assuming API key is set in environment variables
 
-    system_prompt = f"""You are an expert news text analyzer. Analyze the provided text and return a JSON object with the following fields:
-    - "sentiment_label": Must be one of "Positive", "Neutral", or "Negative".
-    - "sentiment_score": A float between -1.0 (very negative) and +1.0 (very positive).
-    - "intents": A list of up to 5 most relevant intent tags. Choose from this predefined list: {PREDEFINED_INTENT_TAGS}. If no specific intent from the list is highly relevant, you can return an empty list or a general tag like "News Report".
-    - "keywords": A list of 10-15 most relevant and distinct keywords or key phrases from the text.
-    - "publication_date": The estimated publication date in YYYY-MM-DD format. If not found or ambiguous, return null.
-    
-    Ensure the output is a valid JSON object matching this structure.
+    system_prompt = f"""
+    Analyze the sentiment of the following text and return a structured JSON response with the following fields:
+    - "sentiment_label": Overall sentiment (Positive, Neutral, or Negative).
+    - "sentiment_score": A score from -1.0 (very negative) to +1.0 (very positive).
+    - "intents": A list of AT MOST 5 most relevant intent tags from: {PREDEFINED_INTENT_TAGS}.
+    - **"keywords": A list of 10-15 single words or short phrases that capture the main topics/themes of the text.
+      Do NOT include generic sentiment adjectives unless they are central to the topic.**
+    - "publication_date": The estimated publication date in YYYY-MM-DD format or null.
+    - "summary": A concise news-style headline in no more than 10 words.
+
+    Ensure the output is valid JSON and that "intents" contains no more than 5 items.
     """
 
     try:
@@ -155,6 +159,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_pos.intents}")
     print(f"Keywords: {result_pos.keywords}")
     print(f"Publication Date: {result_pos.publication_date}")
+    print(f"Summary: {result_pos.summary}")
     print("-----------------------------")
 
     print("--- Analyzing Negative Text ---")
@@ -163,6 +168,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_neg.intents}")
     print(f"Keywords: {result_neg.keywords}")
     print(f"Publication Date: {result_neg.publication_date}")
+    print(f"Summary: {result_neg.summary}")
     print("-----------------------------")
 
     print("--- Analyzing Mixed Text ---")
@@ -171,6 +177,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_mix.intents}")
     print(f"Keywords: {result_mix.keywords}")
     print(f"Publication Date: {result_mix.publication_date}")
+    print(f"Summary: {result_mix.summary}")
     print("-----------------------------")
 
     print("--- Analyzing Dated Text ---")
@@ -179,6 +186,7 @@ if __name__ == '__main__':
     print(f"Intents: {result_dated.intents}")
     print(f"Keywords: {result_dated.keywords}")
     print(f"Publication Date: {result_dated.publication_date}")
+    print(f"Summary: {result_dated.summary}")
     print("-----------------------------")
 
     # Test the legacy analyze_sentiment function

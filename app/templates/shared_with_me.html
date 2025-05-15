@@ -41,8 +41,8 @@
                        aria-valuemin="0" aria-valuemax="100"></div>
                 {% elif report.overall_sentiment_score < 0 %}
                   <div class="progress-bar bg-danger" role="progressbar" 
-                       style="width: {{ (abs(report.overall_sentiment_score) * 50 + 50)|int }}%;" 
-                       aria-valuenow="{{ (abs(report.overall_sentiment_score) * 50 + 50)|int }}" 
+                       style="width: {{ ((report.overall_sentiment_score|abs) * 50 + 50)|int }}%;" 
+                       aria-valuenow="{{ ((report.overall_sentiment_score|abs) * 50 + 50)|int }}" 
                        aria-valuemin="0" aria-valuemax="100"></div>
                 {% else %}
                   <div class="progress-bar bg-secondary" role="progressbar" 
