@@ -336,14 +336,9 @@ def results_dashboard(report_id):
     # Check permission: user must be the author or it must be shared with them
     is_author = report.user_id == current_user.id
     
-    # Correctly check if the report is shared with the current user
-    # by querying the association table directly.
-    stmt = db.select(analysis_report_shares).where(
-        (analysis_report_shares.c.analysis_report_id == report.id) &
-        (analysis_report_shares.c.recipient_id == current_user.id)
-    )
-    # is_shared_with_current_user will be True if a record exists, False otherwise.
-    is_shared_with_current_user = db.session.execute(db.select(stmt.exists())).scalar()
+    # Use the same method as shared_report_details to check sharing permissions
+    # This ensures consistency between the two routes
+    is_shared_with_current_user = db.session.query(report.shared_with_recipients.filter(User.id == current_user.id).exists()).scalar()
 
     if not is_author and not is_shared_with_current_user:
         flash('You do not have permission to view this report.', 'danger')
