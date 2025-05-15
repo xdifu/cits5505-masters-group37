@@ -23,6 +23,14 @@
             headings: {
                 primary: 'h1.display-5',
                 secondary: 'h2:not(.typing-active)'
+            },
+            // Horizontal scroll gallery selectors
+            horizontalScroll: {
+                section: '.horizontal-scroll-section',
+                content: '.horizontal-content',
+                spacer: '.horizontal-scroll-spacer',
+                indicator: '.scroll-indicator',
+                items: '.horizontal-item'
             }
         },
         ANIMATION: {
@@ -30,7 +38,8 @@
             TOAST_DELAY: 3000,
             FADE_DURATION: 500,
             HIGHLIGHT_DURATION: 1500, // Added for highlight animation duration
-            BUTTON_TRANSITION_DURATION: '0.3s' // Added for button transition duration
+            BUTTON_TRANSITION_DURATION: '0.3s', // Added for button transition duration
+            HORIZONTAL_SCROLL_TRANSITION: '0.1s' // Transition for horizontal scroll
         },
         TILT: {
             MAX_WIDTH: 600,
@@ -764,20 +773,130 @@
     }
 
     /**
+     * Initializes the horizontal scroll gallery on the homepage
+     * Maps vertical scroll to horizontal movement of gallery items
+     */
+    function initializeHorizontalScrollGallery() {
+        const selectors = CONFIG.SELECTORS.horizontalScroll;
+        const section = DOM.get(selectors.section);
+        const content = DOM.get(selectors.content);
+        const spacer = DOM.get(selectors.spacer);
+        const indicator = DOM.get(selectors.indicator);
+        const items = DOM.getAll(selectors.items);
+        
+        // If the gallery elements don't exist, exit the function
+        if (!section || !content || !spacer || !items.length) {
+            return;
+        }
+        
+        log('Initializing horizontal scroll gallery');
+        
+        // Calculate total width of all items
+        const totalWidth = items.length * window.innerWidth;
+        content.style.width = totalWidth + 'px';
+        
+        // The point where we want to start the horizontal scroll
+        const startPoint = section.offsetTop;
+        
+        // The point where we want to end the horizontal scroll
+        const endPoint = startPoint + spacer.offsetHeight;
+        
+        // Update spacer height to match the viewport height for smooth scrolling
+        spacer.style.height = window.innerHeight + 'px';
+        
+        // Function to update horizontal scroll position
+        function updateScroll() {
+            // Current scroll position
+            const scrollPosition = window.pageYOffset;
+            
+            // Check if we're in the horizontal scroll section
+            if (scrollPosition >= startPoint && scrollPosition <= endPoint) {
+                // Calculate horizontal scroll amount (0 to totalWidth - window.innerWidth)
+                const scrollPercentage = (scrollPosition - startPoint) / (endPoint - startPoint);
+                const horizontalScroll = scrollPercentage * (totalWidth - window.innerWidth);
+                
+                // Apply the transform to move content horizontally
+                content.style.transform = `translateX(-${horizontalScroll}px)`;
+                
+                // Hide the scroll indicator once scrolling starts
+                if (scrollPercentage > 0.05 && indicator) {
+                    indicator.style.opacity = '0';
+                } else if (indicator) {
+                    indicator.style.opacity = '1';
+                }
+            }
+        }
+        
+        // Add scroll event listener with optimization to improve performance
+        // Use requestAnimationFrame to optimize the scroll event handling
+        let ticking = false;
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    updateScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+        
+        // Initial update
+        updateScroll();
+        
+        // Update on resize with debouncing
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                // Recalculate dimensions
+                const totalWidth = items.length * window.innerWidth;
+                content.style.width = totalWidth + 'px';
+                
+                // Update spacer height
+                spacer.style.height = window.innerHeight + 'px';
+                
+                // Update scroll position
+                updateScroll();
+            }, 250); // Debounce time
+        });
+    }
+    
+    /**
      * Main initialization function
      */
     function init() {
-        // Initialize components, event listeners, and charts
-        initializeBootstrapComponents();
-        initializeParticleEffects();
-        initialize3DTiltEffects();
-        initializeTextAnimations();
-        renderSentimentChart();
-        setupAjaxFormSubmissions();
-        setupAjaxToggleShare();
-        initializeScrollEffects();
-
-        log('Sentiment Analyzer custom script loaded and initialized.');
+        try {
+            // Initialize Bootstrap components
+            initializeBootstrapComponents();
+            
+            // Initialize background effects
+            initializeParticleEffects();
+            
+            // Initialize card hover effects
+            initialize3DTiltEffects();
+            
+            // Initialize text animations
+            initializeTextAnimations();
+            
+            // Initialize scroll effects for the navbar
+            initializeScrollEffects();
+            
+            // Initialize horizontal scroll gallery
+            initializeHorizontalScrollGallery();
+            
+            // Render any charts if they exist
+            renderSentimentChart();
+            
+            // Setup AJAX form submissions
+            setupAjaxFormSubmissions();
+            
+            // Setup share toggles
+            setupAjaxToggleShare();
+            
+            log('Application initialization complete.');
+        } catch (error) {
+            ErrorHandler.handle(error, 'There was an error initializing the application. Please refresh the page.');
+        }
     }
 
     // Initialize when the DOM is fully loaded

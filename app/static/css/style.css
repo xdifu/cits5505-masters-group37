@@ -1409,3 +1409,119 @@ canvas#sentimentChart {
 .report-card:hover .report-card-timestamp {
   color: var(--primary-color) !important;
 }
+
+/* --- Horizontal Scroll Gallery Section --- */
+/* Horizontal scroll gallery for the homepage */
+.horizontal-scroll-section {
+    position: sticky;
+    top: 70px; /* Position below the navbar */
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    z-index: 1;
+    background-color: var(--background-color);
+}
+
+.horizontal-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.horizontal-content {
+    position: absolute;
+    height: 100%;
+    display: flex;
+    will-change: transform; /* Optimization for animation performance */
+    transition: transform 0.1s ease-out;
+}
+
+.horizontal-item {
+    height: 100%;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.gallery-card {
+    width: 80%;
+    max-width: 900px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: var(--glass-border);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--depth-shadow);
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.gallery-card h3 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.gallery-card img {
+    width: 100%;
+    max-height: 50vh;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.gallery-card p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.horizontal-scroll-spacer {
+    height: 100vh; /* Same height as the section to allow scrolling past */
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--primary-color);
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+.scroll-indicator span {
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Media queries for responsive adjustments */
+@media (max-width: 768px) {
+    .gallery-card {
+        width: 90%;
+        padding: 1.5rem;
+    }
+    
+    .gallery-card img {
+        max-height: 40vh;
+    }
+    
+    .gallery-card h3 {
+        font-size: 1.5rem;
+    }
+    
+    .gallery-card p {
+        font-size: 1rem;
+    }
+}
