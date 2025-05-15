@@ -1227,6 +1227,72 @@ canvas#sentimentChart {
     box-shadow: 0 8px 16px rgba(0, 102, 255, 0.25);
 }
 
+/* --- Dashboard Grid Layout --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    grid-template-rows: auto 1fr;
+    grid-gap: 24px;
+    margin: var(--space-4) 0;
+}
+
+.dashboard-grid .main-intent {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.dashboard-grid .sentiment {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.dashboard-grid .related-topics {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+}
+
+/* Base card style for dashboard */
+.dashboard-card {
+    padding: var(--space-3);
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    background: #fff;
+}
+
+/* Card header and title styling */
+.dashboard-card h2.card-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--dark-text);
+    margin-bottom: var(--space-2);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding-bottom: var(--space-2);
+}
+
+/* Specific card heights */
+.sentiment {
+    min-height: 300px;
+}
+
+.related-topics {
+    min-height: 350px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        grid-gap: 32px;
+    }
+    .dashboard-grid .main-intent,
+    .dashboard-grid .sentiment,
+    .dashboard-grid .related-topics {
+        grid-column: 1;
+        grid-row: auto;
+    }
+}
+
 /* --- Responsive Improvements --- */
 @media (max-width: 768px) {
     /* Adjust typography for smaller screens */
