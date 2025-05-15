@@ -194,7 +194,7 @@
   {{ sentiment_trend_chart_data|tojson|safe if sentiment_trend_chart_data and sentiment_trend_chart_data.labels else '{}' }}
 </script>
 <script id="relatedTopicsDataJson" type="application/json">
-  {{ top_20_keywords_data|tojson|safe if top_20_keywords_data else '[]' }}
+  {{ top_20_keywords_data|tojson|safe }}
 </script>
 <script id="entityOverviewScoreJson" type="application/json">
   {{ entity_overview_score|tojson|safe }}
@@ -400,10 +400,9 @@
             const layout = d3.layout.cloud()
                 .size([width, height])
                 .words(relatedTopicsData.map(d => ({
-                    text: d.text, 
-                    size: 10 + d.weight * 2,  // Adjust scaling factor for size
-                    avg_sentiment: d.avg_sentiment, 
-                    color: d.color // Use pre-calculated color from data
+                    text:  d.text,
+                    size:  10 + d.value * 2,    // frequency → font size
+                    color: d.color             // sentiment hue
                 })))
                 .padding(5).rotate(() => (Math.random() * 6 - 3) * 15)
                 .font("Poppins, sans-serif").fontSize(d => d.size)
