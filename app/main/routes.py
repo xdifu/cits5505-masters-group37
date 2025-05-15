@@ -234,6 +234,20 @@ def analyze():
             if overall_sentiments:
                 new_report.overall_sentiment_score = sum(overall_sentiments) / len(overall_sentiments)
             
+            # Get all news items created for this report to calculate aggregates
+            news_items = db.session.scalars(
+                db.select(NewsItem)
+                .where(NewsItem.analysis_report_id == new_report.id)
+            ).all()
+            
+            # Generate and store aggregated data for the report
+            aggregates = _prepare_report_aggregates(news_items)
+            new_report.aggregated_intents_json = aggregates['aggregated_intents_json']
+            new_report.aggregated_keywords_json = aggregates['aggregated_keywords_json'] 
+            new_report.sentiment_trend_json = aggregates['sentiment_trend_json']
+            new_report.overall_sentiment_label = aggregates['overall_sentiment_label']
+            # Note: overall_sentiment_score was already set above based on the average of scores
+            
             db.session.commit()
 
             if is_ajax_request():
