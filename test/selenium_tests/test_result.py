@@ -1,3 +1,17 @@
+"""
+Test Summary:
+This Selenium test case validates the visualization elements on the Sentiment Analytics Dashboard page.
+
+Steps performed:
+1. Open a Chrome browser in headless mode.
+2. Log in to the application using a test account (test1/Test1234!).
+3. Navigate to the visualization page.
+4. Verify that the page contains the heading "Sentiment Analytics Dashboard".
+5. Check for the presence and visibility of three chart elements: barChart, pieChart, and lineChart.
+6. Close the browser after test completion.
+
+This ensures the dashboard loads properly and key elements are rendered for the user.
+"""
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By

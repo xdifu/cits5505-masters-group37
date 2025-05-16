@@ -1,3 +1,16 @@
+"""
+This Selenium test case is designed to verify the visualization page of a Flask-based web application.
+
+Summary of Logic:
+1. The `setUpClass` method configures the Chrome WebDriver to run in headless mode and performs user login using the "test1" account.
+2. The `test_visualization_elements` method navigates to the /visualization page and waits for the page to load.
+   - It checks if the header text "Sentiment Analytics Dashboard" is present.
+   - It verifies that the three expected charts (barChart, pieChart, and lineChart) are present and visible on the page.
+3. The `tearDownClass` method cleanly shuts down the WebDriver after tests complete.
+
+Purpose:
+Ensure that the visualization page is correctly rendered, all major chart elements are loaded, and the user is authenticated beforehand.
+"""
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By

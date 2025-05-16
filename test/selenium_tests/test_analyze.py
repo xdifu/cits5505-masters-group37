@@ -1,3 +1,19 @@
+"""
+Selenium Test: Analyze Flow
+
+This test simulates a user logging into the application and submitting text to be analyzed.
+The steps covered in this test are:
+1. Set up the Chrome driver in headless mode and navigate to the login page.
+2. Log in with test credentials ("test1" / "Test1234!") and confirm successful navigation to the index page.
+3. Navigate to the Analyze page and wait for the text input field to be ready.
+4. Enter a sample news text and submit it for analysis.
+5. Wait for the results page to render, verifying that "Keywords" and "Sentiment" are present in the output.
+
+The test ensures that:
+- The login works with valid credentials.
+- The Analyze form is accessible and functional.
+- The backend processes input text and returns expected analysis results.
+"""
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
