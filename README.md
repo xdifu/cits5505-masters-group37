@@ -196,7 +196,7 @@ news-sentiment-analyzer/
 To run all unit tests (including user model, form validation, analysis API, results page, and visualization page), use the following command:
 
 ```bash
-c
+python -m unittest discover -s test/unit_tests -p "test_*.py"
 ```
 
 This will automatically discover and run all files in the `test/unit_tests` folder that follow the `test_*.py` naming convention.
