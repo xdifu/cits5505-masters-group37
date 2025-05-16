@@ -4,6 +4,8 @@
 [![Flask Version](https://img.shields.io/badge/flask-3.1-brightgreen.svg)](https://flask.palletsprojects.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) <!-- Assuming MIT License -->
 
+![image](https://github.com/user-attachments/assets/404b594b-de65-4b46-af7c-19ab3a740d76)
+
 A full-featured Flask web application designed for analyzing the sentiment of news text using the OpenAI gpt-4.1-nano API. Users can register, submit text for analysis, view their history, and share results with others.
 
 ## Overview
