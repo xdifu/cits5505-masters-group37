@@ -1,3 +1,21 @@
+"""
+This Selenium test suite verifies the registration functionality of the web application.
+
+Test Overview:
+--------------
+- The test navigates to the user registration page (/auth/register).
+- It waits for the registration form to load by checking for the presence of the username input field.
+- A random username is generated using UUID to avoid duplicates during testing.
+- A secure password is defined that meets common validation rules (uppercase, lowercase, number, special character).
+- The test fills out the registration form with:
+    * Random username (for both ID and name fields)
+    * Random email
+    * Password and confirmation
+- It then submits the form by clicking the submit button.
+- After submission, the test checks that the page redirects to the login page,
+  confirming that registration was successful.
+
+"""
 import unittest
 import uuid
 from selenium import webdriver
