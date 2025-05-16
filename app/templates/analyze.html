@@ -28,6 +28,11 @@
                 <div class="card-body">
                     {{ form.hidden_tag() }} <!-- Include CSRF token -->
                     
+                    <!-- ADD Report Name Field -->
+                    <div class="mb-3">
+                        {{ wtf.form_field(form.report_name, class="form-control form-control-lg", placeholder="Report Name (Optional)") }}
+                    </div>
+
                     <!-- Form field with enhanced styling, using the form's built-in label -->
                     <div class="mb-3 position-relative">
                         {# Use the label from the form definition #}

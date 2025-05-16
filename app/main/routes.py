@@ -189,96 +189,133 @@ def analyze():
             return render_template('analyze.html', title='Analyze Text', form=form, analysis_data=analysis_data_for_template)
 
         try:
-            new_report = AnalysisReport(
-                name=report_name,
-                author=current_user,
-                timestamp=datetime.now(timezone.utc)
-            )
-            db.session.add(new_report)
-            db.session.flush()  # Get new_report.id for associations
+            # Create all objects but don't commit right away
+            processed_news_items_data = []
+            overall_sentiment_scores = []
             
-            created_news_items_details = []
-            overall_sentiments = []
-
+            # Step 1: Process all texts and collect their analysis results
             for single_text in raw_texts:
                 if not single_text.strip():
                     continue
                 
-                analysis_result: SingleNewsItemAnalysis = analyze_text_data(single_text.strip())
+                # Analyze the text
+                analysis_result = analyze_text_data(single_text.strip())
                 
-                # Parse the publication date string from OpenAI into a datetime object
-                parsed_publication_date = _parse_publication_date(analysis_result.publication_date)
-
-                news_item = NewsItem(
-                    original_text=single_text.strip(),
-                    sentiment_label=analysis_result.sentiment_label,
-                    sentiment_score=analysis_result.sentiment_score,
-                    intents=json.dumps(analysis_result.intents),
-                    keywords=json.dumps(analysis_result.keywords),
-                    summary=analysis_result.summary,  # Store the generated summary
-                    analysis_report_id=new_report.id,
-                    publication_date=parsed_publication_date # Set the publication_date field
-                    # timestamp=datetime.now(timezone.utc) # REMOVE: This was causing the error
-                )
-                db.session.add(news_item)
-                
-                created_news_items_details.append({
+                # Store processed data
+                processed_news_items_data.append({
                     "original_text": single_text.strip(),
-                    "sentiment": analysis_result.sentiment_label,
+                    "sentiment_label": analysis_result.sentiment_label,
                     "sentiment_score": analysis_result.sentiment_score,
                     "intents": analysis_result.intents,
-                    "keywords": analysis_result.keywords
+                    "keywords": analysis_result.keywords,
+                    "summary": analysis_result.summary,
+                    "publication_date": analysis_result.publication_date
                 })
+                
+                # Collect scores for overall sentiment calculation
                 if analysis_result.sentiment_score is not None:
-                    overall_sentiments.append(analysis_result.sentiment_score)
-
-            if not created_news_items_details:
-                db.session.rollback() # Rollback report if no items processed
+                    overall_sentiment_scores.append(analysis_result.sentiment_score)
+            
+            # Step 2: Validate we have processed items
+            if not processed_news_items_data:
                 if is_ajax_request():
                     return jsonify({'error': 'No valid text items found for analysis after splitting.'}), 400
                 flash('No valid text items found for analysis after splitting.', 'warning')
                 return render_template('analyze.html', title='Analyze Text', form=form, analysis_data=analysis_data_for_template)
-
-            if overall_sentiments:
-                new_report.overall_sentiment_score = sum(overall_sentiments) / len(overall_sentiments)
             
-            # Get all news items created for this report to calculate aggregates
-            news_items = db.session.scalars(
-                db.select(NewsItem)
-                .where(NewsItem.analysis_report_id == new_report.id)
-            ).all()
+            # Step 3: Create the AnalysisReport with timestamp
+            report_timestamp = datetime.now(timezone.utc)
             
-            # Generate and store aggregated data for the report
-            aggregates = _prepare_report_aggregates(news_items)
-            new_report.aggregated_intents_json = aggregates['aggregated_intents_json']
-            new_report.aggregated_keywords_json = aggregates['aggregated_keywords_json'] 
-            new_report.sentiment_trend_json = aggregates['sentiment_trend_json']
-            new_report.overall_sentiment_label = aggregates['overall_sentiment_label']
-            # Note: overall_sentiment_score was already set above based on the average of scores
+            # Step 4: Calculate overall sentiment score and label
+            overall_sentiment_score = sum(overall_sentiment_scores) / len(overall_sentiment_scores) if overall_sentiment_scores else 0.0
+            overall_sentiment_label = "Neutral"
+            if overall_sentiment_score > 0.2:
+                overall_sentiment_label = "Positive"
+            elif overall_sentiment_score < -0.2:
+                overall_sentiment_label = "Negative"
+                
+            # Step 5: Set the summary (from the last processed item)
+            summary = processed_news_items_data[-1].get('summary') or report_name
             
-            # After processing all items, assign AI-headline to report
-            # store the generated headline (or fallback to name)
-            new_report.summary = analysis_result.summary or new_report.name
-
+            # Step 6: Create empty placeholders for aggregates (we'll update these later)
+            empty_intents_json = json.dumps({})
+            empty_keywords_json = json.dumps([])
+            empty_trend_json = json.dumps({'dates': [], 'overall_scores': [], 'keyword_trends': {}})
+            
+            # Step 7: Create and save the AnalysisReport
+            new_report = AnalysisReport(
+                name=report_name,
+                author=current_user, # Sets up the relationship
+                user_id=current_user.id,  # Explicitly set user_id for the foreign key
+                timestamp=report_timestamp,
+                summary=summary,
+                overall_sentiment_score=overall_sentiment_score,
+                overall_sentiment_label=overall_sentiment_label,
+                aggregated_intents_json=empty_intents_json,
+                aggregated_keywords_json=empty_keywords_json,
+                sentiment_trend_json=empty_trend_json
+            )
+            
+            db.session.add(new_report)
+            # Commit to save the report and get an ID
+            db.session.commit() # First commit for AnalysisReport
+            
+            # Step 8: Create all NewsItem objects
+            news_items = []
+            for item_data in processed_news_items_data:
+                parsed_date = _parse_publication_date(item_data.get("publication_date"))
+                
+                news_item = NewsItem(
+                    original_text=item_data["original_text"],
+                    sentiment_label=item_data["sentiment_label"],
+                    sentiment_score=item_data["sentiment_score"],
+                    intents=json.dumps(item_data["intents"]),
+                    keywords=json.dumps(item_data["keywords"]),
+                    summary=item_data["summary"],
+                    analysis_report_id=new_report.id,
+                    publication_date=parsed_date
+                )
+                db.session.add(news_item)
+                news_items.append(news_item)
+            
+            # Commit to save all news items
             db.session.commit()
-
+            
+            # Step 9: Calculate and update report aggregates using a direct SQL UPDATE
+            # This avoids the StaleDataError by not modifying the ORM object after it's committed
+            aggregates = _prepare_report_aggregates(news_items)
+            
+            # Use direct SQL update instead of modifying the ORM object
+            db.session.execute(
+                db.update(AnalysisReport)
+                .where(AnalysisReport.id == new_report.id)
+                .values(
+                    aggregated_intents_json=aggregates['aggregated_intents_json'],
+                    aggregated_keywords_json=aggregates['aggregated_keywords_json'],
+                    sentiment_trend_json=aggregates['sentiment_trend_json'],
+                    overall_sentiment_label=aggregates['overall_sentiment_label']
+                )
+            )
+            db.session.commit()
+            
+            # Step 10: Prepare response
             if is_ajax_request():
                 # For AJAX, return JSON with details of the first item or a summary
-                first_item_analysis = created_news_items_details[0] if created_news_items_details else {}
+                first_item = processed_news_items_data[0] if processed_news_items_data else {}
                 return jsonify({
-                    'message': f'Analysis report "{new_report.name}" created successfully! {len(created_news_items_details)} item(s) processed.',
-                    'sentiment': first_item_analysis.get('sentiment'),
-                    'sentiment_score': first_item_analysis.get('sentiment_score'),
-                    'intents': first_item_analysis.get('intents'),
-                    'keywords': first_item_analysis.get('keywords'),
-                    'summary': first_item_analysis.get('summary'),  # Include summary in response
+                    'message': f'Analysis report "{new_report.name}" created successfully! {len(processed_news_items_data)} item(s) processed.',
+                    'sentiment': first_item.get('sentiment_label'),
+                    'sentiment_score': first_item.get('sentiment_score'),
+                    'intents': first_item.get('intents'),
+                    'keywords': first_item.get('keywords'),
+                    'summary': first_item.get('summary'),
                     'report_id': new_report.id,
                     'report_url': url_for('main.results_dashboard', report_id=new_report.id)
                 })
 
             flash(f'Analysis report "{new_report.name}" created successfully!', 'success')
             return redirect(url_for('main.results_dashboard', report_id=new_report.id))
-        
+            
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error saving analysis report: {e}", exc_info=True)
@@ -506,10 +543,34 @@ def api_filtered_report_data(report_id):
 @bp.route('/share_report/<int:report_id>', methods=['GET', 'POST'])
 @login_required
 def share_report(report_id):
+    # --- BEGIN DEBUG LOGGING ---
+    current_app.logger.info(f"[SHARE_REPORT_DEBUG] Attempting to access share page for report_id: {report_id}")
+    current_app.logger.info(f"[SHARE_REPORT_DEBUG] Current user: ID={current_user.id if current_user else 'None'}, Username={current_user.username if current_user else 'None'}")
+    # --- END DEBUG LOGGING ---
+
     report = db.session.get(AnalysisReport, report_id)
-    if not report or report.author.id != current_user.id:
-        flash('Analysis report not found or you do not own this report.', 'danger')
+    
+    if not report:
+        # --- BEGIN DEBUG LOGGING ---
+        current_app.logger.warning(f"[SHARE_REPORT_DEBUG] Report with ID {report_id} NOT FOUND in database.")
+        # --- END DEBUG LOGGING ---
+        flash('Analysis report not found.', 'danger')
         return redirect(url_for('main.results'))
+    
+    # --- BEGIN DEBUG LOGGING ---
+    current_app.logger.info(f"[SHARE_REPORT_DEBUG] Found report: ID={report.id}, Name='{report.name}', Report's UserID={report.user_id}")
+    # --- END DEBUG LOGGING ---
+
+    if report.user_id != current_user.id:
+        # --- BEGIN DEBUG LOGGING ---
+        current_app.logger.error(f"[SHARE_REPORT_DEBUG] PERMISSION DENIED for report ID {report.id}. Report Owner UserID ({report.user_id}) != Current User ID ({current_user.id}). Redirecting to results.")
+        # --- END DEBUG LOGGING ---
+        flash('You do not own this report.', 'danger')
+        return redirect(url_for('main.results'))
+    
+    # --- BEGIN DEBUG LOGGING ---
+    current_app.logger.info(f"[SHARE_REPORT_DEBUG] Permission GRANTED for report ID {report.id} to user {current_user.id}. Proceeding to render share_analysis.html.")
+    # --- END DEBUG LOGGING ---
 
     # Quick share form (original)
     form = ShareReportForm()
