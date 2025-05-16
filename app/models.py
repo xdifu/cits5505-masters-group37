@@ -2,39 +2,84 @@
 # Includes models for Users, their sentiment analysis reports (AnalysisReport),
 # and individual news items within those reports (NewsItem).
 
-from datetime import datetime, timezone # Import datetime for timestamping
-from typing import Optional, List # For type hinting optional relationships and lists
-import sqlalchemy as sa # Core SQLAlchemy library
-import sqlalchemy.orm as so # SQLAlchemy ORM components
-from werkzeug.security import generate_password_hash, check_password_hash # For password hashing
-from flask_login import UserMixin # Provides default implementations for Flask-Login user methods
-import json # For handling JSON data in text fields
+from datetime import datetime, timezone
+from typing import Optional, List
+import sqlalchemy as sa
+import sqlalchemy.orm as so
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+import json
 
-# Import the db instance initialized in app/__init__.py
 from app import db, login_manager
 
-# Association table for AnalysisReport sharing
+# Enhanced sharing table with additional metadata
 analysis_report_shares = db.Table('analysis_report_shares',
-    db.Column('analysis_report_id', sa.Integer, db.ForeignKey('analysis_report.id'), primary_key=True),
-    db.Column('recipient_id', sa.Integer, db.ForeignKey('user.id'), primary_key=True)
+    db.Column('analysis_report_id', sa.Integer, 
+              db.ForeignKey('analysis_report.id', ondelete='CASCADE'), 
+              primary_key=True),
+    db.Column('recipient_id', sa.Integer, 
+              db.ForeignKey('user.id', ondelete='CASCADE'), 
+              primary_key=True),
+    db.Column('shared_at', sa.DateTime(timezone=True),
+              nullable=False, 
+              default=lambda: datetime.now(timezone.utc)),
+    db.Column('status', sa.String(20),
+              nullable=False,
+              default='active',
+              comment='Share status: active, revoked'),
+    sa.Index('idx_share_recipient', 'recipient_id'),
+    sa.Index('idx_share_report', 'analysis_report_id')
 )
 
 class User(UserMixin, db.Model):
     """
-    Represents a user in the application.
-    Includes authentication fields and relationship to analysis reports.
-    Inherits from UserMixin for Flask-Login integration.
+    User model representing application users.
+    
+    Attributes:
+        id: Primary key
+        username: Unique username for identification
+        email: User's email address
+        password_hash: Securely hashed password
+        created_at: Account creation timestamp
+        last_login: Last successful login timestamp
+        is_active: Account status indicator
     """
-    id: so.Mapped[int] = so.mapped_column(primary_key=True)
-    username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True, nullable=False)
-    email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True, nullable=False)
-    password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256), nullable=False)
+    __tablename__ = 'user'
+    __table_args__ = (
+        sa.Index('idx_user_email_username', 'email', 'username'),
+    )
 
-    # Renamed from authored_results to authored_analysis_reports
-    # Relationship to AnalysisReport (reports authored by the user)
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    username: so.Mapped[str] = so.mapped_column(sa.String(64), 
+                                              index=True, 
+                                              unique=True, 
+                                              nullable=False)
+    email: so.Mapped[str] = so.mapped_column(sa.String(120), 
+                                           index=True, 
+                                           unique=True, 
+                                           nullable=False)
+    password_hash: so.Mapped[str] = so.mapped_column(sa.String(256), 
+                                                    nullable=False)
+    created_at: so.Mapped[datetime] = so.mapped_column(
+        sa.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+    last_login: so.Mapped[Optional[datetime]] = so.mapped_column(
+        sa.DateTime(timezone=True)
+    )
+    is_active: so.Mapped[bool] = so.mapped_column(
+        sa.Boolean,
+        default=True,
+        nullable=False
+    )
+
+    # Relationships
     authored_analysis_reports: so.WriteOnlyMapped['AnalysisReport'] = so.relationship(
-        back_populates='author', lazy='select',
-        cascade="all, delete-orphan", passive_deletes=True
+        back_populates='author',
+        lazy='select',
+        cascade="all, delete-orphan",
+        passive_deletes=True
     )
 
     # Renamed from results_shared_with_me to analysis_reports_shared_with_me
@@ -62,9 +107,21 @@ class User(UserMixin, db.Model):
 # Renamed from Result to AnalysisReport
 class AnalysisReport(db.Model):
     __tablename__ = 'analysis_report' # Explicitly define table name
+    __table_args__ = (
+        sa.Index('idx_report_user_timestamp', 'user_id', 'timestamp'),
+        sa.CheckConstraint('overall_sentiment_score >= -1 AND overall_sentiment_score <= 1',
+                          name='check_sentiment_score_range')
+    )
     """
-    Represents a single sentiment analysis report/session.
-    This report aggregates data from multiple NewsItem entries.
+    Represents a sentiment analysis report aggregating multiple news items.
+    
+    Attributes:
+        id: Primary key
+        name: Optional report name
+        timestamp: Report creation time
+        status: Processing status
+        user_id: Author's user ID
+        shared: Sharing status flag
     """
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     name: so.Mapped[Optional[str]] = so.mapped_column(sa.String(128)) # Optional name for the report
@@ -105,8 +162,37 @@ class AnalysisReport(db.Model):
     # Stores data for sentiment trend chart: e.g., '{"overall": [{"date": "YYYY-MM-DD", "score": 0.5}, ...], "keyword1": [...] }'
     sentiment_trend_json: so.Mapped[Optional[str]] = so.mapped_column(sa.Text) # Added field
 
+    # Enhanced JSON storage
+    aggregated_data: so.Mapped[Optional[dict]] = so.mapped_column(
+        sa.JSON,
+        comment='Stores aggregated analysis results including intents, keywords, and trends'
+    )
+    
+    # Processing status tracking
+    status: so.Mapped[str] = so.mapped_column(
+        sa.String(20),
+        default='pending',
+        nullable=False,
+        comment='Status: pending, processing, completed, failed'
+    )
 
 class NewsItem(db.Model):
+    """
+    Represents an individual news item with its analysis results.
+    
+    Attributes:
+        id: Primary key
+        original_text: Raw news text
+        processed_at: Analysis timestamp
+        metadata: Analysis results in JSON format
+    """
+    __tablename__ = 'news_item'
+    __table_args__ = (
+        sa.Index('idx_news_report_sentiment', 'analysis_report_id', 'sentiment_score'),
+        sa.CheckConstraint('sentiment_score >= -1 AND sentiment_score <= 1',
+                          name='check_news_sentiment_score_range')
+    )
+
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     original_text: so.Mapped[str] = so.mapped_column(sa.Text, nullable=False)
     # Sentiment analysis results from OpenAI
@@ -119,6 +205,18 @@ class NewsItem(db.Model):
 
     analysis_report_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('analysis_report.id'), index=True)
     analysis_report: so.Mapped['AnalysisReport'] = so.relationship(back_populates='news_items')
+
+    # Enhanced metadata storage
+    metadata: so.Mapped[Optional[dict]] = so.mapped_column(
+        sa.JSON,
+        comment='Stores analysis results including intents, keywords, and sentiment data'
+    )
+    
+    processed_at: so.Mapped[datetime] = so.mapped_column(
+        sa.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
 
     def to_dict(self) -> dict:
         """Serializes the NewsItem object to a dictionary."""
