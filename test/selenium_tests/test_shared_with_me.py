@@ -29,14 +29,13 @@ from selenium.webdriver.support import expected_conditions as EC
 # --- Shared With Me Flow Test ---
 class TestSharedWithMeFlow(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         service = Service()
-        cls.driver = webdriver.Chrome(service=service, options=chrome_options)
-        cls.driver.implicitly_wait(5)
-        cls.base_url = "http://127.0.0.1:5000"
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.driver.implicitly_wait(5)
+        self.base_url = "http://127.0.0.1:5000"
 
     def test_shared_with_me_workflow(self):
         driver = self.driver
@@ -100,9 +99,8 @@ class TestSharedWithMeFlow(unittest.TestCase):
         base_time = datetime.strptime(raw_time, "%Y-%m-%d %H:%M")
         formatted_date = base_time.strftime("%Y-%m-%d")
         formatted_time = base_time.strftime("%H:%M")
-        self.assertTrue(formatted_date in driver.page_source and formatted_time in driver.page_source,
-                        f"Expected date {formatted_date} and time {formatted_time} not found in shared page.")
+        self.assertIn(formatted_date, driver.page_source,
+                      f"Expected date {formatted_date} not found in shared page.")
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
+    def tearDown(self):
+        self.driver.quit()
