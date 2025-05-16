@@ -191,6 +191,16 @@ news-sentiment-analyzer/
     pytest
     ```
 
+### Unit Tests (unittest)
+
+To run all unit tests (including user model, form validation, analysis API, results page, and visualization page), use the following command:
+
+```bash
+c
+```
+
+This will automatically discover and run all files in the `test/unit_tests` folder that follow the `test_*.py` naming convention.
+
 ### Functional Tests (Selenium)
 
 Automated browser-based tests are implemented using **Selenium**.
