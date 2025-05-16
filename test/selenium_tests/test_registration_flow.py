@@ -28,15 +28,13 @@ import time
 
 class TestRegistrationFlow(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        # Set up Chrome driver
+    def setUp(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Optional: headless mode
+        chrome_options.add_argument("--headless")
         service = Service()
-        cls.driver = webdriver.Chrome(service=service, options=chrome_options)
-        cls.driver.implicitly_wait(5)
-        cls.base_url = "http://127.0.0.1:5000"
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.driver.implicitly_wait(5)
+        self.base_url = "http://127.0.0.1:5000"
 
     def test_register_user(self):
         driver = self.driver
@@ -65,9 +63,8 @@ class TestRegistrationFlow(unittest.TestCase):
         # Confirm redirection to login page
         self.assertIn("login", driver.current_url.lower())
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
+    def tearDown(self):
+        self.driver.quit()
 
 if __name__ == "__main__":
     unittest.main()

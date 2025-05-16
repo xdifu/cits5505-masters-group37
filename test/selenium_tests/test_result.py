@@ -22,22 +22,21 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class TestVisualizationPage(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         service = Service()
-        cls.driver = webdriver.Chrome(service=service, options=chrome_options)
-        cls.driver.implicitly_wait(5)
-        cls.base_url = "http://127.0.0.1:5000"
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        self.driver.implicitly_wait(5)
+        self.base_url = "http://127.0.0.1:5000"
 
         # Login first
-        cls.driver.get(f"{cls.base_url}/auth/login")
-        cls.driver.find_element(By.NAME, "username").send_keys("test1")
-        cls.driver.find_element(By.NAME, "password").send_keys("Test1234!")
-        cls.driver.find_element(By.CSS_SELECTOR, "input[type='submit']").click()
+        self.driver.get(f"{self.base_url}/auth/login")
+        self.driver.find_element(By.NAME, "username").send_keys("test1")
+        self.driver.find_element(By.NAME, "password").send_keys("Test1234!")
+        self.driver.find_element(By.CSS_SELECTOR, "input[type='submit']").click()
 
-        WebDriverWait(cls.driver, 5).until(
+        WebDriverWait(self.driver, 5).until(
             EC.url_contains("/index")
         )
 
@@ -58,6 +57,5 @@ class TestVisualizationPage(unittest.TestCase):
         self.assertTrue(pie.is_displayed())
         self.assertTrue(line.is_displayed())
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
+    def tearDown(self):
+        self.driver.quit()
