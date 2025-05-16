@@ -18,17 +18,26 @@ Test Overview:
 """
 import unittest
 import uuid
+import threading
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
+from run import app  # 确保 run.py 中有 app 实例
 
 class TestRegistrationFlow(unittest.TestCase):
 
     def setUp(self):
+        # 启动 Flask 应用线程
+        self.app_thread = threading.Thread(target=app.run, kwargs={"port": 5000, "use_reloader": False})
+        self.app_thread.setDaemon(True)
+        self.app_thread.start()
+        time.sleep(1)  # 等待服务器启动
+
+        # 初始化浏览器
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         service = Service()
@@ -44,27 +53,19 @@ class TestRegistrationFlow(unittest.TestCase):
             EC.presence_of_element_located((By.ID, "username"))
         )
 
-        # Generate a random, valid user
         random_username = f"selenium_{uuid.uuid4().hex[:6]}"
         random_email = f"{random_username}@example.com"
-        secure_password = "Test1234!"  # ✅ Valid format: uppercase, lowercase, number, special char
+        secure_password = "Test1234!"  # ✅ Valid format
 
-        # Fill in the form
         driver.find_element(By.ID, "username").send_keys(random_username)
         driver.find_element(By.NAME, "username").send_keys(random_username)
         driver.find_element(By.NAME, "email").send_keys(random_email)
         driver.find_element(By.NAME, "password").send_keys(secure_password)
         driver.find_element(By.NAME, "password2").send_keys(secure_password)
 
-        # Submit the form
         driver.find_element(By.CSS_SELECTOR, "input[type='submit']").click()
         time.sleep(1)
-
-        # Confirm redirection to login page
         self.assertIn("login", driver.current_url.lower())
 
     def tearDown(self):
         self.driver.quit()
-
-if __name__ == "__main__":
-    unittest.main()

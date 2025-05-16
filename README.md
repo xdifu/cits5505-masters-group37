@@ -191,28 +191,28 @@ news-sentiment-analyzer/
     pytest
     ```
 
-### Functional Tests (`selenium`)
+### Functional Tests (Selenium)
 
-**Prerequisites:**
+Automated browser-based tests are implemented using **Selenium**.
 
-*   **WebDriver:** You need the appropriate WebDriver for the browser you intend to test with (e.g., `chromedriver` for Chrome, `geckodriver` for Firefox). Ensure the WebDriver executable is in your system's PATH or specify its location in the test configuration.
-*   **Running Application:** The Flask application must be running in a separate terminal instance before executing Selenium tests.
+Each test case uses `setUp()` and `tearDown()` to automatically start and stop the Flask development server, ensuring an isolated environment for each run.
 
-**Execution:**
+#### Prerequisites:
 
-1.  **Start the Flask application:**
-    ```bash
-    flask run
-    ```
-2.  **Open a *new* terminal window/tab.**
-3.  **Activate the virtual environment in the new terminal:**
-    *   Linux/macOS: `source venv/bin/activate`
-    *   Windows: `.\venv\Scripts\activate`
-4.  **Run the Selenium tests using pytest:**
-    ```bash
-    pytest tests/test_selenium.py
-    ```
-    *(Note: Depending on test configuration, you might run all tests with `pytest` and it will include Selenium tests if properly set up, but running them specifically can be useful.)*
+- Install dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- Ensure `chromedriver` is installed and available in your system path.
+
+#### Run All Selenium Tests:
+
+```bash
+python -m unittest discover -s test/selenium_tests -p "test_*.py"
+```
+
+If port `5000` is already in use, please close any previous Flask instance or restart your system. The test suite will launch Flask on port 5000 and terminate it after each test.
 
 ## Usage
 

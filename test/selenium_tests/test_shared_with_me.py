@@ -19,6 +19,9 @@ Assumptions:
 import unittest
 import random
 import string
+import threading
+import time
+from run import app
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -30,6 +33,11 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestSharedWithMeFlow(unittest.TestCase):
 
     def setUp(self):
+        self.app_thread = threading.Thread(target=app.run, kwargs={"port": 5000, "use_reloader": False})
+        self.app_thread.setDaemon(True)
+        self.app_thread.start()
+        time.sleep(1) 
+
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         service = Service()

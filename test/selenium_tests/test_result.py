@@ -13,6 +13,9 @@ Steps performed:
 This ensures the dashboard loads properly and key elements are rendered for the user.
 """
 import unittest
+import threading
+import time
+from run import app
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -23,6 +26,12 @@ from selenium.webdriver.support import expected_conditions as EC
 class TestVisualizationPage(unittest.TestCase):
 
     def setUp(self):
+        # 启动 Flask 应用线程
+        self.app_thread = threading.Thread(target=app.run, kwargs={"port": 5000, "use_reloader": False})
+        self.app_thread.setDaemon(True)
+        self.app_thread.start()
+        time.sleep(2)  # 等待服务器启动
+
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         service = Service()
@@ -40,22 +49,28 @@ class TestVisualizationPage(unittest.TestCase):
             EC.url_contains("/index")
         )
 
-    def test_visualization_elements(self):
+    def test_result_buttons_navigation(self):
         driver = self.driver
-        driver.get(f"{self.base_url}/visualization")
+        driver.get(f"{self.base_url}/results")
 
-        WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.TAG_NAME, "h1"))
+        # Wait until the page loads and result cards are visible
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "report-card"))
         )
-        self.assertIn("Sentiment Analytics Dashboard", driver.page_source)
 
-        bar = driver.find_element(By.ID, "barChart")
-        pie = driver.find_element(By.ID, "pieChart")
-        line = driver.find_element(By.ID, "lineChart")
+        # Click the first "View Dashboard" button
+        view_buttons = driver.find_elements(By.LINK_TEXT, "VIEW DASHBOARD")
+        self.assertTrue(view_buttons, "View Dashboard button not found")
+        view_buttons[0].click()
+        self.assertIn("/results_dashboard", driver.current_url)
 
-        self.assertTrue(bar.is_displayed())
-        self.assertTrue(pie.is_displayed())
-        self.assertTrue(line.is_displayed())
+        driver.back()
+
+        # Click the first "Share Report" button
+        share_buttons = driver.find_elements(By.LINK_TEXT, "SHARE REPORT")
+        self.assertTrue(share_buttons, "Share Report button not found")
+        share_buttons[0].click()
+        self.assertIn("/share_report", driver.current_url)
 
     def tearDown(self):
         self.driver.quit()
