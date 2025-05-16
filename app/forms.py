@@ -82,42 +82,137 @@ class RegistrationForm(FlaskForm):
 
 
 class AnalysisForm(FlaskForm):
-    """Form for submitting text for creating an analysis report."""
-    report_name = StringField('Report Name (Optional)', validators=[WTFormsOptional(), Length(max=128)])
-    news_text = TextAreaField('News Articles Text (one article per line or separated by double newlines)', 
-                              validators=[DataRequired(), Length(min=10, max=50000)],
-                              render_kw={"rows": 15, "placeholder": "Paste your news articles here. For multiple articles, place each on a new line or separate them with a blank line."})
-    submit = SubmitField('Analyze and Create Report')
+    """
+    Form for submitting text content for sentiment analysis.
+    
+    Fields:
+        report_name: Optional name for the analysis report
+        news_text: Text area for multiple news articles input
+        keywords: Optional keywords for focused analysis
+        submit: Submit button for form
+    """
+    report_name = StringField(
+        'Report Name (Optional)', 
+        validators=[
+            WTFormsOptional(),
+            Length(max=128),
+            Regexp(r'^[\w\s-]*$', message="Report name can only contain letters, numbers, spaces and hyphens")
+        ]
+    )
+    
+    news_text = TextAreaField(
+        'News Articles Text', 
+        validators=[
+            DataRequired(message="Please enter at least one news article"),
+            Length(min=10, max=50000, message="Text must be between 10 and 50000 characters")
+        ],
+        render_kw={
+            "rows": 15,
+            "class": "form-control",
+            "placeholder": "Paste your news articles here. Separate multiple articles with blank lines."
+        }
+    )
+    
+    # New field for analysis keywords
+    keywords = StringField(
+        'Focus Keywords (Optional)',
+        validators=[
+            WTFormsOptional(),
+            Length(max=200),
+            Regexp(r'^[\w\s,]*$', message="Keywords should be comma-separated words")
+        ],
+        render_kw={
+            "placeholder": "Enter comma-separated keywords (optional)"
+        }
+    )
+    
+    submit = SubmitField('Analyze Content')
+
+    def validate_news_text(self, field):
+        """
+        Custom validator for news_text field.
+        Ensures the text contains valid content and proper formatting.
+        
+        Args:
+            field: The news_text field being validated
+            
+        Raises:
+            ValidationError: If text format is invalid
+        """
+        articles = [art.strip() for art in field.data.split('\n\n') if art.strip()]
+        if not articles:
+            raise ValidationError('Please provide at least one valid article')
+        if len(articles) > 50:
+            raise ValidationError('Maximum 50 articles allowed per analysis')
 
 
 class ShareReportForm(FlaskForm):
-    """Form for sharing an analysis report with another user."""
-    # Renamed from ShareForm to ShareReportForm for clarity
-    # This form might be part of a page where the report_id is implicit or passed in the URL
-    share_with_username = StringField('Username to share with', validators=[DataRequired(), Length(max=64)])
-    report_id = HiddenField() # To carry the report_id if needed, though often handled by URL context
+    """
+    Form for sharing analysis reports with other users.
+    Handles both single user sharing and batch sharing operations.
+    
+    Fields:
+        share_with_username: Username of recipient
+        report_id: Hidden field for report identification
+        share_message: Optional message for recipient
+        submit: Submit button
+    """
+    share_with_username = StringField(
+        'Share with User',
+        validators=[
+            DataRequired(),
+            Length(min=3, max=64),
+            Regexp(r'^[\w.-]+$', message="Username contains invalid characters")
+        ]
+    )
+    
+    report_id = HiddenField(validators=[DataRequired()])
+    
+    # New field for share message
+    share_message = TextAreaField(
+        'Add a Message (Optional)',
+        validators=[
+            WTFormsOptional(),
+            Length(max=500)
+        ],
+        render_kw={
+            "rows": 3,
+            "placeholder": "Add an optional message for the recipient"
+        }
+    )
+    
     submit = SubmitField('Share Report')
 
     def validate_share_with_username(self, share_with_username):
         """
-        Custom validator to check if the username to share with exists.
-        Requires the User model and db session to be available.
+        Validates share recipient exists and has permission to receive shares.
+        
         Args:
-            share_with_username (Field): The username field being validated.
+            share_with_username: Username field to validate
+            
         Raises:
-            ValidationError: If the username does not exist in the database.
+            ValidationError: If user not found or sharing not allowed
         """
-        if db and User:
-            user = db.session.scalar(db.select(User).where(User.username == share_with_username.data))
-            if user is None:
-                raise ValidationError('User not found. Please enter a valid username.')
-        else:
-            print("Warning: DB connection or User model not available for username validation during sharing.")
-
-
-class ManageSharingForm(FlaskForm):
-    """Form for managing multiple sharing recipients."""
-    users_to_share_with = SelectMultipleField('Select users to share with:',
-                                             coerce=int,
-                                             render_kw={"class": "form-select"})
-    submit = SubmitField('Update Sharing Settings')
+        if not (db and User):
+            raise ValidationError("System error: Unable to validate user")
+            
+        user = db.session.scalar(
+            db.select(User).where(User.username == share_with_username.data)
+        )
+        
+        if user is None:
+            raise ValidationError('User not found')
+        
+        if user.id == current_user.id:
+            raise ValidationError('Cannot share with yourself')
+            
+        # Check if already shared
+        if self.report_id.data:
+            existing_share = db.session.scalar(
+                db.select(analysis_report_shares).where(
+                    analysis_report_shares.c.analysis_report_id == self.report_id.data,
+                    analysis_report_shares.c.recipient_id == user.id
+                )
+            )
+            if existing_share:
+                raise ValidationError('Report already shared with this user')
