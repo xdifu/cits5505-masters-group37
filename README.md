@@ -34,7 +34,7 @@ This application provides a platform for users to perform sentiment analysis on 
 *   **Environment Variables:** `python-dotenv`
 *   **Database Migrations:** Flask-Migrate (with Alembic)
 *   **Testing:**
-    *   Unit Testing: `pytest`
+    *   Unit Testing: `unittest`
     *   Functional Testing: `selenium`
 *   **Development Server:** Werkzeug (via Flask CLI)
 
@@ -182,16 +182,7 @@ news-sentiment-analyzer/
 
 ## Running Tests
 
-### Unit Tests (`pytest`)
-
-1.  **Ensure your virtual environment is activated and dependencies are installed.**
-2.  **The test environment uses an in-memory SQLite database by default.** Migrations should be applied during test setup (see `tests/conftest.py` if customization is needed).
-3.  **Run pytest from the project root directory:**
-    ```bash
-    pytest
-    ```
-
-### Unit Tests (unittest)
+### Unit Tests (`unittest`)
 
 To run all unit tests (including user model, form validation, analysis API, results page, and visualization page), use the following command:
 
