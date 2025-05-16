@@ -78,8 +78,10 @@
 /* Apply a slightly more modern font stack and background treatment */
 body {
     font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--background-color);
-    color: var(--dark-text);
+    /* background-color: var(--background-color); */ /* Original: Light background from variable */
+    /* color: var(--dark-text); */ /* Original: Dark text from variable */
+    background-color: #22272e; /* New: Dark background color */
+    color: #c9d1d9;       /* New: Light text color for dark background */
     line-height: var(--line-height-normal); /* Updated using new variable */
     position: relative;
     overflow-x: hidden;
