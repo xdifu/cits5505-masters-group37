@@ -87,7 +87,7 @@ class TestResultPageNavigation(unittest.TestCase): # Renamed class for clarity
     def setUp(self):
         # Initialize browser
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         # chrome_options.add_argument("--window-size=1920,1080") # Uncomment for non-headless debugging
         # chrome_options.add_argument("--disable-gpu")
         # chrome_options.add_argument("--no-sandbox")
